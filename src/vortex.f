@@ -766,6 +766,29 @@
        END DO
        END DO
 
+       DO IR=1,NL
+        LOW1=SUM(NPATCH(0:IR-1))+1
+        LOW2=SUM(NPATCH(0:IR))
+ !$OMP PARALLEL DO SHARED(PATCHNX,PATCHNY,PATCHNZ,LOW1,LOW2,
+ !$OMP+                   U12P,U13P,U14P),
+ !$OMP+            PRIVATE(IX,JY,KZ,N1,N2,N3,I)
+        DO I=LOW1,LOW2
+        N1=PATCHNX(I)
+        N2=PATCHNY(I)
+        N3=PATCHNZ(I)
+        DO KZ=1, N3
+        DO JY=0, N2
+        DO IX=0, N1
+           U12P(IX,JY,KZ,I)=-1.0*U12P(IX,JY,KZ,I)
+           U13P(IX,JY,KZ,I)=-1.0*U13P(IX,JY,KZ,I)
+           U14P(IX,JY,KZ,I)=-1.0*U14P(IX,JY,KZ,I)
+        END DO
+        END DO
+        END DO
+
+        END DO
+        END DO
+
 **       !!!! Writing compressional (parallel) velocity component
         IF (FLAG_VERBOSE.EQ.1) THEN
           WRITE(*,*) '...Compressional velocity...'
