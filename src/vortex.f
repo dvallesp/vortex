@@ -742,6 +742,11 @@
           WRITE(*,*) MAXVAL(U4),MAXVAL(U14)
         END IF
 
+        IF (FLAG_W_VELOCITIES.EQ.1) THEN
+          CALL WRITE_TOTALVELOCITY(FILERR5,NX,NY,NZ,ITER,T,ZETA,NL,
+     &                             NPATCH, PATCHNX,PATCHNY,PATCHNZ)
+        END IF
+
         WRITE(*,*) '...Differencing the potentials...'
 *     We compute the -grad(PHI)  ---> we get (U2P,U3P,U4P)
 *     PHI NOW IS IN DIVER0 AND DIVER!!!
@@ -774,6 +779,7 @@
 
 
 **     We compute the rotational of (rotax,rotay,rotaz) ---> we get (U2R,U3R,U4R)
+*      Note that we lose the original velocities (U2, U3, U4), as we overwrite them
 
 !$OMP PARALLEL DO SHARED(NX,NY,NZ,U2,U3,U4,ROTAX_0,ROTAY_0,ROTAZ_0),
 !$OMP+            PRIVATE(I,J,K)
