@@ -1,2 +1,4 @@
 old
 *.sh
+*.png
+.DS_Store
