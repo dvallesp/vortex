@@ -19,7 +19,7 @@ def write_mock_grids(it, t, nl, mdm, zeta, ndxyz, npatch, patchnx, patchny, patc
         grids.write('{}\t{}\t{}\n'.format(0, ndxyz, 0))
 
         for l in range(1, len(npatch)):
-            grids.write('{}\t{}\n'.format(l, npatch[l]))
+            grids.write('{}\t{}\t{}\t{}\n'.format(l, npatch[l],0,0))
             grids.write(' ----------------- within level=           {}  -----------\n'.format(l))
 
             for ipatch in range(sum(npatch[0:l]) + 1, sum(npatch[0:l + 1]) + 1):
@@ -31,7 +31,7 @@ def write_mock_grids(it, t, nl, mdm, zeta, ndxyz, npatch, patchnx, patchny, patc
 
 def write_mock_clus(vx, vy, vz, it, digits=5, path=''):
     with FF(os.path.join(path, masclet.read_masclet.filename(it, 'b', digits)), 'w') as clus:
-        clus.write_record(np.array([0]).astype('i4')) #first line
+        clus.write_record(np.array([it,0,0,0]).astype('i4')) #first line
         # base level
         clus.write_record(np.array([0]).astype('i4'))
         clus.write_record(vx[0].T.astype('f4'))
