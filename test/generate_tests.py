@@ -49,7 +49,7 @@ write_mock_clus(vx, vy, vz, mockit, digits=5, path=output_path)
 os.chdir(initialpath)
 
 #######################################
-# test1a: constant curl field
+# test1b: constant curl field
 #######################################
 output_path = os.path.join(initialpath, 'test_files/1b')
 maxl = 10
