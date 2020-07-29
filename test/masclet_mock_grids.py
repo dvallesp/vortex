@@ -44,13 +44,13 @@ def mock_gridsA(nlevels, Nx, L=1):
                     patchnx[ipatch] = Nx / 2
                     patchny[ipatch] = Nx / 2
                     patchnz[ipatch] = Nx / 2
+                    
+                    patchx[ipatch] = (patchnx[ipatch] / 2 * (i + 1)) % patchnx[ipare] + 1
+                    patchy[ipatch] = (patchny[ipatch] / 2 * (j + 1)) % patchny[ipare] + 1
+                    patchz[ipatch] = (patchnz[ipatch] / 2 * (k + 1)) % patchnz[ipare] + 1
 
-                    patchx[ipatch] = (patchnx[ipatch] / 2 * (i + 1)) % patchnx[ipare]
-                    patchy[ipatch] = (patchny[ipatch] / 2 * (j + 1)) % patchny[ipare]
-                    patchz[ipatch] = (patchnz[ipatch] / 2 * (k + 1)) % patchnz[ipare]
-
-                    patchrx[ipatch] = patchrx[ipare] + (patchx[ipatch] - 1 / 2) * L / Nx / 2 ** (l - 1)
-                    patchry[ipatch] = patchry[ipare] + (patchy[ipatch] - 1 / 2) * L / Nx / 2 ** (l - 1)
-                    patchrz[ipatch] = patchrz[ipare] + (patchz[ipatch] - 1 / 2) * L / Nx / 2 ** (l - 1)
+                    patchrx[ipatch] = patchrx[ipare] + (patchx[ipatch] - 3 / 2) * L / Nx / 2 ** (l - 1)
+                    patchry[ipatch] = patchry[ipare] + (patchy[ipatch] - 3 / 2) * L / Nx / 2 ** (l - 1)
+                    patchrz[ipatch] = patchrz[ipare] + (patchz[ipatch] - 3 / 2) * L / Nx / 2 ** (l - 1)
 
     return npatch, patchnx, patchny, patchnz, patchx, patchy, patchz, patchrx, patchry, patchrz, pare
