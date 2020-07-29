@@ -25,3 +25,10 @@ def constant_div_field(cellsrx, cellsry, cellsrz, constant):
     vy = [np.nan_to_num(vi * y / r) for vi, y, r in zip(v, cellsry, cellsr)]
     vz = [np.nan_to_num(vi * z / r) for vi, z, r in zip(v, cellsrz, cellsr)]
     return vx, vy, vz
+
+
+def periodic(cellsrx, cellsry, cellsrz, constant):
+    vx = [constant * np.sin(2 * np.pi * x) for x in cellsrx]
+    vy = [np.zeros(x.size) for x in cellsrx]
+    vz = [np.zeros(x.size) for x in cellsrx]
+    return vx, vy, vz
