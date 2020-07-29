@@ -777,8 +777,8 @@
         N2=PATCHNY(I)
         N3=PATCHNZ(I)
         DO KZ=1, N3
-        DO JY=0, N2
-        DO IX=0, N1
+        DO JY=1, N2
+        DO IX=1, N1
            U12P(IX,JY,KZ,I)=-1.0*U12P(IX,JY,KZ,I)
            U13P(IX,JY,KZ,I)=-1.0*U13P(IX,JY,KZ,I)
            U14P(IX,JY,KZ,I)=-1.0*U14P(IX,JY,KZ,I)
