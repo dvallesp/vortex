@@ -119,6 +119,10 @@
        COMMON /MINIGRIDS/ RX,RY,RZ,RMX,RMY,RMZ
 *
 
+*      SOR precision parameter and max num of iterations
+       REAL*4 PRECIS
+       INTEGER MAXIT
+       COMMON /SOR/ PRECIS,MAXIT
 
 *      ---PARALLEL---
        INTEGER NUM,OMP_GET_NUM_THREADS,NUMOR, FLAG_PARALLEL
@@ -147,6 +151,8 @@
        READ(1,*) GAMMA,MUM
        READ(1,*)
        READ(1,*) NL
+       READ(1,*)
+       READ(1,*) PRECIS, MAXIT
        READ(1,*)
        READ(1,*) FLAG_VERBOSE, FLAG_W_DIVROT, FLAG_W_POTENTIALS,
      &           FLAG_W_VELOCITIES

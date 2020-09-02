@@ -283,8 +283,9 @@
       REAL*4 BAS,ERROR,ERRMAX,BASS, PI
       REAL*4 SSS,DXPA,DX,WWW,ERR,ERRTOT
       REAL*4 RADIUS,SNOR,RESNOR,PRECIS
-      INTEGER CR1,CR2,CR3,MARCA,LOW1,LOW2
+      INTEGER CR1,CR2,CR3,MARCA,LOW1,LOW2,MAXIT
       REAL*4 AAA,BBB,CCC
+      COMMON /SOR/ PRECIS,MAXIT
 
       REAL*4 RX(-2:NAMRX+3,NPALEV)
       REAL*4 RY(-2:NAMRX+3,NPALEV)
@@ -320,12 +321,7 @@
 
 *     ---------------------------------------------------------------------------
 
-*     SOR PRECISON PARAMETER
-      PRECIS=1.E-6   !!-4
-
       PI=ACOS(-1.0)
-
-**    WRITE(*,*) ' POTAMR STARTS !!!!!!!!!!!!!!!!!!!!!!!'
 
       IR=1
       DXPA=DX/(2.0**IR)
@@ -431,7 +427,7 @@
         WWW=1.0/(1.0-0.25*WWW*RADIUS**2)
         IF (II.EQ.1) WWW=1.0/(1.0-0.5*RADIUS**2)
 *
-        IF (II.GT.500) MARCA=1
+        IF (II.GT.MAXIT) MARCA=1
        END DO
 
       APOT1(1:N1,1:N2,1:N3,I)=POT1(1:N1,1:N2,1:N3)
@@ -574,7 +570,7 @@
         WWW=1.0/(1.0-0.25*WWW*RADIUS**2)
         IF (II.EQ.1) WWW=1.0/(1.0-0.5*RADIUS**2)
 *
-        IF (II.GT.500) MARCA=1
+        IF (II.GT.MAXIT) MARCA=1
        END DO
 
 
