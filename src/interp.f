@@ -15,7 +15,7 @@
       REAL*4 DXCEN,DYCEN,DZCEN
 
 
-      LIM=2.0
+      LIM=8.0
 
       II=-1
       JJ=-1
@@ -112,7 +112,7 @@
       REAL*4 DXCEN,DYCEN,DZCEN
 
 
-      LIM=2.0
+      LIM=8.0
 
       DXX=0.0
       DYY=0.0
