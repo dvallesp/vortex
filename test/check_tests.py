@@ -15,6 +15,7 @@ cwd = os.getcwd()
 import numpy as np
 import masclet_framework as masclet
 from cython_fortran_file import FortranFile as FF
+import pickle
 
 # modules in this package
 from masclet_mock_files import *
@@ -26,6 +27,7 @@ ncores = 8
 verbose = True
 
 percentiles = [5, 25, 50, 75, 95]
+file_dictionary = {}
 
 #######################################
 # test1a: constant divergence field
@@ -138,6 +140,9 @@ for l in range(maxl + 1):
     print('Fraction of rotational velocity: ', ['{:.2e}'.format(i) for i in frac_vrot[l]], '\n')
 
 os.chdir(initialpath)
+
+file_dictionary['1a'] = {'percentiles': percentiles,
+                         'ediv': ediv, 'erot': erot, 'ev': ev, 'frac_vcomp': frac_vcomp, 'frac_vrot': frac_vrot}
 
 if verbose:
     print('#####################')
@@ -255,6 +260,9 @@ for l in range(maxl + 1):
 
 os.chdir(initialpath)
 
+file_dictionary['1b'] = {'percentiles': percentiles, 'ediv': ediv,
+                         'erotz': erotz, 'erotxy': erotxy, 'ev': ev, 'frac_vcomp': frac_vcomp, 'frac_vrot': frac_vrot}
+
 if verbose:
     print('#####################')
     print('Done with test 1b!')
@@ -288,7 +296,7 @@ truevx, truevy, truevz = masclet.read_masclet.read_clus(mockit, path=os.path.joi
 
 cellsrx, cellsry, cellsrz = masclet.tools_xyz.compute_position_fields(patchnx, patchny, patchnz, patchrx, patchry,
                                                                       patchrz, npatch, size, nmax, ncores=ncores)
-truediv = [-2 * np.pi * (np.cos(2 * np.pi * x) + np.cos(2 * np.pi * y) + np.cos(2 * np.pi * z)) for x, y, z in
+truediv = [2 * np.pi * (np.cos(2 * np.pi * x) + np.cos(2 * np.pi * y) + np.cos(2 * np.pi * z)) for x, y, z in
            zip(cellsrx, cellsry,
                cellsrz)]
 truerotx = [np.pi * (6 * np.cos(6 * np.pi * y) - 4 * np.cos(4 * np.pi * z)) for x, y, z in zip(cellsrx, cellsry,
@@ -397,10 +405,16 @@ for l in range(maxl + 1):
 
 os.chdir(initialpath)
 
+file_dictionary['1c'] = {'percentiles': percentiles,
+                         'ediv': ediv, 'erot': erot, 'ev': ev, 'evcomp': evrot, 'evrot': evcomp}
+
 if verbose:
     print('#####################')
     print('Done with test 1c!')
     print('#####################')
+
+with open('test_results.pickle', 'wb') as f:
+    pickle.dump(file_dictionary, f)
 
 #### END MESSAGE
 if verbose:
