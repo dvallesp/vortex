@@ -8,7 +8,7 @@
 
 *      refinements ----------------------------------------------------          
        INTEGER NPALEV,NLEVELS                                          
-       PARAMETER (NPALEV=6000,NLEVELS=9) 
+       PARAMETER (NPALEV=6000,NLEVELS=15) 
        
        INTEGER NAMRX,NAMRY,NAMRZ
        PARAMETER (NAMRX=64,NAMRY=64,NAMRZ=64)
