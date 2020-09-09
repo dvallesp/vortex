@@ -35,14 +35,14 @@ def periodic(cellsrx, cellsry, cellsrz, constant):
 
 
 def periodic_compressive(cellsrx, cellsry, cellsrz, constant):
-    vx = [constant * np.cos(np.pi * x) for x, y, z in zip(cellsrx, cellsry, cellsrz)]
-    vy = [constant * np.cos(np.pi * y) for x, y, z in zip(cellsrx, cellsry, cellsrz)]
-    vz = [constant * np.cos(np.pi * z) for x, y, z in zip(cellsrx, cellsry, cellsrz)]
+    vx = [constant * np.sin(2 * np.pi * x) for x, y, z in zip(cellsrx, cellsry, cellsrz)]
+    vy = [constant * np.sin(2 * np.pi * y) for x, y, z in zip(cellsrx, cellsry, cellsrz)]
+    vz = [constant * np.sin(2 * np.pi * z) for x, y, z in zip(cellsrx, cellsry, cellsrz)]
     return vx, vy, vz
 
 
 def periodic_rotational(cellsrx, cellsry, cellsrz, constant):
-    vx = [constant * (np.sin(2 * np.pi * y) + np.sin(4 * np.pi * z)) for x, y, z in zip(cellsrx, cellsry, cellsrz)]
-    vy = [constant * (np.sin(2 * np.pi * z) + np.sin(4 * np.pi * x)) for x, y, z in zip(cellsrx, cellsry, cellsrz)]
-    vz = [constant * (np.sin(2 * np.pi * x) + np.sin(4 * np.pi * y)) for x, y, z in zip(cellsrx, cellsry, cellsrz)]
+    vx = [constant * (np.sin(4 * np.pi * y) + np.sin(6 * np.pi * z)) for x, y, z in zip(cellsrx, cellsry, cellsrz)]
+    vy = [constant * (np.sin(4 * np.pi * z) + np.sin(6 * np.pi * x)) for x, y, z in zip(cellsrx, cellsry, cellsrz)]
+    vz = [constant * (np.sin(4 * np.pi * x) + np.sin(6 * np.pi * y)) for x, y, z in zip(cellsrx, cellsry, cellsrz)]
     return vx, vy, vz
