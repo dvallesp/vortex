@@ -128,9 +128,12 @@ for l in range(maxl + 1):
     velrecy_l = velcompy_l + velroty_l
     velrecz_l = velcompz_l + velrotz_l
 
-    ev[l] = [np.mean([np.percentile(np.abs(velrecx_l / vx_l - 1), perc),
-                      np.percentile(np.abs(velrecy_l / vy_l - 1), perc),
-                      np.percentile(np.abs(velrecz_l / vz_l - 1), perc)]) for perc in percentiles]
+    # ev[l] = [np.mean([np.percentile(np.abs(velrecx_l / vx_l - 1), perc),
+    #                  np.percentile(np.abs(velrecy_l / vy_l - 1), perc),
+    #                  np.percentile(np.abs(velrecz_l / vz_l - 1), perc)]) for perc in percentiles]
+    ev[l] = [np.percentile((vx_l / v_l) ** 2 * np.abs(velrecx_l / vx_l - 1) +
+                           (vy_l / v_l) ** 2 * np.abs(velrecy_l / vy_l - 1) +
+                           (vz_l / v_l) ** 2 * np.abs(velrecz_l / vz_l - 1), perc) for perc in percentiles]
     frac_vcomp[l] = [np.percentile(velcomp_l / v_l, perc) for perc in percentiles]
     frac_vrot[l] = [np.percentile(velrot_l / v_l, perc) for perc in percentiles]
 
@@ -248,8 +251,10 @@ for l in range(maxl + 1):
     velrecy_l = velcompy_l + velroty_l
     velrecz_l = velcompz_l + velrotz_l
 
-    ev[l] = [np.mean([np.percentile(np.abs(velrecx_l / vx_l - 1), perc),
-                      np.percentile(np.abs(velrecy_l / vy_l - 1), perc)]) for perc in percentiles]
+    # ev[l] = [np.mean([np.percentile(np.abs(velrecx_l / vx_l - 1), perc),
+    #                  np.percentile(np.abs(velrecy_l / vy_l - 1), perc)]) for perc in percentiles]
+    ev[l] = [np.percentile((vx_l / v_l) ** 2 * np.abs(velrecx_l / vx_l - 1) +
+                           (vy_l / v_l) ** 2 * np.abs(velrecy_l / vy_l - 1), perc) for perc in percentiles]
     frac_vcomp[l] = [np.percentile(velcomp_l / v_l, perc) for perc in percentiles]
     frac_vrot[l] = [np.percentile(velrot_l / v_l, perc) for perc in percentiles]
 
@@ -375,6 +380,7 @@ for l in range(maxl + 1):
     truevelcompx_l = np.concatenate([a.flatten() for a in truevelcompx[minipatch:maxipatch + 1]])
     truevelcompy_l = np.concatenate([a.flatten() for a in truevelcompy[minipatch:maxipatch + 1]])
     truevelcompz_l = np.concatenate([a.flatten() for a in truevelcompz[minipatch:maxipatch + 1]])
+    truevelcomp_l = np.sqrt(truevelcompx_l ** 2 + truevelcompy_l ** 2 + truevelcompz_l ** 2)
 
     velrotx_l = np.concatenate([a.flatten() for a in velrotx[minipatch:maxipatch + 1]])
     velroty_l = np.concatenate([a.flatten() for a in velroty[minipatch:maxipatch + 1]])
@@ -383,23 +389,35 @@ for l in range(maxl + 1):
     truevelrotx_l = np.concatenate([a.flatten() for a in truevelrotx[minipatch:maxipatch + 1]])
     truevelroty_l = np.concatenate([a.flatten() for a in truevelroty[minipatch:maxipatch + 1]])
     truevelrotz_l = np.concatenate([a.flatten() for a in truevelrotz[minipatch:maxipatch + 1]])
+    truevelrot_l = np.sqrt(truevelrotx_l ** 2 + truevelroty_l ** 2 + truevelrotz_l ** 2)
 
     velrecx_l = velcompx_l + velrotx_l
     velrecy_l = velcompy_l + velroty_l
     velrecz_l = velcompz_l + velrotz_l
 
-    ev[l] = [np.mean([np.percentile(np.abs(velrecx_l / vx_l - 1), perc),
-                      np.percentile(np.abs(velrecy_l / vy_l - 1), perc),
-                      np.percentile(np.abs(velrecz_l / vz_l - 1), perc)]) for perc in percentiles]
-    evcomp[l] = [np.mean([np.percentile(np.abs(velcompx_l / truevelcompx_l - 1), perc),
-                          np.percentile(np.abs(velcompy_l / truevelcompy_l - 1), perc),
-                          np.percentile(np.abs(velcompz_l / truevelcompz_l - 1), perc)]) for perc in percentiles]
-    evrot[l] = [np.mean([np.percentile(np.abs(velrotx_l / truevelrotx_l - 1), perc),
-                         np.percentile(np.abs(velroty_l / truevelroty_l - 1), perc),
-                         np.percentile(np.abs(velrotz_l / truevelrotz_l - 1), perc)]) for perc in percentiles]
+    # ev[l] = [np.mean([np.percentile(np.abs(velrecx_l / vx_l - 1), perc),
+    #                  np.percentile(np.abs(velrecy_l / vy_l - 1), perc),
+    #                  np.percentile(np.abs(velrecz_l / vz_l - 1), perc)]) for perc in percentiles]
+    ev[l] = [np.percentile((vx_l / v_l) ** 2 * np.abs(velrecx_l / vx_l - 1) +
+                           (vy_l / v_l) ** 2 * np.abs(velrecy_l / vy_l - 1) +
+                           (vz_l / v_l) ** 2 * np.abs(velrecz_l / vz_l - 1), perc) for perc in percentiles]
+    # evcomp[l] = [np.mean([np.percentile(np.abs(velcompx_l / truevelcompx_l - 1), perc),
+    #                      np.percentile(np.abs(velcompy_l / truevelcompy_l - 1), perc),
+    #                      np.percentile(np.abs(velcompz_l / truevelcompz_l - 1), perc)]) for perc in percentiles]
+    evcomp[l] = [np.percentile((truevelcompx_l / truevelcomp_l) ** 2 * np.abs(velcompx_l / truevelcompx_l - 1) +
+                               (truevelcompx_l / truevelcomp_l) ** 2 * np.abs(velcompy_l / truevelcompy_l - 1) +
+                               (truevelcompx_l / truevelcomp_l) ** 2 * np.abs(velcompz_l / truevelcompz_l - 1),
+                               perc) for perc in percentiles]
+    # evrot[l] = [np.mean([np.percentile(np.abs(velrotx_l / truevelrotx_l - 1), perc),
+    #                     np.percentile(np.abs(velroty_l / truevelroty_l - 1), perc),
+    #                     np.percentile(np.abs(velrotz_l / truevelrotz_l - 1), perc)]) for perc in percentiles]
+    evrot[l] = [np.percentile((truevelrotx_l / truevelrot_l) ** 2 * np.abs(velrotx_l / truevelrotx_l - 1) +
+                              (truevelrotx_l / truevelrot_l) ** 2 * np.abs(velroty_l / truevelroty_l - 1) +
+                              (truevelrotx_l / truevelrot_l) ** 2 * np.abs(velrotz_l / truevelrotz_l - 1),
+                              perc) for perc in percentiles]
 
     print('* At level {}, percentiles: '.format(l), percentiles)
-    #print('Relative errors in velocity reconstruction: ', ['{:.2e}'.format(i) for i in ev[l]])
+    # print('Relative errors in velocity reconstruction: ', ['{:.2e}'.format(i) for i in ev[l]])
     print('Relative errors in compressive velocity: ', ['{:.2e}'.format(i) for i in evcomp[l]])
     print('Relative errors in rotational velocity: ', ['{:.2e}'.format(i) for i in evrot[l]], '\n')
 
