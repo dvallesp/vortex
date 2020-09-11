@@ -347,3 +347,52 @@
       CLOSE(25)
 
       END
+
+
+***********************************************************************
+       SUBROUTINE WRITE_SOLAPST(FILERR5,NX,NY,NZ,ITER,T,ZETA,NL,NPATCH,
+     &                          PATCHNX,PATCHNY,PATCHNZ,SOLAPST)
+***********************************************************************
+      IMPLICIT NONE
+
+      INCLUDE 'vortex_parameters.dat'
+
+*     FUNCTION ARGUMENTS
+      CHARACTER*30 FILERR5
+      INTEGER NX, NY, NZ, NL, ITER
+      REAL*4 T, ZETA
+      INTEGER NPATCH(0:NLEVELS)
+      INTEGER PATCHNX(NPALEV),PATCHNY(NPALEV),PATCHNZ(NPALEV)
+      INTEGER SOLAPST(NAMRX,NAMRY,NAMRZ,NPALEV)
+
+*     VARIABLES
+      INTEGER IR, I, LOW1, LOW2, IX, J, K, N1, N2, N3
+      INTEGER, ALLOCATABLE::SCR4(:,:,:)
+
+*     OPEN THE OUTPUT FILE
+      OPEN(25,FILE=FILERR5,STATUS='UNKNOWN',FORM='UNFORMATTED',
+     &     POSITION='APPEND')
+
+      ALLOCATE(SCR4(NAMRX,NAMRY,NAMRZ))
+
+      DO IR=1,NL
+
+        LOW1=SUM(NPATCH(0:IR-1))+1
+        LOW2=SUM(NPATCH(0:IR))
+        DO I=LOW1,LOW2
+
+          N1=PATCHNX(I)
+          N2=PATCHNY(I)
+          N3=PATCHNZ(I)
+
+          SCR4(1:N1,1:N2,1:N3)=SOLAPST(1:N1,1:N2,1:N3,I)
+          WRITE(25) (((SCR4(IX,J,K),IX=1,N1),J=1,N2),K=1,N3)
+
+        END DO
+      END DO
+
+      DEALLOCATE(SCR4)
+
+      CLOSE(25)
+
+      END

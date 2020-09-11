@@ -57,15 +57,18 @@ truevx, truevy, truevz = masclet.read_masclet.read_clus(it, path=os.path.join(ou
                                                         output_pres=False, output_pot=False,
                                                         output_temp=False, output_metalicity=False, output_cr0amr=False,
                                                         output_solapst=False)
-solapst = masclet.read_masclet.read_npz_field('solapst_bool' + '{:05d}'.format(it), solapst_path)
-solapst[0] = np.ones(truevx[0].shape, dtype='bool')
+# for the usual solapst
+# solapst = masclet.read_masclet.read_npz_field('solapst_bool' + '{:05d}'.format(it), solapst_path)
+# solapst[0] = np.ones(truevx[0].shape, dtype='bool')
 
 div, rotx, roty, rotz, scalarpot, vecpotx, vecpoty, vecpotz, vx, vy, vz, velcompx, velcompy, velcompz, velrotx, \
-velroty, velrotz = masclet.read_masclet.read_vortex(it, path=os.path.join(output_path, 'output_files'),
-                                                    grids_path=os.path.join(output_path, 'simu_masclet'),
-                                                    parameters_path=output_path,
-                                                    digits=5, are_divrot=True, are_potentials=True, are_velocities=True,
-                                                    verbose=False)
+velroty, velrotz, solapst = masclet.read_masclet.read_vortex(it, path=os.path.join(output_path, 'output_files'),
+                                                             grids_path=os.path.join(output_path, 'simu_masclet'),
+                                                             parameters_path=output_path,
+                                                             digits=5, are_divrot=True, are_potentials=True,
+                                                             are_velocities=True,
+                                                             is_solapst=True, verbose=False)
+solapst[0] = np.ones(truevx[0].shape, dtype='bool')
 
 # test velocities
 # first assert the written total velocities are the original ones
@@ -83,7 +86,7 @@ for l in range(maxl + 1):
         maxipatch = 0
     else:
         minipatch = npatch[0:l].sum() + 1
-        maxipatch = npatch[0:l+1].sum()
+        maxipatch = npatch[0:l + 1].sum()
 
     if use_solapst:
         solapst_l = np.concatenate([a.flatten() for a in solapst[minipatch:maxipatch + 1]])

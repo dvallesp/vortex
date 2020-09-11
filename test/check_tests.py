@@ -63,7 +63,7 @@ velroty, velrotz = masclet.read_masclet.read_vortex(mockit, path=os.path.join(ou
                                                     grids_path=os.path.join(output_path, 'simu_masclet'),
                                                     parameters_path=output_path,
                                                     digits=5, are_divrot=True, are_potentials=True, are_velocities=True,
-                                                    verbose=False)
+                                                    is_solapst=False, verbose=False)
 
 # test divergence
 ediv = {}
@@ -186,7 +186,7 @@ velroty, velrotz = masclet.read_masclet.read_vortex(mockit, path=os.path.join(ou
                                                     grids_path=os.path.join(output_path, 'simu_masclet'),
                                                     parameters_path=output_path,
                                                     digits=5, are_divrot=True, are_potentials=True, are_velocities=True,
-                                                    verbose=False)
+                                                    is_solapst=False, verbose=False)
 
 # test rotational
 ediv = {}
@@ -321,7 +321,7 @@ velroty, velrotz = masclet.read_masclet.read_vortex(mockit, path=os.path.join(ou
                                                     grids_path=os.path.join(output_path, 'simu_masclet'),
                                                     parameters_path=output_path,
                                                     digits=5, are_divrot=True, are_potentials=True, are_velocities=True,
-                                                    verbose=False)
+                                                    is_solapst=False, verbose=False)
 
 # test divergence
 ediv = {}

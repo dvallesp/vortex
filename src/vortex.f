@@ -72,6 +72,15 @@
        REAL*4 U14P(0:NAMRX+1,0:NAMRY+1,0:NAMRZ+1,NPALEV)
        COMMON /VELOC_P/ U2P,U3P,U4P,U12P,U13P,U14P
 
+*      to save the original velocities and reuse U2, U3, ...
+       REAL*4 UORI2(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
+       REAL*4 UORI3(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
+       REAL*4 UORI4(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
+       REAL*4 UORI12(0:NAMRX+1,0:NAMRY+1,0:NAMRZ+1,NPALEV)
+       REAL*4 UORI13(0:NAMRX+1,0:NAMRY+1,0:NAMRZ+1,NPALEV)
+       REAL*4 UORI14(0:NAMRX+1,0:NAMRY+1,0:NAMRZ+1,NPALEV)
+       COMMON /VELOC_ORIGINAL/ UORI2,UORI3,UORI4,UORI12,UORI13,UORI14
+
        REAL*4 ROTAX_0(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
        REAL*4 ROTAY_0(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
        REAL*4 ROTAZ_0(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
@@ -84,12 +93,14 @@
        REAL*4 DIVER(0:NAMRX+1,0:NAMRY+1,0:NAMRZ+1,NPALEV)
        COMMON /DIVERGENCE/ DIVER0, DIVER
 
+       INTEGER SOLAPST_VORTEX(NAMRX,NAMRY,NAMRZ,NPALEV)
+
        INTEGER II,JJ,KK1,KK2,KK,IT
        INTEGER FLAG_VERBOSE, FLAG_W_DIVROT, FLAG_W_POTENTIALS,
-     &         FLAG_W_VELOCITIES
+     &         FLAG_W_VELOCITIES, FLAG_W_SOLAPST
        LOGICAL FILE_EXISTS
        COMMON /FLAGS/ FLAG_VERBOSE, FLAG_W_DIVROT, FLAG_W_POTENTIALS,
-     &                FLAG_W_VELOCITIES
+     &                FLAG_W_VELOCITIES, FLAG_W_SOLAPST
        REAL*4 ZETA,LIM,BAS
        INTEGER N1,N2,N3,NTOT,AXIS,VAR
 
@@ -155,7 +166,7 @@
        READ(1,*) PRECIS, MAXIT
        READ(1,*)
        READ(1,*) FLAG_VERBOSE, FLAG_W_DIVROT, FLAG_W_POTENTIALS,
-     &           FLAG_W_VELOCITIES
+     &           FLAG_W_VELOCITIES, FLAG_W_SOLAPST
 
        CLOSE(1)
 
@@ -753,6 +764,44 @@
      &                             NPATCH, PATCHNX,PATCHNY,PATCHNZ)
         END IF
 
+*       We backup the original velocities in UORI
+
+!$OMP PARALLEL DO SHARED(NX,NY,NZ,U2,U3,U4,UORI2,UORI3,UORI4),
+!$OMP+            PRIVATE(I,J,K)
+       DO K=1, NZ
+       DO J=1, NY
+       DO I=1, NX
+         UORI2(I,J,K)=U2(I,J,K)
+         UORI3(I,J,K)=U3(I,J,K)
+         UORI4(I,J,K)=U4(I,J,K)
+       END DO
+       END DO
+       END DO
+
+       DO IR=1,NL
+        LOW1=SUM(NPATCH(0:IR-1))+1
+        LOW2=SUM(NPATCH(0:IR))
+!$OMP PARALLEL DO SHARED(PATCHNX,PATCHNY,PATCHNZ,LOW1,LOW2,
+!$OMP+                   U12,U13,U14,UORI12,UORI13,UORI14),
+!$OMP+            PRIVATE(IX,JY,KZ,N1,N2,N3,I)
+        DO I=LOW1,LOW2
+        N1=PATCHNX(I)
+        N2=PATCHNY(I)
+        N3=PATCHNZ(I)
+        DO KZ=1, N3
+        DO JY=1, N2
+        DO IX=1, N1
+           UORI12(IX,JY,KZ,I)=U12(IX,JY,KZ,I)
+           UORI13(IX,JY,KZ,I)=U13(IX,JY,KZ,I)
+           UORI14(IX,JY,KZ,I)=U14(IX,JY,KZ,I)
+        END DO
+        END DO
+        END DO
+
+        END DO
+        END DO
+*       END backuping original velocities
+
         WRITE(*,*) '...Differencing the potentials...'
 *     We compute the -grad(PHI)  ---> we get (U2P,U3P,U4P)
 *     PHI NOW IS IN DIVER0 AND DIVER!!!
@@ -855,8 +904,20 @@
      &                          NPATCH, PATCHNX,PATCHNY,PATCHNZ)
         END IF
 
+        ! compute the solapst based on velocity reconstruction error
+        CALL VEINSGRID_VORTEX(NL,NPATCH,PARE,PATCHNX,PATCHNY,PATCHNZ,
+     &                        PATCHX,PATCHY,PATCHZ,PATCHRX,PATCHRY,
+     &                        PATCHRZ,SOLAPST_VORTEX)
 
-*////////////////////////////////////
+        IF (FLAG_W_SOLAPST.EQ.1) THEN
+          CALL WRITE_SOLAPST(FILERR5,NX,NY,NZ,ITER,T,ZETA,NL,NPATCH,
+     &                       PATCHNX,PATCHNY,PATCHNZ,SOLAPST_VORTEX)
+        END IF
+
+        write(*,*) minval(SOLAPST_VORTEX(:,:,:,1:SUM(NPATCH(0:NL)))),
+     &             maxval(SOLAPST_VORTEX(:,:,:,1:SUM(NPATCH(0:NL))))
+
+*//////////////////////////////////// ! DO IFI=1,NFILE
        END DO
 *////////////////////////////////////
 
@@ -874,3 +935,4 @@
       INCLUDE 'poisson.f'
       INCLUDE 'reader.f'
       INCLUDE 'writer.f'
+      INCLUDE 'overlaps.f'
