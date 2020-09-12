@@ -110,16 +110,16 @@
          BAS = BAS1 + BAS2 + BAS3
 
          IF(BAS.NE.0.0) THEN
-           BAS1 = ABS(BAS1 / BAS * U2P(I,J,K))
-           BAS2 = ABS(BAS2 / BAS * U3P(I,J,K))
-           BAS3 = ABS(BAS3 / BAS * U4P(I,J,K))
+           BAS1 = (BAS1 / BAS * U2P(I,J,K)) ** 2
+           BAS2 = (BAS2 / BAS * U3P(I,J,K)) ** 2
+           BAS3 = (BAS3 / BAS * U4P(I,J,K)) ** 2
          ELSE
            BAS1 = 0
            BAS2 = 0
            BAS3 = 0
          END IF
 
-         ERR0(I,J,K) = BAS1 + BAS2 + BAS3
+         ERR0(I,J,K) = SQRT(BAS1 + BAS2 + BAS3)
        END DO
        END DO
        END DO
@@ -143,16 +143,16 @@
            BAS = BAS1 + BAS2 + BAS3
 
            IF(BAS.NE.0) THEN
-             BAS1 = ABS(BAS1 / BAS * U12P(IX,JY,KZ,I))
-             BAS2 = ABS(BAS2 / BAS * U13P(IX,JY,KZ,I))
-             BAS3 = ABS(BAS3 / BAS * U14P(IX,JY,KZ,I))
+             BAS1 = (BAS1 / BAS * U12P(IX,JY,KZ,I)) ** 2
+             BAS2 = (BAS2 / BAS * U13P(IX,JY,KZ,I)) ** 2
+             BAS3 = (BAS3 / BAS * U14P(IX,JY,KZ,I)) ** 2
            ELSE
              BAS1 = 0
              BAS2 = 0
              BAS3 = 0
            END IF
 
-           ERR1(IX,JY,KZ,I) = BAS1 + BAS2 + BAS3
+           ERR1(IX,JY,KZ,I) = SQRT(BAS1 + BAS2 + BAS3)
          END DO
          END DO
          END DO
