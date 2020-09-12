@@ -112,9 +112,10 @@ for l in range(maxl + 1):
     velrecy_l = velcompy_l + velroty_l
     velrecz_l = velcompz_l + velrotz_l
 
-    ev[l] = [np.percentile((vx_l / v_l) ** 2 * np.abs(velrecx_l / vx_l - 1) +
-                           (vy_l / v_l) ** 2 * np.abs(velrecy_l / vy_l - 1) +
-                           (vz_l / v_l) ** 2 * np.abs(velrecz_l / vz_l - 1), perc) for perc in percentiles]
+    ev[l] = [np.percentile(np.sqrt(((vx_l / v_l) ** 2 * np.abs(velrecx_l / vx_l - 1)) ** 2 +
+                                   ((vy_l / v_l) ** 2 * np.abs(velrecy_l / vy_l - 1)) ** 2 +
+                                   ((vz_l / v_l) ** 2 * np.abs(velrecz_l / vz_l - 1)) ** 2),
+                           perc) for perc in percentiles]
     frac_vcomp[l] = [np.percentile(velcomp_l / v_l, perc) for perc in percentiles]
     frac_vrot[l] = [np.percentile(velrot_l / v_l, perc) for perc in percentiles]
 

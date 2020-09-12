@@ -128,12 +128,10 @@ for l in range(maxl + 1):
     velrecy_l = velcompy_l + velroty_l
     velrecz_l = velcompz_l + velrotz_l
 
-    # ev[l] = [np.mean([np.percentile(np.abs(velrecx_l / vx_l - 1), perc),
-    #                  np.percentile(np.abs(velrecy_l / vy_l - 1), perc),
-    #                  np.percentile(np.abs(velrecz_l / vz_l - 1), perc)]) for perc in percentiles]
-    ev[l] = [np.percentile((vx_l / v_l) ** 2 * np.abs(velrecx_l / vx_l - 1) +
-                           (vy_l / v_l) ** 2 * np.abs(velrecy_l / vy_l - 1) +
-                           (vz_l / v_l) ** 2 * np.abs(velrecz_l / vz_l - 1), perc) for perc in percentiles]
+    ev[l] = [np.percentile(np.sqrt(((vx_l / v_l) ** 2 * np.abs(velrecx_l / vx_l - 1)) ** 2 +
+                                   ((vy_l / v_l) ** 2 * np.abs(velrecy_l / vy_l - 1)) ** 2 +
+                                   ((vz_l / v_l) ** 2 * np.abs(velrecz_l / vz_l - 1)) ** 2),
+                           perc) for perc in percentiles]
     frac_vcomp[l] = [np.percentile(velcomp_l / v_l, perc) for perc in percentiles]
     frac_vrot[l] = [np.percentile(velrot_l / v_l, perc) for perc in percentiles]
 
@@ -251,10 +249,9 @@ for l in range(maxl + 1):
     velrecy_l = velcompy_l + velroty_l
     velrecz_l = velcompz_l + velrotz_l
 
-    # ev[l] = [np.mean([np.percentile(np.abs(velrecx_l / vx_l - 1), perc),
-    #                  np.percentile(np.abs(velrecy_l / vy_l - 1), perc)]) for perc in percentiles]
-    ev[l] = [np.percentile((vx_l / v_l) ** 2 * np.abs(velrecx_l / vx_l - 1) +
-                           (vy_l / v_l) ** 2 * np.abs(velrecy_l / vy_l - 1), perc) for perc in percentiles]
+    ev[l] = [np.percentile(np.sqrt(((vx_l / v_l) ** 2 * np.abs(velrecx_l / vx_l - 1)) ** 2 +
+                                   ((vy_l / v_l) ** 2 * np.abs(velrecy_l / vy_l - 1)) ** 2),
+                           perc) for perc in percentiles]
     frac_vcomp[l] = [np.percentile(velcomp_l / v_l, perc) for perc in percentiles]
     frac_vrot[l] = [np.percentile(velrot_l / v_l, perc) for perc in percentiles]
 
@@ -395,25 +392,19 @@ for l in range(maxl + 1):
     velrecy_l = velcompy_l + velroty_l
     velrecz_l = velcompz_l + velrotz_l
 
-    # ev[l] = [np.mean([np.percentile(np.abs(velrecx_l / vx_l - 1), perc),
-    #                  np.percentile(np.abs(velrecy_l / vy_l - 1), perc),
-    #                  np.percentile(np.abs(velrecz_l / vz_l - 1), perc)]) for perc in percentiles]
-    ev[l] = [np.percentile((vx_l / v_l) ** 2 * np.abs(velrecx_l / vx_l - 1) +
-                           (vy_l / v_l) ** 2 * np.abs(velrecy_l / vy_l - 1) +
-                           (vz_l / v_l) ** 2 * np.abs(velrecz_l / vz_l - 1), perc) for perc in percentiles]
-    # evcomp[l] = [np.mean([np.percentile(np.abs(velcompx_l / truevelcompx_l - 1), perc),
-    #                      np.percentile(np.abs(velcompy_l / truevelcompy_l - 1), perc),
-    #                      np.percentile(np.abs(velcompz_l / truevelcompz_l - 1), perc)]) for perc in percentiles]
-    evcomp[l] = [np.percentile((truevelcompx_l / truevelcomp_l) ** 2 * np.abs(velcompx_l / truevelcompx_l - 1) +
-                               (truevelcompx_l / truevelcomp_l) ** 2 * np.abs(velcompy_l / truevelcompy_l - 1) +
-                               (truevelcompx_l / truevelcomp_l) ** 2 * np.abs(velcompz_l / truevelcompz_l - 1),
+    ev[l] = [np.percentile(np.sqrt(((vx_l / v_l) ** 2 * np.abs(velrecx_l / vx_l - 1)) ** 2 +
+                                   ((vy_l / v_l) ** 2 * np.abs(velrecy_l / vy_l - 1)) ** 2 +
+                                   ((vz_l / v_l) ** 2 * np.abs(velrecz_l / vz_l - 1)) ** 2),
+                           perc) for perc in percentiles]
+
+    evcomp[l] = [np.percentile(np.sqrt(((truevelcompx_l / truevelcomp_l) ** 2 * np.abs(velcompx_l / truevelcompx_l - 1)) ** 2 +
+                                       ((truevelcompx_l / truevelcomp_l) ** 2 * np.abs(velcompy_l / truevelcompy_l - 1)) ** 2 +
+                                       ((truevelcompx_l / truevelcomp_l) ** 2 * np.abs(velcompz_l / truevelcompz_l - 1)) ** 2),
                                perc) for perc in percentiles]
-    # evrot[l] = [np.mean([np.percentile(np.abs(velrotx_l / truevelrotx_l - 1), perc),
-    #                     np.percentile(np.abs(velroty_l / truevelroty_l - 1), perc),
-    #                     np.percentile(np.abs(velrotz_l / truevelrotz_l - 1), perc)]) for perc in percentiles]
-    evrot[l] = [np.percentile((truevelrotx_l / truevelrot_l) ** 2 * np.abs(velrotx_l / truevelrotx_l - 1) +
-                              (truevelrotx_l / truevelrot_l) ** 2 * np.abs(velroty_l / truevelroty_l - 1) +
-                              (truevelrotx_l / truevelrot_l) ** 2 * np.abs(velrotz_l / truevelrotz_l - 1),
+
+    evrot[l] = [np.percentile(np.sqrt(((truevelrotx_l / truevelrot_l) ** 2 * np.abs(velrotx_l / truevelrotx_l - 1)) ** 2 +
+                                      ((truevelrotx_l / truevelrot_l) ** 2 * np.abs(velroty_l / truevelroty_l - 1)) ** 2 +
+                                      ((truevelrotx_l / truevelrot_l) ** 2 * np.abs(velrotz_l / truevelrotz_l - 1)) ** 2),
                               perc) for perc in percentiles]
 
     print('* At level {}, percentiles: '.format(l), percentiles)
