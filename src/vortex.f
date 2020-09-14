@@ -905,17 +905,20 @@
         END IF
 
         ! compute the solapst based on velocity reconstruction error
-        CALL VEINSGRID_VORTEX(NL,NPATCH,PARE,PATCHNX,PATCHNY,PATCHNZ,
-     &                        PATCHX,PATCHY,PATCHZ,PATCHRX,PATCHRY,
-     &                        PATCHRZ,SOLAPST_VORTEX)
-
         IF (FLAG_W_SOLAPST.EQ.1) THEN
+          CALL VEINSGRID_VORTEX(NL,NPATCH,PARE,PATCHNX,PATCHNY,PATCHNZ,
+     &                          PATCHX,PATCHY,PATCHZ,PATCHRX,PATCHRY,
+     &                          PATCHRZ,SOLAPST_VORTEX)
+
+
           CALL WRITE_SOLAPST(FILERR5,NX,NY,NZ,ITER,T,ZETA,NL,NPATCH,
      &                       PATCHNX,PATCHNY,PATCHNZ,SOLAPST_VORTEX)
-        END IF
 
-        write(*,*) minval(SOLAPST_VORTEX(:,:,:,1:SUM(NPATCH(0:NL)))),
-     &             maxval(SOLAPST_VORTEX(:,:,:,1:SUM(NPATCH(0:NL))))
+
+          write(*,*) minval(SOLAPST_VORTEX(:,:,:,1:SUM(NPATCH(0:NL)))),
+     &               maxval(SOLAPST_VORTEX(:,:,:,1:SUM(NPATCH(0:NL))))
+
+        END IF
 
 *//////////////////////////////////// ! DO IFI=1,NFILE
        END DO
