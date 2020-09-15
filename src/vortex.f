@@ -342,6 +342,21 @@
         CALL ROTARY(NX,NY,NZ,NL,NPATCH,PARE,PATCHNX,PATCHNY,PATCHNZ,
      &              PATCHX,PATCHY,PATCHZ,PATCHRX,PATCHRY,PATCHRZ)
 
+        WRITE(*,*) 'Computation ends!'
+
+        WRITE(*,*) 'Computing velocity divergence...'
+
+        CALL DIVER_FINA(NX,NY,NZ,NL,NPATCH,PARE,PATCHNX,
+     &                  PATCHNY,PATCHNZ,PATCHX,PATCHY,
+     &                  PATCHZ,PATCHRX,PATCHRY,PATCHRZ)
+
+        WRITE(*,*) 'Computation ends!'
+
+*       Correct the values of the diff operators in the boundaries
+*       by interpolation from the most refined coarser grid.
+        CALL CORRECT_SOURCE_BOUNDARIES(NL,NX,NY,NZ,NPATCH,
+     &           PATCHNX,PATCHNY,PATCHNZ)
+
         IF (FLAG_VERBOSE.EQ.1) THEN
           write(*,*) 'rotational: min and max values'
           write(*,*) minval(rotax_0),minval(rotax_1)
@@ -350,23 +365,10 @@
           write(*,*) maxval(rotay_0),maxval(rotay_1)
           write(*,*) minval(rotaz_0),minval(rotaz_1)
           write(*,*) maxval(rotaz_0),maxval(rotaz_1)
-        END IF
-
-
-        WRITE(*,*) 'Computation ends!'
-
-        WRITE(*,*) 'Computing velocity divergence...'
-        CALL DIVER_FINA(NX,NY,NZ,NL,NPATCH,PARE,PATCHNX,
-     &                  PATCHNY,PATCHNZ,PATCHX,PATCHY,
-     &                  PATCHZ,PATCHRX,PATCHRY,PATCHRZ)
-
-        IF (FLAG_VERBOSE.EQ.1) THEN
           write(*,*) 'divergence: min and max values'
           write(*,*) minval(diver0),minval(diver)
           write(*,*) maxval(diver0),maxval(diver)
         END IF
-
-        WRITE(*,*) 'Computation ends!'
 
         IF (FLAG_W_DIVROT.EQ.1) THEN
           CALL WRITE_DIVROT(FILERR5,NX,NY,NZ,ITER,T,ZETA,NL,NPATCH,
@@ -417,7 +419,7 @@
       END DO
       END DO
 
-      WRITE(*,*) 'Vector potential'
+      WRITE(*,*) 'Vector potential: x component'
 **     SOURCE=-ROTAX_0
 !$OMP PARALLEL DO SHARED(NX,NY,NZ,U1,ROTAX_0),
 !$OMP+            PRIVATE(I,J,K)
@@ -441,6 +443,7 @@
       END DO
       END DO
 
+      WRITE(*,*) 'Vector potential: y component'
 **     SOURCE=-ROTAY_0
 !$OMP PARALLEL DO SHARED(NX,NY,NZ,U1,ROTAY_0),
 !$OMP+            PRIVATE(I,J,K)
@@ -464,6 +467,7 @@
       END DO
       END DO
 
+      WRITE(*,*) 'Vector potential: z component'
 **     SOURCE=-ROTAZ_0
 !$OMP PARALLEL DO SHARED(NX,NY,NZ,U1,ROTAZ_0),
 !$OMP+            PRIVATE(I,J,K)
@@ -559,8 +563,8 @@
        END DO
        END DO
 
-       WRITE(*,*) 'Vector potential'
 ** 2ND CALL:
+       WRITE(*,*) 'Vector potential: x component'
 !$OMP PARALLEL DO SHARED(NX,NY,NZ,POT,ROTAX_0),
 !$OMP+            PRIVATE(I,J,K)
        DO K=0, NZ+1
@@ -621,6 +625,7 @@
        END DO
 
 * 3RD CALL:
+       WRITE(*,*) 'Vector potential: y component'
 !$OMP PARALLEL DO SHARED(NX,NY,NZ,POT,ROTAY_0),
 !$OMP+            PRIVATE(I,J,K)
        DO K=0, NZ+1
@@ -682,6 +687,7 @@
        END DO
 
 * 4TH CALL:
+       WRITE(*,*) 'Vector potential: z component'
 !$OMP PARALLEL DO SHARED(NX,NY,NZ,POT,ROTAZ_0),
 !$OMP+            PRIVATE(I,J,K)
        DO K=0, NZ+1
@@ -844,18 +850,6 @@
         END DO
         END DO
 
-**       !!!! Writing compressional (parallel) velocity component
-        IF (FLAG_VERBOSE.EQ.1) THEN
-          WRITE(*,*) '...Compressional velocity...'
-          WRITE(*,*) MINVAL(U2P),MINVAL(U12P)
-          WRITE(*,*) MAXVAL(U2P),MAXVAL(U12P)
-          WRITE(*,*) MINVAL(U3P),MINVAL(U13P)
-          WRITE(*,*) MAXVAL(U3P),MAXVAL(U13P)
-          WRITE(*,*) MINVAL(U4P),MINVAL(U14P)
-          WRITE(*,*) MAXVAL(U4P),MAXVAL(U14P)
-        END IF
-
-
 **     We compute the rotational of (rotax,rotay,rotaz) ---> we get (U2R,U3R,U4R)
 *      Note that we lose the original velocities (U2, U3, U4), as we overwrite them
 
@@ -887,7 +881,19 @@
        CALL ROTARY(NX,NY,NZ,NL,NPATCH,PARE,PATCHNX,PATCHNY,PATCHNZ,
      &             PATCHX,PATCHY,PATCHZ,PATCHRX,PATCHRY,PATCHRZ)
 
+*       Correct the values of the velocities in the boundaries
+*       by interpolation from the most refined coarser grid.
+       CALL CORRECT_VELOCITY_BOUNDARIES(NL,NX,NY,NZ,NPATCH,
+     &                                  PATCHNX,PATCHNY,PATCHNZ)
+
         IF (FLAG_VERBOSE.EQ.1) THEN
+          WRITE(*,*) '...Compressional velocity...'
+          WRITE(*,*) MINVAL(U2P),MINVAL(U12P)
+          WRITE(*,*) MAXVAL(U2P),MAXVAL(U12P)
+          WRITE(*,*) MINVAL(U3P),MINVAL(U13P)
+          WRITE(*,*) MAXVAL(U3P),MAXVAL(U13P)
+          WRITE(*,*) MINVAL(U4P),MINVAL(U14P)
+          WRITE(*,*) MAXVAL(U4P),MAXVAL(U14P)
           WRITE(*,*) '...Rotational velocity...'
           WRITE(*,*) MINVAL(ROTAX_0),MINVAL(ROTAX_1)
           WRITE(*,*) MAXVAL(ROTAX_0),MAXVAL(ROTAX_1)
@@ -939,3 +945,4 @@
       INCLUDE 'reader.f'
       INCLUDE 'writer.f'
       INCLUDE 'overlaps.f'
+      INCLUDE 'boundaries.f'
