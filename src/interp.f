@@ -128,7 +128,8 @@
      &     MAX(1.E-30,ABS(MIN(U(3,2,2),U(1,2,2))))
 
       IF ((DXMIN*DXMAS).GT.0.0) THEN
-       DXX=MIN(ABS(DXCEN),ABS(DXMIN),ABS(DXMAS))
+       !DXX=MIN(ABS(DXCEN),ABS(DXMIN),ABS(DXMAS))
+       DXX = ABS(DXCEN) !! change DV: use always centered differences
        SIGNO=1.0
        IF (DXCEN.LT.0.0) SIGNO=-1.0
        DXX=DXX*SIGNO
@@ -146,7 +147,8 @@
      &     MAX(1.E-30,ABS(MIN(U(2,3,2),U(2,1,2))))
 
       IF ((DYMIN*DYMAS).GT.0.0) THEN
-       DYY=MIN(ABS(DYCEN),ABS(DYMIN),ABS(DYMAS))
+       !DYY=MIN(ABS(DYCEN),ABS(DYMIN),ABS(DYMAS))
+       DYY = ABS(DYCEN) !! change DV: use always centered differences
        SIGNO=1.0
        IF (DYCEN.LT.0.0) SIGNO=-1.0
        DYY=DYY*SIGNO
@@ -164,7 +166,8 @@
      &     MAX(1.E-30,ABS(MIN(U(2,2,3),U(2,2,1))))
 
       IF ((DZMIN*DZMAS).GT.0.0) THEN
-       DZZ=MIN(ABS(DZCEN),ABS(DZMIN),ABS(DZMAS))
+       !DZZ=MIN(ABS(DZCEN),ABS(DZMIN),ABS(DZMAS))
+       DZZ = ABS(DZCEN) !! change DV: use always centered differences
        SIGNO=1.0
        IF (DZCEN.LT.0.0) SIGNO=-1.0
        DZZ=DZZ*SIGNO
