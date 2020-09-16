@@ -937,7 +937,7 @@
 *********************************************************************
 
       !!!! code functions
-      INCLUDE 'diff.f'
+      INCLUDE 'diff_ho.f' ! diff.f for first order
       INCLUDE 'nomfile.f'
       INCLUDE 'grids.f'
       INCLUDE 'interp.f'
