@@ -90,17 +90,17 @@
 * X
         bas32 = 0.0
         bas42 = 0.0
-        if(ix.ge.4.and.ix.le.n1-3) then
+        if (ix.ge.5.and.ix.le.n1-4) then
          do idx=-4,4
            bas32 = bas32 + coef4(idx) * u13(ix+idx,jy,kz,i)
            bas42 = bas42 + coef4(idx) * u14(ix+idx,jy,kz,i)
          end do
-        else if (ix.ge.3.and.ix.le.n1-2) then
+        else if (ix.ge.4.and.ix.le.n1-3) then
          do idx=-3,3
            bas32 = bas32 + coef3(idx) * u13(ix+idx,jy,kz,i)
            bas42 = bas42 + coef3(idx) * u14(ix+idx,jy,kz,i)
          end do
-        else if (ix.ge.2.and.ix.le.n1-1) then
+        else if (ix.ge.3.and.ix.le.n1-2) then
          do idx=-2,2
            bas32 = bas32 + coef2(idx) * u13(ix+idx,jy,kz,i)
            bas42 = bas42 + coef2(idx) * u14(ix+idx,jy,kz,i)
@@ -117,17 +117,17 @@
 * Y
         bas23 = 0.0
         bas43 = 0.0
-        if(jy.ge.4.and.jy.le.n2-3) then
+        if (jy.ge.5.and.jy.le.n2-4) then
          do idx=-4,4
            bas23 = bas23 + coef4(idx) * u12(ix,jy+idx,kz,i)
            bas43 = bas43 + coef4(idx) * u14(ix,jy+idx,kz,i)
          end do
-        else if (jy.ge.3.and.jy.le.n2-2) then
+        else if (jy.ge.4.and.jy.le.n2-3) then
          do idx=-3,3
            bas23 = bas23 + coef3(idx) * u12(ix,jy+idx,kz,i)
            bas43 = bas43 + coef3(idx) * u14(ix,jy+idx,kz,i)
          end do
-        else if (jy.ge.2.and.jy.le.n2-1) then
+        else if (jy.ge.3.and.jy.le.n2-2) then
          do idx=-2,2
            bas23 = bas23 + coef2(idx) * u12(ix,jy+idx,kz,i)
            bas43 = bas43 + coef2(idx) * u14(ix,jy+idx,kz,i)
@@ -144,17 +144,17 @@
 * Z
         bas24 = 0.0
         bas34 = 0.0
-        if(kz.ge.4.and.kz.le.n3-3) then
+        if (kz.ge.5.and.kz.le.n3-4) then
          do idx=-4,4
            bas24 = bas24 + coef4(idx) * u12(ix,jy,kz+idx,i)
            bas34 = bas34 + coef4(idx) * u13(ix,jy,kz+idx,i)
          end do
-        else if (kz.ge.3.and.kz.le.n3-2) then
+        else if (kz.ge.4.and.kz.le.n3-3) then
          do idx=-3,3
            bas24 = bas24 + coef3(idx) * u12(ix,jy,kz+idx,i)
            bas34 = bas34 + coef3(idx) * u13(ix,jy,kz+idx,i)
          end do
-        else if (kz.ge.2.and.kz.le.n3-1) then
+        else if (kz.ge.3.and.kz.le.n3-2) then
          do idx=-2,2
            bas24 = bas24 + coef2(idx) * u12(ix,jy,kz+idx,i)
            bas34 = bas34 + coef2(idx) * u13(ix,jy,kz+idx,i)
@@ -192,17 +192,17 @@
 * X
        bas32 = 0.0
        bas42 = 0.0
-       if(ix.ge.4.and.ix.le.nx-3) then
+       if (ix.ge.5.and.ix.le.nx-4) then
         do idx=-4,4
           bas32 = bas32 + coef4(idx) * u3(ix+idx,jy,kz)
           bas42 = bas42 + coef4(idx) * u4(ix+idx,jy,kz)
         end do
-       else if (ix.ge.3.and.ix.le.nx-2) then
+       else if (ix.ge.4.and.ix.le.nx-3) then
         do idx=-3,3
           bas32 = bas32 + coef3(idx) * u3(ix+idx,jy,kz)
           bas42 = bas42 + coef3(idx) * u4(ix+idx,jy,kz)
         end do
-       else if (ix.ge.2.and.ix.le.nx-1) then
+       else if (ix.ge.3.and.ix.le.nx-2) then
         do idx=-2,2
           bas32 = bas32 + coef2(idx) * u3(ix+idx,jy,kz)
           bas42 = bas42 + coef2(idx) * u4(ix+idx,jy,kz)
@@ -219,17 +219,17 @@
 * Y
        bas23 = 0.0
        bas43 = 0.0
-       if(jy.ge.4.and.jy.le.ny-3) then
+       if (jy.ge.5.and.jy.le.ny-4) then
         do idx=-4,4
           bas23 = bas23 + coef4(idx) * u2(ix,jy+idx,kz)
           bas43 = bas43 + coef4(idx) * u4(ix,jy+idx,kz)
         end do
-       else if (jy.ge.3.and.jy.le.ny-2) then
+       else if (jy.ge.4.and.jy.le.ny-3) then
         do idx=-3,3
           bas23 = bas23 + coef3(idx) * u2(ix,jy+idx,kz)
           bas43 = bas43 + coef3(idx) * u4(ix,jy+idx,kz)
         end do
-       else if (jy.ge.2.and.jy.le.ny-1) then
+       else if (jy.ge.3.and.jy.le.ny-2) then
         do idx=-2,2
           bas23 = bas23 + coef2(idx) * u2(ix,jy+idx,kz)
           bas43 = bas43 + coef2(idx) * u4(ix,jy+idx,kz)
@@ -246,17 +246,17 @@
 * Z
        bas24 = 0.0
        bas34 = 0.0
-       if(kz.ge.4.and.kz.le.nz-3) then
+       if (kz.ge.5.and.kz.le.nz-4) then
         do idx=-4,4
           bas24 = bas24 + coef4(idx) * u2(ix,jy,kz+idx)
           bas34 = bas34 + coef4(idx) * u3(ix,jy,kz+idx)
         end do
-      else if (kz.ge.3.and.kz.le.nz-2) then
+      else if (kz.ge.4.and.kz.le.nz-3) then
         do idx=-3,3
           bas24 = bas24 + coef3(idx) * u2(ix,jy,kz+idx)
           bas34 = bas34 + coef3(idx) * u3(ix,jy,kz+idx)
         end do
-      else if (kz.ge.2.and.kz.le.nz-1) then
+      else if (kz.ge.3.and.kz.le.nz-2) then
         do idx=-2,2
           bas24 = bas24 + coef2(idx) * u2(ix,jy,kz+idx)
           bas34 = bas34 + coef2(idx) * u3(ix,jy,kz+idx)
@@ -368,15 +368,15 @@
 
 * X
        bas22 = 0.0
-       if(ix.ge.4.and.ix.le.n1-3) then
+       if (ix.ge.5.and.ix.le.n1-4) then
         do idx=-4,4
           bas22 = bas22 + coef4(idx) * u12(ix+idx,jy,kz,i)
         end do
-       else if (ix.ge.3.and.ix.le.n1-2) then
+       else if (ix.ge.4.and.ix.le.n1-3) then
         do idx=-3,3
           bas22 = bas22 + coef3(idx) * u12(ix+idx,jy,kz,i)
         end do
-       else if (ix.ge.2.and.ix.le.n1-1) then
+       else if (ix.ge.3.and.ix.le.n1-2) then
         do idx=-2,2
           bas22 = bas22 + coef2(idx) * u12(ix+idx,jy,kz,i)
         end do
@@ -389,15 +389,15 @@
 
 * Y
        bas33 = 0.0
-       if(jy.ge.4.and.jy.le.n2-3) then
+       if (jy.ge.5.and.jy.le.n2-4) then
         do idx=-4,4
           bas33 = bas33 + coef4(idx) * u13(ix,jy+idx,kz,i)
         end do
-      else if (jy.ge.3.and.jy.le.n2-2) then
+      else if (jy.ge.4.and.jy.le.n2-3) then
         do idx=-3,3
           bas33 = bas33 + coef3(idx) * u13(ix,jy+idx,kz,i)
         end do
-      else if (jy.ge.2.and.jy.le.n2-1) then
+      else if (jy.ge.3.and.jy.le.n2-2) then
         do idx=-2,2
           bas33 = bas33 + coef2(idx) * u13(ix,jy+idx,kz,i)
         end do
@@ -410,15 +410,15 @@
 
 * Z
        bas44 = 0.0
-       if(kz.ge.4.and.kz.le.n3-3) then
+       if (kz.ge.5.and.kz.le.n3-4) then
         do idx=-4,4
           bas44 = bas44 + coef4(idx) * u14(ix,jy,kz+idx,i)
         end do
-       else if (kz.ge.3.and.kz.le.n3-2) then
+       else if (kz.ge.4.and.kz.le.n3-3) then
         do idx=-3,3
           bas44 = bas44 + coef3(idx) * u14(ix,jy,kz+idx,i)
         end do
-       else if (kz.ge.2.and.kz.le.n3-1) then
+       else if (kz.ge.3.and.kz.le.n3-2) then
         do idx=-2,2
           bas44 = bas44 + coef2(idx) * u14(ix,jy,kz+idx,i)
         end do
@@ -448,15 +448,15 @@
 
 * X
         bas22 = 0.0
-        if(ix.ge.4.and.ix.le.nx-3) then
+        if (ix.ge.5.and.ix.le.nx-4) then
          do idx=-4,4
            bas22 = bas22 + coef4(idx) * u2(ix+idx,jy,kz)
          end do
-        else if (ix.ge.3.and.ix.le.nx-2) then
+        else if (ix.ge.4.and.ix.le.nx-3) then
          do idx=-3,3
            bas22 = bas22 + coef3(idx) * u2(ix+idx,jy,kz)
          end do
-        else if (ix.ge.2.and.ix.le.nx-1) then
+        else if (ix.ge.3.and.ix.le.nx-2) then
          do idx=-2,2
            bas22 = bas22 + coef2(idx) * u2(ix+idx,jy,kz)
          end do
@@ -469,15 +469,15 @@
 
 * Y
         bas33 = 0.0
-        if(jy.ge.4.and.jy.le.ny-3) then
+        if (jy.ge.5.and.jy.le.ny-4) then
          do idx=-4,4
            bas33 = bas33 + coef4(idx) * u3(ix,jy+idx,kz)
          end do
-        else if (jy.ge.3.and.jy.le.ny-2) then
+        else if (jy.ge.4.and.jy.le.ny-3) then
          do idx=-3,3
            bas33 = bas33 + coef3(idx) * u3(ix,jy+idx,kz)
          end do
-        else if (jy.ge.2.and.jy.le.ny-1) then
+        else if (jy.ge.3.and.jy.le.ny-2) then
          do idx=-2,2
            bas33 = bas33 + coef2(idx) * u3(ix,jy+idx,kz)
          end do
@@ -490,15 +490,15 @@
 
 * Z
         bas44 = 0.0
-        if(kz.ge.4.and.kz.le.nz-3) then
+        if (kz.ge.5.and.kz.le.nz-4) then
          do idx=-4,4
            bas44 = bas44 + coef4(idx) * u4(ix,jy,kz+idx)
          end do
-        else if (kz.ge.3.and.kz.le.nz-2) then
+        else if (kz.ge.4.and.kz.le.nz-3) then
          do idx=-3,3
            bas44 = bas44 + coef3(idx) * u4(ix,jy,kz+idx)
          end do
-        else if (kz.ge.2.and.kz.le.nz-1) then
+        else if (kz.ge.3.and.kz.le.nz-2) then
          do idx=-2,2
            bas44 = bas44 + coef2(idx) * u4(ix,jy,kz+idx)
          end do
@@ -621,15 +621,15 @@
 
 * X
         bas22 = 0.0
-        if(ix.ge.4.and.ix.le.n1-3) then
+        if (ix.ge.5.and.ix.le.n1-4) then
          do idx=-4,4
            bas22 = bas22 + coef4(idx) * diver(ix+idx,jy,kz,i)
          end do
-        else if (ix.ge.3.and.ix.le.n1-2) then
+        else if (ix.ge.4.and.ix.le.n1-3) then
          do idx=-3,3
            bas22 = bas22 + coef3(idx) * diver(ix+idx,jy,kz,i)
          end do
-        else if (ix.ge.2.and.ix.le.n1-1) then
+        else if (ix.ge.3.and.ix.le.n1-2) then
          do idx=-2,2
            bas22 = bas22 + coef2(idx) * diver(ix+idx,jy,kz,i)
          end do
@@ -642,15 +642,15 @@
 
 * Y
         bas33 = 0.0
-        if(jy.ge.4.and.jy.le.n2-3) then
+        if (jy.ge.5.and.jy.le.n2-4) then
          do idx=-4,4
            bas33 = bas33 + coef4(idx) * diver(ix,jy+idx,kz,i)
          end do
-       else if (jy.ge.3.and.jy.le.n2-2) then
+       else if (jy.ge.4.and.jy.le.n2-3) then
          do idx=-3,3
            bas33 = bas33 + coef3(idx) * diver(ix,jy+idx,kz,i)
          end do
-       else if (jy.ge.2.and.jy.le.n2-1) then
+       else if (jy.ge.3.and.jy.le.n2-2) then
          do idx=-2,2
            bas33 = bas33 + coef2(idx) * diver(ix,jy+idx,kz,i)
          end do
@@ -663,15 +663,15 @@
 
 * Z
         bas44 = 0.0
-        if(kz.ge.4.and.kz.le.n3-3) then
+        if (kz.ge.5.and.kz.le.n3-4) then
          do idx=-4,4
            bas44 = bas44 + coef4(idx) * diver(ix,jy,kz+idx,i)
          end do
-        else if (kz.ge.3.and.kz.le.n3-2) then
+        else if (kz.ge.4.and.kz.le.n3-3) then
          do idx=-3,3
            bas44 = bas44 + coef3(idx) * diver(ix,jy,kz+idx,i)
          end do
-        else if (kz.ge.2.and.kz.le.n3-1) then
+        else if (kz.ge.3.and.kz.le.n3-2) then
          do idx=-2,2
            bas44 = bas44 + coef2(idx) * diver(ix,jy,kz+idx,i)
          end do
@@ -703,15 +703,15 @@
 
 * X
         bas22 = 0.0
-        if(ix.ge.4.and.ix.le.nx-3) then
+        if (ix.ge.5.and.ix.le.nx-4) then
          do idx=-4,4
            bas22 = bas22 + coef4(idx) * diver0(ix+idx,jy,kz)
          end do
-        else if (ix.ge.3.and.ix.le.nx-2) then
+        else if (ix.ge.4.and.ix.le.nx-3) then
          do idx=-3,3
            bas22 = bas22 + coef3(idx) * diver0(ix+idx,jy,kz)
          end do
-        else if (ix.ge.2.and.ix.le.nx-1) then
+        else if (ix.ge.3.and.ix.le.nx-2) then
          do idx=-2,2
            bas22 = bas22 + coef2(idx) * diver0(ix+idx,jy,kz)
          end do
@@ -724,15 +724,15 @@
 
 *  Y
         bas33 = 0.0
-        if(jy.ge.4.and.jy.le.ny-3) then
+        if (jy.ge.5.and.jy.le.ny-4) then
          do idx=-4,4
           bas33 = bas33 + coef4(idx) * diver0(ix,jy+idx,kz)
          end do
-        else if (jy.ge.3.and.jy.le.ny-2) then
+        else if (jy.ge.4.and.jy.le.ny-3) then
          do idx=-3,3
            bas33 = bas33 + coef3(idx) * diver0(ix,jy+idx,kz)
          end do
-        else if (jy.ge.2.and.jy.le.ny-1) then
+        else if (jy.ge.3.and.jy.le.ny-2) then
          do idx=-2,2
            bas33 = bas33 + coef2(idx) * diver0(ix,jy+idx,kz)
          end do
@@ -745,15 +745,15 @@
 
 * Z
         bas44 = 0.0
-        if(kz.ge.4.and.kz.le.nz-3) then
+        if (kz.ge.5.and.kz.le.nz-4) then
          do idx=-4,4
            bas44 = bas44 + coef4(idx) * diver0(ix,jy,kz+idx)
          end do
-        else if (kz.ge.3.and.kz.le.nz-2) then
+        else if (kz.ge.4.and.kz.le.nz-3) then
          do idx=-3,3
            bas44 = bas44 + coef3(idx) * diver0(ix,jy,kz+idx)
          end do
-        else if (kz.ge.2.and.kz.le.nz-1) then
+        else if (kz.ge.3.and.kz.le.nz-2) then
          do idx=-2,2
            bas44 = bas44 + coef2(idx) * diver0(ix,jy,kz+idx)
          end do
