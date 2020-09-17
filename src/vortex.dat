@@ -15,5 +15,5 @@ numero de nivels  ------------------------>
 9
 SOR presion parameter, SOR max iter ---------->
 1e-6,500
-flags_writing (1=yes; 0=no): verbose, write_divrot, write_potentials, write_velocities, write_solapst---------------->
-1,1,1,1,1
+flags_writing (1=yes; 0=no): verbose, write_divrot, write_potentials, write_velocities---------------->
+1,1,1,1

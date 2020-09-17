@@ -93,14 +93,12 @@
        REAL*4 DIVER(0:NAMRX+1,0:NAMRY+1,0:NAMRZ+1,NPALEV)
        COMMON /DIVERGENCE/ DIVER0, DIVER
 
-       INTEGER SOLAPST_VORTEX(NAMRX,NAMRY,NAMRZ,NPALEV)
-
        INTEGER II,JJ,KK1,KK2,KK,IT
        INTEGER FLAG_VERBOSE, FLAG_W_DIVROT, FLAG_W_POTENTIALS,
-     &         FLAG_W_VELOCITIES, FLAG_W_SOLAPST
+     &         FLAG_W_VELOCITIES
        LOGICAL FILE_EXISTS
        COMMON /FLAGS/ FLAG_VERBOSE, FLAG_W_DIVROT, FLAG_W_POTENTIALS,
-     &                FLAG_W_VELOCITIES, FLAG_W_SOLAPST
+     &                FLAG_W_VELOCITIES
        REAL*4 ZETA,LIM,BAS
        INTEGER N1,N2,N3,NTOT,AXIS,VAR
 
@@ -166,7 +164,7 @@
        READ(1,*) PRECIS, MAXIT
        READ(1,*)
        READ(1,*) FLAG_VERBOSE, FLAG_W_DIVROT, FLAG_W_POTENTIALS,
-     &           FLAG_W_VELOCITIES, FLAG_W_SOLAPST
+     &           FLAG_W_VELOCITIES
 
        CLOSE(1)
 
@@ -878,12 +876,13 @@
 
 *       Correct the values of the velocities in the boundaries
 *       by interpolation from the most refined coarser grid.
+
        CALL CORRECT_VELOCITY_BOUNDARIES(NL,NX,NY,NZ,NPATCH,
      &                                  PATCHNX,PATCHNY,PATCHNZ)
 
-       CALL VEINSGRID_VORTEX(NL,NPATCH,PARE,PATCHNX,PATCHNY,PATCHNZ,
+       CALL SYNC_AMR_VELOCITIES(NL,NPATCH,PARE,PATCHNX,PATCHNY,PATCHNZ,
      &                       PATCHX,PATCHY,PATCHZ,PATCHRX,PATCHRY,
-     &                       PATCHRZ,SOLAPST_VORTEX)
+     &                       PATCHRZ)
 
         IF (FLAG_VERBOSE.EQ.1) THEN
           WRITE(*,*) '...Compressional velocity...'
@@ -907,17 +906,6 @@
         IF (FLAG_W_VELOCITIES.EQ.1) THEN
           CALL WRITE_VELOCITIES(FILERR5,NX,NY,NZ,ITER,T,ZETA,NL,
      &                          NPATCH, PATCHNX,PATCHNY,PATCHNZ)
-        END IF
-
-        ! compute the solapst based on velocity reconstruction error
-        IF (FLAG_W_SOLAPST.EQ.1) THEN
-          CALL WRITE_SOLAPST(FILERR5,NX,NY,NZ,ITER,T,ZETA,NL,NPATCH,
-     &                       PATCHNX,PATCHNY,PATCHNZ,SOLAPST_VORTEX)
-
-
-          write(*,*) minval(SOLAPST_VORTEX(:,:,:,1:SUM(NPATCH(0:NL)))),
-     &               maxval(SOLAPST_VORTEX(:,:,:,1:SUM(NPATCH(0:NL))))
-
         END IF
 
 *//////////////////////////////////// ! DO IFI=1,NFILE

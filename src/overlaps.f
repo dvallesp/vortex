@@ -176,9 +176,8 @@
 
 
 ************************************************************************
-       SUBROUTINE VEINSGRID_VORTEX(NL,NPATCH,PARE,PATCHNX,PATCHNY,
-     &            PATCHNZ,PATCHX,PATCHY,PATCHZ,PATCHRX,PATCHRY,PATCHRZ,
-     &            SOLAP)
+       SUBROUTINE SYNC_AMR_VELOCITIES(NL,NPATCH,PARE,PATCHNX,PATCHNY,
+     &            PATCHNZ,PATCHX,PATCHY,PATCHZ,PATCHRX,PATCHRY,PATCHRZ)
 ************************************************************************
 
 *     modified VQ 23-4-2020, DV 23-4-2020
@@ -208,7 +207,6 @@
        INTEGER, ALLOCATABLE::NVECI(:)
        INTEGER NV,A2,B2,C2,K,LOW1, LOW2
 
-       INTEGER SOLAP(NAMRX,NAMRY,NAMRZ,NPALEV)
        INTEGER MARCA(NAMRX,NAMRY,NAMRZ,NPALEV)
 
        REAL*4 A1,B1,C1,RIV1,RIV2,RIV3
@@ -303,8 +301,6 @@
          N1=PATCHNX(I)
          N2=PATCHNY(I)
          N3=PATCHNZ(I)
-
-         SOLAP(:,:,:,I)=1
 
          NV=0
 
@@ -497,7 +493,6 @@
               JY=JJ-CORNYY1+CORNY1
               KZ=KK-CORNZZ1+CORNZ1
               IF (ERR1(IX,JY,KZ,I).LE.ERR1(II,JJ,KK,J)) THEN
-                SOLAP(II,JJ,KK,J) = 0
                 U12P(II,JJ,KK,J) = U12P(IX,JY,KZ,I)
                 U13P(II,JJ,KK,J) = U13P(IX,JY,KZ,I)
                 U14P(II,JJ,KK,J) = U14P(IX,JY,KZ,I)
@@ -508,7 +503,6 @@
                 U13(II,JJ,KK,J) = U13(IX,JY,KZ,I)
                 U14(II,JJ,KK,J) = U14(IX,JY,KZ,I)
               ELSE
-                SOLAP(IX,JY,KZ,I) = 0
                 U12P(IX,JY,KZ,I) = U12P(II,JJ,KK,J)
                 U13P(IX,JY,KZ,I) = U13P(II,JJ,KK,J)
                 U14P(IX,JY,KZ,I) = U14P(II,JJ,KK,J)
