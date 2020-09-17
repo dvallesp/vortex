@@ -61,9 +61,8 @@ truevx, truevy, truevz = masclet.read_masclet.read_clus(mockit, path=os.path.joi
 div, rotx, roty, rotz, scalarpot, vecpotx, vecpoty, vecpotz, vx, vy, vz, velcompx, velcompy, velcompz, velrotx, \
 velroty, velrotz = masclet.read_masclet.read_vortex(mockit, path=os.path.join(output_path, 'output_files'),
                                                     grids_path=os.path.join(output_path, 'simu_masclet'),
-                                                    parameters_path=output_path,
-                                                    digits=5, are_divrot=True, are_potentials=True, are_velocities=True,
-                                                    is_solapst=False, verbose=False)
+                                                    parameters_path=output_path, digits=5, are_divrot=True,
+                                                    are_potentials=True, are_velocities=True, verbose=False)
 
 # test divergence
 ediv = {}
@@ -182,9 +181,8 @@ truevx, truevy, truevz = masclet.read_masclet.read_clus(mockit, path=os.path.joi
 div, rotx, roty, rotz, scalarpot, vecpotx, vecpoty, vecpotz, vx, vy, vz, velcompx, velcompy, velcompz, velrotx, \
 velroty, velrotz = masclet.read_masclet.read_vortex(mockit, path=os.path.join(output_path, 'output_files'),
                                                     grids_path=os.path.join(output_path, 'simu_masclet'),
-                                                    parameters_path=output_path,
-                                                    digits=5, are_divrot=True, are_potentials=True, are_velocities=True,
-                                                    is_solapst=False, verbose=False)
+                                                    parameters_path=output_path, digits=5, are_divrot=True,
+                                                    are_potentials=True, are_velocities=True, verbose=False)
 
 # test rotational
 ediv = {}
@@ -316,9 +314,8 @@ truevelrot = [np.sqrt(x ** 2 + y ** 2 + z ** 2) for x, y, z in zip(truevelrotx, 
 div, rotx, roty, rotz, scalarpot, vecpotx, vecpoty, vecpotz, vx, vy, vz, velcompx, velcompy, velcompz, velrotx, \
 velroty, velrotz = masclet.read_masclet.read_vortex(mockit, path=os.path.join(output_path, 'output_files'),
                                                     grids_path=os.path.join(output_path, 'simu_masclet'),
-                                                    parameters_path=output_path,
-                                                    digits=5, are_divrot=True, are_potentials=True, are_velocities=True,
-                                                    is_solapst=False, verbose=False)
+                                                    parameters_path=output_path, digits=5, are_divrot=True,
+                                                    are_potentials=True, are_velocities=True, verbose=False)
 
 # test divergence
 ediv = {}

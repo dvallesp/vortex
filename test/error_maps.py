@@ -29,8 +29,7 @@ it = 4000
 ncores = 8
 verbose = True
 
-use_mysolapst = True
-ubox = [-5,5,-5,5,-5,5]
+ubox = [-5, 5, -5, 5, -5, 5]
 up_to_level = 4
 plotname = 'sliceploterror_zoom2.png'
 
@@ -64,30 +63,16 @@ solapst = masclet.read_masclet.read_npz_field('solapst_bool' + '{:05d}'.format(i
 # solapst[0] = np.ones(truevx[0].shape, dtype='bool')
 
 div, rotx, roty, rotz, scalarpot, vecpotx, vecpoty, vecpotz, vx, vy, vz, velcompx, velcompy, velcompz, velrotx, \
-velroty, velrotz, _ = masclet.read_masclet.read_vortex(it, path=os.path.join(output_path, 'output_files'),
-                                                             grids_path=os.path.join(output_path, 'simu_masclet'),
-                                                             parameters_path=output_path,
-                                                             digits=5, are_divrot=True, are_potentials=True,
-                                                             are_velocities=True,
-                                                             is_solapst=True, verbose=False)
+velroty, velrotz = masclet.read_masclet.read_vortex(it, path=os.path.join(output_path, 'output_files'),
+                                                    grids_path=os.path.join(output_path, 'simu_masclet'),
+                                                    parameters_path=output_path, digits=5, are_divrot=True,
+                                                    are_potentials=True, are_velocities=True, verbose=False)
 
-if use_mysolapst:
-    solapst = _
-else:
-    del _
-#solapst[0] = np.ones(truevx[0].shape, dtype='bool')
-
-# test velocities
-# first assert the written total velocities are the original ones
-for ipatch in range(len(vx)):
-    if ((vx[ipatch] - truevx[ipatch]) ** 2 + (vy[ipatch] - truevy[ipatch]) ** 2 + (
-            vz[ipatch] - truevz[ipatch]) ** 2).sum() > 0:
-        print('Problem with the original velocity in patch {}!'.format(ipatch))
 
 velx = [vcx + vrx for vcx, vrx in zip(velcompx, velrotx)]
 vely = [vcy + vry for vcy, vry in zip(velcompy, velroty)]
 velz = [vcz + vrz for vcz, vrz in zip(velcompz, velrotz)]
-v = [np.sqrt(vxi**2 + vyi**2 + vzi**2) for vxi, vyi, vzi in zip(vx, vy, vz)]
+v = [np.sqrt(vxi ** 2 + vyi ** 2 + vzi ** 2) for vxi, vyi, vzi in zip(vx, vy, vz)]
 
 errx = [(vxi / vi) ** 2 * np.abs(vxitilde / vxi - 1) for vi, vxi, vxitilde in zip(v, vx, velx)]
 erry = [(vyi / vi) ** 2 * np.abs(vyitilde / vyi - 1) for vi, vyi, vyitilde in zip(v, vy, vely)]
@@ -104,7 +89,6 @@ data = dict(Error=u)
 ds = yt.load_uniform_grid(data, u.shape, 3.08e24, bbox=bbox, nprocs=ncores)
 slc = yt.SlicePlot(ds, 'z', 'Error')
 slc.save(plotname)
-
 
 if verbose:
     print('#####################')

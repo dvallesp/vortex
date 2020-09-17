@@ -62,25 +62,12 @@ solapst = masclet.read_masclet.read_npz_field('solapst_bool' + '{:05d}'.format(i
 # solapst[0] = np.ones(truevx[0].shape, dtype='bool')
 
 div, rotx, roty, rotz, scalarpot, vecpotx, vecpoty, vecpotz, vx, vy, vz, velcompx, velcompy, velcompz, velrotx, \
-velroty, velrotz, _ = masclet.read_masclet.read_vortex(it, path=os.path.join(output_path, 'output_files'),
-                                                       grids_path=os.path.join(output_path, 'simu_masclet'),
-                                                       parameters_path=output_path,
-                                                       digits=5, are_divrot=True, are_potentials=True,
-                                                       are_velocities=True,
-                                                       is_solapst=True, verbose=False)
-
-if use_mysolapst:
-    solapst = _
-else:
-    del _
-# solapst[0] = np.ones(truevx[0].shape, dtype='bool')
+velroty, velrotz = masclet.read_masclet.read_vortex(it, path=os.path.join(output_path, 'output_files'),
+                                                    grids_path=os.path.join(output_path, 'simu_masclet'),
+                                                    parameters_path=output_path, digits=5, are_divrot=True,
+                                                    are_potentials=True, are_velocities=True, verbose=False)
 
 # test velocities
-# first assert the written total velocities are the original ones
-for ipatch in range(len(vx)):
-    if ((vx[ipatch] - truevx[ipatch]) ** 2 + (vy[ipatch] - truevy[ipatch]) ** 2 + (
-            vz[ipatch] - truevz[ipatch]) ** 2).sum() > 0:
-        print('Problem with the original velocity in patch {}!'.format(ipatch))
 
 velx = [vcx + vrx for vcx, vrx in zip(velcompx, velrotx)]
 vely = [vcy + vry for vcy, vry in zip(velcompy, velroty)]
@@ -127,9 +114,9 @@ for ipatch in range(npatch.sum() + 1):
 
     errboundarycells = np.concatenate([err[ipatch][0, :, :].flatten(), err[ipatch][n1 - 1, :, :].flatten(),
                                        err[ipatch][1:n1, 0, :].flatten(), err[ipatch][1:n1, n2 - 1, :].flatten(),
-                                       err[ipatch][1:n1, 1:n2, 0].flatten(), err[ipatch][1:n1, 1:n2, n3-1].flatten()])
+                                       err[ipatch][1:n1, 1:n2, 0].flatten(), err[ipatch][1:n1, 1:n2, n3 - 1].flatten()])
     errboundarycells = np.percentile(errboundarycells, percentile)
-    errinterior = err[ipatch][1:n1,1:n2,1:n3].flatten()
+    errinterior = err[ipatch][1:n1, 1:n2, 1:n3].flatten()
     errinterior = np.percentile(errinterior, percentile)
     timeserrboundary = errboundarycells / errinterior
 
@@ -137,11 +124,11 @@ for ipatch in range(npatch.sum() + 1):
 
     corr_err_vmodulo = spearmanr(err[ipatch].flatten(), v[ipatch].flatten())
     corr_err_vmincomp = spearmanr(err[ipatch].flatten(),
-                                    np.minimum(np.minimum(np.abs(vx[ipatch]), np.abs(vy[ipatch])),np.abs(vz[ipatch])).flatten())
+                                  np.minimum(np.minimum(np.abs(vx[ipatch]), np.abs(vy[ipatch])),
+                                             np.abs(vz[ipatch])).flatten())
 
     corr_err_vmodulos.append(corr_err_vmodulo)
     corr_err_vmincomps.append(corr_err_vmincomp)
-
 
 for l in range(maxl + 1):
     if l == 0:
