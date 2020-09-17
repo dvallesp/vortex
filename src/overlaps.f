@@ -43,6 +43,14 @@
       REAL*4 ERR1(0:NAMRX+1,0:NAMRY+1,0:NAMRZ+1,NPALEV)
       COMMON /ERROR/ ERR0, ERR1
 
+*     Auxiliary variables
+      REAL*4 EU2(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
+      REAL*4 EU3(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
+      REAL*4 EU4(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
+      REAL*4 EU12(0:NAMRX+1,0:NAMRY+1,0:NAMRZ+1,NPALEV)
+      REAL*4 EU13(0:NAMRX+1,0:NAMRY+1,0:NAMRZ+1,NPALEV)
+      REAL*4 EU14(0:NAMRX+1,0:NAMRY+1,0:NAMRZ+1,NPALEV)
+
 *     private VARIABLES
       INTEGER IX, JY, KZ, I, J, K, LOW1, LOW2, N1, N2, N3, IR
       REAL*4 BAS, BAS1, BAS2, BAS3
@@ -51,15 +59,15 @@
 *     UP will contain the relative error per component!!!!
 
 !$OMP PARALLEL DO SHARED(NX,NY,NZ,U2P,U3P,U4P,U2R,U3R,U4R,
-!$OMP+                   U2,U3,U4), PRIVATE(I,J,K)
+!$OMP+                   U2,U3,U4,EU2,EU3,EU4), PRIVATE(I,J,K)
        DO K=1, NZ
        DO J=1, NY
        DO I=1, NX
-         IF(U2(I,J,K).NE.0.0) U2P(I,J,K) = (U2P(I,J,K) + U2R(I,J,K)) /
+         IF(U2(I,J,K).NE.0.0) EU2(I,J,K) = (U2P(I,J,K) + U2R(I,J,K)) /
      &                                     U2(I,J,K) - 1.0
-         IF(U3(I,J,K).NE.0.0) U3P(I,J,K)= (U3P(I,J,K) + U3R(I,J,K)) /
+         IF(U3(I,J,K).NE.0.0) EU3(I,J,K)= (U3P(I,J,K) + U3R(I,J,K)) /
      &                                     U3(I,J,K) - 1.0
-         IF(U4(I,J,K).NE.0.0) U4P(I,J,K)= (U4P(I,J,K) + U4R(I,J,K)) /
+         IF(U4(I,J,K).NE.0.0) EU4(I,J,K)= (U4P(I,J,K) + U4R(I,J,K)) /
      &                                     U4(I,J,K) - 1.0
        END DO
        END DO
@@ -69,7 +77,8 @@
         LOW1=SUM(NPATCH(0:IR-1))+1
         LOW2=SUM(NPATCH(0:IR))
 !$OMP PARALLEL DO SHARED(PATCHNX,PATCHNY,PATCHNZ,LOW1,LOW2,
-!$OMP+                   U12P,U13P,U14P,U12R,U13R,U14R,U12,U13,U14),
+!$OMP+                   U12P,U13P,U14P,U12R,U13R,U14R,U12,U13,U14,
+!$OMP+                   EU12,EU13,EU14),
 !$OMP+            PRIVATE(IX,JY,KZ,N1,N2,N3,I)
         DO I=LOW1,LOW2
         N1=PATCHNX(I)
@@ -79,15 +88,15 @@
          DO JY=1, N2
          DO IX=1, N1
            IF(U12(IX,JY,KZ,I).NE.0.0) THEN
-             U12P(IX,JY,KZ,I) = (U12P(IX,JY,KZ,I) + U12R(IX,JY,KZ,I)) /
+             EU12(IX,JY,KZ,I) = (U12P(IX,JY,KZ,I) + U12R(IX,JY,KZ,I)) /
      &                          U12(IX,JY,KZ,I) - 1.0
            END IF
            IF(U13(IX,JY,KZ,I).NE.0.0) THEN
-             U13P(IX,JY,KZ,I) = (U13P(IX,JY,KZ,I) + U13R(IX,JY,KZ,I)) /
+             EU13(IX,JY,KZ,I) = (U13P(IX,JY,KZ,I) + U13R(IX,JY,KZ,I)) /
      &                          U13(IX,JY,KZ,I) - 1.0
            END IF
            IF(U14(IX,JY,KZ,I).NE.0.0) THEN
-             U14P(IX,JY,KZ,I) = (U14P(IX,JY,KZ,I) + U14R(IX,JY,KZ,I)) /
+             EU14(IX,JY,KZ,I) = (U14P(IX,JY,KZ,I) + U14R(IX,JY,KZ,I)) /
      &                          U14(IX,JY,KZ,I) - 1.0
            END IF
          END DO
@@ -99,7 +108,8 @@
 
 *       Compute the relative error
 
-!$OMP PARALLEL DO SHARED(NX,NY,NZ,U2P,U3P,U4P,U2,U3,U4,ERR0),
+!$OMP PARALLEL DO SHARED(NX,NY,NZ,U2P,U3P,U4P,U2,U3,U4,ERR0,
+!$OMP+                   EU2,EU3,EU4),
 !$OMP+            PRIVATE(I,J,K,BAS,BAS1,BAS2,BAS3)
        DO K=1, NZ
        DO J=1, NY
@@ -110,9 +120,9 @@
          BAS = BAS1 + BAS2 + BAS3
 
          IF(BAS.NE.0.0) THEN
-           BAS1 = (BAS1 / BAS * U2P(I,J,K)) ** 2
-           BAS2 = (BAS2 / BAS * U3P(I,J,K)) ** 2
-           BAS3 = (BAS3 / BAS * U4P(I,J,K)) ** 2
+           BAS1 = (BAS1 / BAS * EU2(I,J,K)) ** 2
+           BAS2 = (BAS2 / BAS * EU3(I,J,K)) ** 2
+           BAS3 = (BAS3 / BAS * EU4(I,J,K)) ** 2
          ELSE
            BAS1 = 0
            BAS2 = 0
@@ -128,7 +138,8 @@
         LOW1=SUM(NPATCH(0:IR-1))+1
         LOW2=SUM(NPATCH(0:IR))
 !$OMP PARALLEL DO SHARED(PATCHNX,PATCHNY,PATCHNZ,LOW1,LOW2,
-!$OMP+                   U12P,U13P,U14P,U12,U13,U14,ERR1),
+!$OMP+                   U12P,U13P,U14P,U12,U13,U14,ERR1,
+!$OMP+                   EU12,EU13,EU14),
 !$OMP+            PRIVATE(IX,JY,KZ,N1,N2,N3,I,BAS,BAS1,BAS2,BAS3)
         DO I=LOW1,LOW2
         N1=PATCHNX(I)
@@ -143,9 +154,9 @@
            BAS = BAS1 + BAS2 + BAS3
 
            IF(BAS.NE.0) THEN
-             BAS1 = (BAS1 / BAS * U12P(IX,JY,KZ,I)) ** 2
-             BAS2 = (BAS2 / BAS * U13P(IX,JY,KZ,I)) ** 2
-             BAS3 = (BAS3 / BAS * U14P(IX,JY,KZ,I)) ** 2
+             BAS1 = (BAS1 / BAS * EU12(IX,JY,KZ,I)) ** 2
+             BAS2 = (BAS2 / BAS * EU13(IX,JY,KZ,I)) ** 2
+             BAS3 = (BAS3 / BAS * EU14(IX,JY,KZ,I)) ** 2
            ELSE
              BAS1 = 0
              BAS2 = 0
