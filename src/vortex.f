@@ -886,6 +886,10 @@
        CALL CORRECT_VELOCITY_BOUNDARIES(NL,NX,NY,NZ,NPATCH,
      &                                  PATCHNX,PATCHNY,PATCHNZ)
 
+       CALL VEINSGRID_VORTEX(NL,NPATCH,PARE,PATCHNX,PATCHNY,PATCHNZ,
+     &                       PATCHX,PATCHY,PATCHZ,PATCHRX,PATCHRY,
+     &                       PATCHRZ,SOLAPST_VORTEX)
+
         IF (FLAG_VERBOSE.EQ.1) THEN
           WRITE(*,*) '...Compressional velocity...'
           WRITE(*,*) MINVAL(U2P),MINVAL(U12P)
@@ -912,11 +916,6 @@
 
         ! compute the solapst based on velocity reconstruction error
         IF (FLAG_W_SOLAPST.EQ.1) THEN
-          CALL VEINSGRID_VORTEX(NL,NPATCH,PARE,PATCHNX,PATCHNY,PATCHNZ,
-     &                          PATCHX,PATCHY,PATCHZ,PATCHRX,PATCHRY,
-     &                          PATCHRZ,SOLAPST_VORTEX)
-
-
           CALL WRITE_SOLAPST(FILERR5,NX,NY,NZ,ITER,T,ZETA,NL,NPATCH,
      &                       PATCHNX,PATCHNY,PATCHNZ,SOLAPST_VORTEX)
 

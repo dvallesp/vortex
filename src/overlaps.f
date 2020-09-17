@@ -240,7 +240,32 @@
        REAL*4 ERR1(0:NAMRX+1,0:NAMRY+1,0:NAMRZ+1,NPALEV)
        COMMON /ERROR/ ERR0, ERR1
 
-      write(*,*) 'Computing relative errors...'
+*      compressive velocity
+       REAL*4 U2P(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
+       REAL*4 U3P(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
+       REAL*4 U4P(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
+       REAL*4 U12P(0:NAMRX+1,0:NAMRY+1,0:NAMRZ+1,NPALEV)
+       REAL*4 U13P(0:NAMRX+1,0:NAMRY+1,0:NAMRZ+1,NPALEV)
+       REAL*4 U14P(0:NAMRX+1,0:NAMRY+1,0:NAMRZ+1,NPALEV)
+       COMMON /VELOC_P/ U2P,U3P,U4P,U12P,U13P,U14P
+*      rotational velocity (ROTS variables were reused)
+       REAL*4 U2R(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
+       REAL*4 U3R(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
+       REAL*4 U4R(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
+       REAL*4 U12R(0:NAMRX+1,0:NAMRY+1,0:NAMRZ+1,NPALEV)
+       REAL*4 U13R(0:NAMRX+1,0:NAMRY+1,0:NAMRZ+1,NPALEV)
+       REAL*4 U14R(0:NAMRX+1,0:NAMRY+1,0:NAMRZ+1,NPALEV)
+       COMMON /ROTS/ U2R,U3R,U4R,U12R,U13R,U14R
+*      original, total velocity
+       REAL*4 U2(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
+       REAL*4 U3(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
+       REAL*4 U4(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
+       REAL*4 U12(0:NAMRX+1,0:NAMRY+1,0:NAMRZ+1,NPALEV)
+       REAL*4 U13(0:NAMRX+1,0:NAMRY+1,0:NAMRZ+1,NPALEV)
+       REAL*4 U14(0:NAMRX+1,0:NAMRY+1,0:NAMRZ+1,NPALEV)
+       COMMON /VELOC_ORIGINAL/ U2,U3,U4,U12,U13,U14
+
+       write(*,*) 'Computing relative errors...'
 *      compute the err0, err1 variables!
        CALL CELLWISE_ERROR(NX,NY,NZ,NL,NPATCH,PATCHNX,PATCHNY,PATCHNZ)
 
@@ -475,8 +500,20 @@
      &        THEN
                 IF (ERR1(IX,JY,KZ,I).LE.ERR1(II,JJ,KK,J)) THEN
                   SOLAP(II,JJ,KK,J) = 0
+                  U12P(II,JJ,KK,J) = U12P(IX,JY,KZ,I)
+                  U13P(II,JJ,KK,J) = U13P(IX,JY,KZ,I)
+                  U14P(II,JJ,KK,J) = U14P(IX,JY,KZ,I)
+                  U12R(II,JJ,KK,J) = U12R(IX,JY,KZ,I)
+                  U13R(II,JJ,KK,J) = U13R(IX,JY,KZ,I)
+                  U14R(II,JJ,KK,J) = U14R(IX,JY,KZ,I)
                 ELSE
                   SOLAP(IX,JY,KZ,I) = 0
+                  U12P(IX,JY,KZ,I) = U12P(II,JJ,KK,J)
+                  U13P(IX,JY,KZ,I) = U13P(II,JJ,KK,J)
+                  U14P(IX,JY,KZ,I) = U14P(II,JJ,KK,J)
+                  U12R(IX,JY,KZ,I) = U12R(II,JJ,KK,J)
+                  U13R(IX,JY,KZ,I) = U13R(II,JJ,KK,J)
+                  U14R(IX,JY,KZ,I) = U14R(II,JJ,KK,J)
                 END IF
               END IF
            END DO
