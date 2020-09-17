@@ -765,11 +765,6 @@
           WRITE(*,*) MAXVAL(U4),MAXVAL(U14)
         END IF
 
-        IF (FLAG_W_VELOCITIES.EQ.1) THEN
-          CALL WRITE_TOTALVELOCITY(FILERR5,NX,NY,NZ,ITER,T,ZETA,NL,
-     &                             NPATCH, PATCHNX,PATCHNY,PATCHNZ)
-        END IF
-
 *       We backup the original velocities in UORI
 
 !$OMP PARALLEL DO SHARED(NX,NY,NZ,U2,U3,U4,UORI2,UORI3,UORI4),

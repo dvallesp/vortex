@@ -506,6 +506,9 @@
                   U12R(II,JJ,KK,J) = U12R(IX,JY,KZ,I)
                   U13R(II,JJ,KK,J) = U13R(IX,JY,KZ,I)
                   U14R(II,JJ,KK,J) = U14R(IX,JY,KZ,I)
+                  U12(II,JJ,KK,J) = U12(IX,JY,KZ,I)
+                  U13(II,JJ,KK,J) = U13(IX,JY,KZ,I)
+                  U14(II,JJ,KK,J) = U14(IX,JY,KZ,I)
                 ELSE
                   SOLAP(IX,JY,KZ,I) = 0
                   U12P(IX,JY,KZ,I) = U12P(II,JJ,KK,J)
@@ -514,6 +517,9 @@
                   U12R(IX,JY,KZ,I) = U12R(II,JJ,KK,J)
                   U13R(IX,JY,KZ,I) = U13R(II,JJ,KK,J)
                   U14R(IX,JY,KZ,I) = U14R(II,JJ,KK,J)
+                  U12(IX,JY,KZ,I) = U12(II,JJ,KK,J)
+                  U13(IX,JY,KZ,I) = U13(II,JJ,KK,J)
+                  U14(IX,JY,KZ,I) = U14(II,JJ,KK,J)
                 END IF
               END IF
            END DO
