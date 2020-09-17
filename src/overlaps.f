@@ -496,31 +496,28 @@
               IX=II-CORNXX1+CORNX1
               JY=JJ-CORNYY1+CORNY1
               KZ=KK-CORNZZ1+CORNZ1
-              IF (SOLAP(IX,JY,KZ,I).EQ.1.AND.SOLAP(II,JJ,KK,J).EQ.1)
-     &        THEN
-                IF (ERR1(IX,JY,KZ,I).LE.ERR1(II,JJ,KK,J)) THEN
-                  SOLAP(II,JJ,KK,J) = 0
-                  U12P(II,JJ,KK,J) = U12P(IX,JY,KZ,I)
-                  U13P(II,JJ,KK,J) = U13P(IX,JY,KZ,I)
-                  U14P(II,JJ,KK,J) = U14P(IX,JY,KZ,I)
-                  U12R(II,JJ,KK,J) = U12R(IX,JY,KZ,I)
-                  U13R(II,JJ,KK,J) = U13R(IX,JY,KZ,I)
-                  U14R(II,JJ,KK,J) = U14R(IX,JY,KZ,I)
-                  U12(II,JJ,KK,J) = U12(IX,JY,KZ,I)
-                  U13(II,JJ,KK,J) = U13(IX,JY,KZ,I)
-                  U14(II,JJ,KK,J) = U14(IX,JY,KZ,I)
-                ELSE
-                  SOLAP(IX,JY,KZ,I) = 0
-                  U12P(IX,JY,KZ,I) = U12P(II,JJ,KK,J)
-                  U13P(IX,JY,KZ,I) = U13P(II,JJ,KK,J)
-                  U14P(IX,JY,KZ,I) = U14P(II,JJ,KK,J)
-                  U12R(IX,JY,KZ,I) = U12R(II,JJ,KK,J)
-                  U13R(IX,JY,KZ,I) = U13R(II,JJ,KK,J)
-                  U14R(IX,JY,KZ,I) = U14R(II,JJ,KK,J)
-                  U12(IX,JY,KZ,I) = U12(II,JJ,KK,J)
-                  U13(IX,JY,KZ,I) = U13(II,JJ,KK,J)
-                  U14(IX,JY,KZ,I) = U14(II,JJ,KK,J)
-                END IF
+              IF (ERR1(IX,JY,KZ,I).LE.ERR1(II,JJ,KK,J)) THEN
+                SOLAP(II,JJ,KK,J) = 0
+                U12P(II,JJ,KK,J) = U12P(IX,JY,KZ,I)
+                U13P(II,JJ,KK,J) = U13P(IX,JY,KZ,I)
+                U14P(II,JJ,KK,J) = U14P(IX,JY,KZ,I)
+                U12R(II,JJ,KK,J) = U12R(IX,JY,KZ,I)
+                U13R(II,JJ,KK,J) = U13R(IX,JY,KZ,I)
+                U14R(II,JJ,KK,J) = U14R(IX,JY,KZ,I)
+                U12(II,JJ,KK,J) = U12(IX,JY,KZ,I)
+                U13(II,JJ,KK,J) = U13(IX,JY,KZ,I)
+                U14(II,JJ,KK,J) = U14(IX,JY,KZ,I)
+              ELSE
+                SOLAP(IX,JY,KZ,I) = 0
+                U12P(IX,JY,KZ,I) = U12P(II,JJ,KK,J)
+                U13P(IX,JY,KZ,I) = U13P(II,JJ,KK,J)
+                U14P(IX,JY,KZ,I) = U14P(II,JJ,KK,J)
+                U12R(IX,JY,KZ,I) = U12R(II,JJ,KK,J)
+                U13R(IX,JY,KZ,I) = U13R(II,JJ,KK,J)
+                U14R(IX,JY,KZ,I) = U14R(II,JJ,KK,J)
+                U12(IX,JY,KZ,I) = U12(II,JJ,KK,J)
+                U13(IX,JY,KZ,I) = U13(II,JJ,KK,J)
+                U14(IX,JY,KZ,I) = U14(II,JJ,KK,J)
               END IF
            END DO
            END DO
