@@ -332,8 +332,6 @@
       WRITE(25) (((U3P(I,J,K),I=1,NX),J=1,NY),K=1,NZ)
       WRITE(25) (((U4P(I,J,K),I=1,NX),J=1,NY),K=1,NZ)
 
-      ALLOCATE(SCR4(NAMRX,NAMRY,NAMRZ))
-
       DO IR=1,NL
 
         LOW1=SUM(NPATCH(0:IR-1))+1
