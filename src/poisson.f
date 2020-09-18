@@ -8,13 +8,13 @@
 
       INTEGER NX,NY,NZ,I,J,K
 
-      REAL*4  U1(0:NMAX+1,0:NMAY+1,0:NMAZ+1)    ! source in poisson equation
-      REAL*4  POT(0:NMAX+1,0:NMAY+1,0:NMAZ+1)   ! field to solve
+      real  U1(0:NMAX+1,0:NMAY+1,0:NMAZ+1)    ! source in poisson equation
+      real  POT(0:NMAX+1,0:NMAY+1,0:NMAZ+1)   ! field to solve
       COMMON /BASE/ U1,POT
 
 *     FFT variables
-      REAL*4 KKK(NMAX,NMAY,NMAZ)
-      REAL*4 DATA1(2*NMAX*NMAY*NMAZ)
+      real KKK(NMAX,NMAY,NMAZ)
+      real DATA1(2*NMAX*NMAY*NMAZ)
 
       INTEGER I1,I2,IJK,NYZ,NXYZ,NNN(3)
       INTEGER NZ2,NZ3,NX2,NX3,NY2,NY3
@@ -101,11 +101,11 @@
 
 
       INTEGER NX,NY,NZ,I,J,K
-      REAL*4 PI, DELTA,CONSTA,KX2,KY2,KZ2,DEL2
+      real PI, DELTA,CONSTA,KX2,KY2,KZ2,DEL2
       INTEGER KX,KY,KZ,NX2,NY2,NZ2
 
-      REAL*4 KKK(NMAX,NMAY,NMAZ)
-      REAL*4 DX        !size of coarse grid cell
+      real KKK(NMAX,NMAY,NMAZ)
+      real DX        !size of coarse grid cell
 
 *
       DELTA = DX
@@ -173,7 +173,7 @@
       SUBROUTINE FOURN(DATA,NN,NDIM,ISIGN)
 ***********************************************************************
 
-      IMPLICIT REAL*4(A-H,O-Z)
+      IMPLICIT real(A-H,O-Z)
 
       INCLUDE 'vortex_parameters.dat'
 
@@ -259,12 +259,12 @@
       INTEGER I,J,K,IX,JY,KZ,I1,J2,K3,II,IR
       INTEGER NX,NY,NZ,NL
 
-      REAL*4  U11(NAMRX,NAMRY,NAMRZ,NPALEV)
-      REAL*4  APOT1(0:NAMRX+1,0:NAMRY+1,0:NAMRZ+1,NPALEV)
+      real  U11(NAMRX,NAMRY,NAMRZ,NPALEV)
+      real  APOT1(0:NAMRX+1,0:NAMRY+1,0:NAMRZ+1,NPALEV)
       COMMON /UAMR/U11,APOT1
 
-      REAL*4  U1(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
-      REAL*4  POT(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
+      real  U1(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
+      real  POT(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
       COMMON /BASE/ U1,POT
 
       INTEGER NPATCH(0:NLEVELS)
@@ -277,30 +277,30 @@
       INTEGER PATCHZ(NPALEV)
 
 *     Here pot1 is local !!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      REAL*4 POT1(0:NAMRX+1,0:NAMRY+1,0:NAMRZ+1)
+      real POT1(0:NAMRX+1,0:NAMRY+1,0:NAMRZ+1)
 *     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-      REAL*4 BAS,ERROR,ERRMAX,BASS, PI
-      REAL*4 SSS,DXPA,DX,WWW,ERR,ERRTOT
-      REAL*4 RADIUS,SNOR,RESNOR,PRECIS
+      real BAS,ERROR,ERRMAX,BASS, PI
+      real SSS,DXPA,DX,WWW,ERR,ERRTOT
+      real RADIUS,SNOR,RESNOR,PRECIS
       INTEGER CR1,CR2,CR3,MARCA,LOW1,LOW2,MAXIT
-      REAL*4 AAA,BBB,CCC
+      real AAA,BBB,CCC
       COMMON /SOR/ PRECIS,MAXIT
 
-      REAL*4 RX(-2:NAMRX+3,NPALEV)
-      REAL*4 RY(-2:NAMRX+3,NPALEV)
-      REAL*4 RZ(-2:NAMRX+3,NPALEV)
-      REAL*4 RMX(-2:NAMRX+3,NPALEV)
-      REAL*4 RMY(-2:NAMRX+3,NPALEV)
-      REAL*4 RMZ(-2:NAMRX+3,NPALEV)
+      real RX(-2:NAMRX+3,NPALEV)
+      real RY(-2:NAMRX+3,NPALEV)
+      real RZ(-2:NAMRX+3,NPALEV)
+      real RMX(-2:NAMRX+3,NPALEV)
+      real RMY(-2:NAMRX+3,NPALEV)
+      real RMZ(-2:NAMRX+3,NPALEV)
       COMMON /MINIGRIDS/ RX,RY,RZ,RMX,RMY,RMZ
 
-      REAL*4  RADX(0:NMAX+1),RADMX(0:NMAX+1),
+      real  RADX(0:NMAX+1),RADMX(0:NMAX+1),
      &        RADY(0:NMAY+1),RADMY(0:NMAY+1),
      &        RADZ(0:NMAZ+1),RADMZ(0:NMAZ+1)
       COMMON /GRID/   RADX,RADMX,RADY,RADMY,RADZ,RADMZ
 
-      REAL*4 UBAS(3,3,3),RXBAS(3),RYBAS(3),RZBAS(3),FUIN
+      real UBAS(3,3,3),RXBAS(3),RYBAS(3),RZBAS(3),FUIN
       INTEGER KARE,KR1,KR2,KR3
 
       INTEGER CR3AMR1(-2:NAMRX+3,-2:NAMRY+3,-2:NAMRZ+3,NPALEV)

@@ -7,12 +7,12 @@
       INCLUDE 'vortex_parameters.dat'
 
       INTEGER II,JJ,KK,IX,JY,KZ
-      REAL*4 XX,YY,ZZ,SIGNO
-      REAL*4 FUIN, U(3,3,3)
+      real XX,YY,ZZ,SIGNO
+      real FUIN, U(3,3,3)
 
-      REAL*4 DXX,DYY,DZZ,DXMAS,DYMAS,DZMAS,DXMIN,DYMIN,DZMIN
-      REAL*4 LIM,LIMA
-      REAL*4 DXCEN,DYCEN,DZCEN
+      real DXX,DYY,DZZ,DXMAS,DYMAS,DZMAS,DXMIN,DYMIN,DZMIN
+      real LIM,LIMA
+      real DXCEN,DYCEN,DZCEN
 
 
       LIM=8.0
@@ -103,13 +103,13 @@
       INCLUDE 'vortex_parameters.dat'
 
       INTEGER II,JJ,KK,IX,JY,KZ
-      REAL*4 XX,YY,ZZ,XXX,YYY,ZZZ,SIGNO
-      REAL*4 FUIN
-      REAL*4 U(3,3,3),RX(3),RY(3),RZ(3)
+      real XX,YY,ZZ,XXX,YYY,ZZZ,SIGNO
+      real FUIN
+      real U(3,3,3),RX(3),RY(3),RZ(3)
 
-      REAL*4 DXX,DYY,DZZ,DXMAS,DYMAS,DZMAS,DXMIN,DYMIN,DZMIN
-      REAL*4 LIM,LIMA
-      REAL*4 DXCEN,DYCEN,DZCEN
+      real DXX,DYY,DZZ,DXMAS,DYMAS,DZMAS,DXMIN,DYMIN,DZMIN
+      real LIM,LIMA
+      real DXCEN,DYCEN,DZCEN
 
 
       LIM=8.0
