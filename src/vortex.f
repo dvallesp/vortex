@@ -352,8 +352,8 @@
 
 *       Correct the values of the diff operators in the boundaries
 *       by interpolation from the most refined coarser grid.
-        CALL CORRECT_SOURCE_BOUNDARIES(NL,NX,NY,NZ,NPATCH,
-     &           PATCHNX,PATCHNY,PATCHNZ)
+*        CALL CORRECT_SOURCE_BOUNDARIES(NL,NX,NY,NZ,NPATCH,
+*     &           PATCHNX,PATCHNY,PATCHNZ)
 
         IF (FLAG_VERBOSE.EQ.1) THEN
           write(*,*) 'rotational: min and max values'
@@ -877,8 +877,8 @@
 *       Correct the values of the velocities in the boundaries
 *       by interpolation from the most refined coarser grid.
 
-       CALL CORRECT_VELOCITY_BOUNDARIES(NL,NX,NY,NZ,NPATCH,
-     &                                  PATCHNX,PATCHNY,PATCHNZ)
+*       CALL CORRECT_VELOCITY_BOUNDARIES(NL,NX,NY,NZ,NPATCH,
+*     &                                  PATCHNX,PATCHNY,PATCHNZ)
 
        CALL SYNC_AMR_VELOCITIES(NL,NPATCH,PARE,PATCHNX,PATCHNY,PATCHNZ,
      &                       PATCHX,PATCHY,PATCHZ,PATCHRX,PATCHRY,
