@@ -28,10 +28,11 @@ from masclet_mock_velocityfields import *
 it = 4000
 ncores = 8
 verbose = True
+err_eps = 0.01
 
 ubox = [-5, 5, -5, 5, -5, 5]
 up_to_level = 4
-plotname = 'sliceploterror_zoom2.png'
+plotname = 'sliceploterror_zoom_newerror.png'
 
 #######################################
 # test
@@ -74,9 +75,9 @@ vely = [vcy + vry for vcy, vry in zip(velcompy, velroty)]
 velz = [vcz + vrz for vcz, vrz in zip(velcompz, velrotz)]
 v = [np.sqrt(vxi ** 2 + vyi ** 2 + vzi ** 2) for vxi, vyi, vzi in zip(vx, vy, vz)]
 
-errx = [(vxi / vi) ** 2 * np.abs(vxitilde / vxi - 1) for vi, vxi, vxitilde in zip(v, vx, velx)]
-erry = [(vyi / vi) ** 2 * np.abs(vyitilde / vyi - 1) for vi, vyi, vyitilde in zip(v, vy, vely)]
-errz = [(vzi / vi) ** 2 * np.abs(vzitilde / vzi - 1) for vi, vzi, vzitilde in zip(v, vz, velz)]
+errx = [(vxi / vi) ** 2 * np.abs(vxitilde - vxi) / (np.abs(vxi) + err_eps * abs(vxi).max()) for vi, vxi, vxitilde in zip(v, vx, velx)]
+erry = [(vyi / vi) ** 2 * np.abs(vyitilde - vyi) / (np.abs(vyi) + err_eps * abs(vyi).max()) for vi, vyi, vyitilde in zip(v, vy, vely)]
+errz = [(vzi / vi) ** 2 * np.abs(vzitilde - vzi) / (np.abs(vzi) + err_eps * abs(vzi).max()) for vi, vzi, vzitilde in zip(v, vz, velz)]
 err = [np.sqrt(errxi ** 2 + erryi ** 2 + errzi ** 2) for errxi, erryi, errzi in zip(errx, erry, errz)]
 
 os.chdir(initialpath)

@@ -27,6 +27,7 @@ from masclet_mock_velocityfields import *
 it = 4000
 ncores = 8
 verbose = True
+eps_err = 0.01
 
 percentiles = [5, 25, 50, 75, 95]
 use_solapst = True
@@ -104,9 +105,9 @@ for l in range(maxl + 1):
     velrecy_l = velcompy_l + velroty_l
     velrecz_l = velcompz_l + velrotz_l
 
-    ev[l] = [np.percentile(np.sqrt(((vx_l / v_l) ** 2 * np.abs(velrecx_l / vx_l - 1)) ** 2 +
-                                   ((vy_l / v_l) ** 2 * np.abs(velrecy_l / vy_l - 1)) ** 2 +
-                                   ((vz_l / v_l) ** 2 * np.abs(velrecz_l / vz_l - 1)) ** 2),
+    ev[l] = [np.percentile(np.sqrt(((vx_l / v_l) ** 2 * np.abs(velrecx_l - vx_l) / (abs(vx_l) + eps_err * np.max(abs(vx_l)))) ** 2 +
+                                   ((vy_l / v_l) ** 2 * np.abs(velrecy_l - vy_l) / (abs(vy_l) + eps_err * np.max(abs(vy_l)))) ** 2 +
+                                   ((vz_l / v_l) ** 2 * np.abs(velrecz_l - vz_l) / (abs(vz_l) + eps_err * np.max(abs(vz_l)))) ** 2),
                            perc) for perc in percentiles]
     frac_vcomp[l] = [np.percentile(velcomp_l / v_l, perc) for perc in percentiles]
     frac_vrot[l] = [np.percentile(velrot_l / v_l, perc) for perc in percentiles]
