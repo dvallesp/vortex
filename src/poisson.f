@@ -415,7 +415,7 @@
         IF (II.GT.MAXIT) MARCA=1
        END DO
 
-      APOT1(1:N1,1:N2,1:N3,I)=POT1(1:N1,1:N2,1:N3)
+      APOT1(0:N1+1,0:N2+1,0:N3+1,I)=POT1(0:N1+1,0:N2+1,0:N3+1)
       END DO
 
 
