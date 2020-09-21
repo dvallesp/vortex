@@ -884,6 +884,8 @@
      &                       PATCHX,PATCHY,PATCHZ,PATCHRX,PATCHRY,
      &                       PATCHRZ)
 
+       CALL CORRECT_OUTLIERS(NL,NX,NY,NZ,NPATCH,PATCHNX,PATCHNY,PATCHNZ)
+
         IF (FLAG_VERBOSE.EQ.1) THEN
           WRITE(*,*) '...Compressional velocity...'
           WRITE(*,*) MINVAL(U2P),MINVAL(U12P)
@@ -928,3 +930,4 @@
       INCLUDE 'writer.f'
       INCLUDE 'overlaps.f'
       INCLUDE 'boundaries.f'
+      INCLUDE 'outliers.f'
