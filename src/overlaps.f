@@ -33,9 +33,9 @@
       real U2R(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
       real U3R(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
       real U4R(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
-      real U12R(0:NAMRX+1,0:NAMRY+1,0:NAMRZ+1,NPALEV)
-      real U13R(0:NAMRX+1,0:NAMRY+1,0:NAMRZ+1,NPALEV)
-      real U14R(0:NAMRX+1,0:NAMRY+1,0:NAMRZ+1,NPALEV)
+      real U12R(-2:NAMRX+3,-2:NAMRY+3,-2:NAMRZ+3,NPALEV)
+      real U13R(-2:NAMRX+3,-2:NAMRY+3,-2:NAMRZ+3,NPALEV)
+      real U14R(-2:NAMRX+3,-2:NAMRY+3,-2:NAMRZ+3,NPALEV)
       COMMON /ROTS/ U2R,U3R,U4R,U12R,U13R,U14R
 
 *     variable to store the relative error
@@ -250,9 +250,9 @@
        real U2R(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
        real U3R(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
        real U4R(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
-       real U12R(0:NAMRX+1,0:NAMRY+1,0:NAMRZ+1,NPALEV)
-       real U13R(0:NAMRX+1,0:NAMRY+1,0:NAMRZ+1,NPALEV)
-       real U14R(0:NAMRX+1,0:NAMRY+1,0:NAMRZ+1,NPALEV)
+       real U12R(-2:NAMRX+3,-2:NAMRY+3,-2:NAMRZ+3,NPALEV)
+       real U13R(-2:NAMRX+3,-2:NAMRY+3,-2:NAMRZ+3,NPALEV)
+       real U14R(-2:NAMRX+3,-2:NAMRY+3,-2:NAMRZ+3,NPALEV)
        COMMON /ROTS/ U2R,U3R,U4R,U12R,U13R,U14R
 *      original, total velocity
        real U2(0:NMAX+1,0:NMAY+1,0:NMAZ+1)

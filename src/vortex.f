@@ -49,8 +49,8 @@
        real POT(0:NMAX+1,0:NMAY+1,0:NMAZ+1)    ! field to solve
        COMMON /BASE/ U1,POT
 
-       real  U11(NAMRX,NAMRY,NAMRZ,NPALEV)    !source in Poisson eq.
-       real  POT1(0:NAMRX+1,0:NAMRY+1,0:NAMRZ+1,NPALEV)   !field to solve
+       real  U11(-1:NAMRX+2,-1:NAMRY+2,-1:NAMRZ+2,NPALEV)    !source in Poisson eq.
+       real  POT1(-2:NAMRX+3,-2:NAMRY+3,-2:NAMRZ+3,NPALEV)   !field to solve
        COMMON /UAMR/U11,POT1
 
        real KKK(NMAX,NMAY,NMAZ)    !KKK coeficients of Fourier series
@@ -84,13 +84,13 @@
        real ROTAX_0(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
        real ROTAY_0(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
        real ROTAZ_0(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
-       real ROTAX_1(0:NAMRX+1,0:NAMRY+1,0:NAMRZ+1,NPALEV)
-       real ROTAY_1(0:NAMRX+1,0:NAMRY+1,0:NAMRZ+1,NPALEV)
-       real ROTAZ_1(0:NAMRX+1,0:NAMRY+1,0:NAMRZ+1,NPALEV)
+       real ROTAX_1(-2:NAMRX+3,-2:NAMRY+3,-2:NAMRZ+3,NPALEV)
+       real ROTAY_1(-2:NAMRX+3,-2:NAMRY+3,-2:NAMRZ+3,NPALEV)
+       real ROTAZ_1(-2:NAMRX+3,-2:NAMRY+3,-2:NAMRZ+3,NPALEV)
        COMMON /ROTS/ ROTAX_0,ROTAY_0,ROTAZ_0,ROTAX_1,ROTAY_1,ROTAZ_1
 
        real DIVER0(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
-       real DIVER(0:NAMRX+1,0:NAMRY+1,0:NAMRZ+1,NPALEV)
+       real DIVER(-2:NAMRX+3,-2:NAMRY+3,-2:NAMRZ+3,NPALEV)
        COMMON /DIVERGENCE/ DIVER0, DIVER
 
        INTEGER II,JJ,KK1,KK2,KK,IT
@@ -550,9 +550,9 @@
        N2=PATCHNY(I)
        N3=PATCHNZ(I)
 
-       DO KZ=0, N3+1
-       DO JY=0, N2+1
-       DO IX=0, N1+1
+       DO KZ=-2, N3+3
+       DO JY=-2, N2+3
+       DO IX=-2, N1+3
           DIVER(IX,JY,KZ,I)=POT1(IX,JY,KZ,I)
        END DO
        END DO
@@ -611,9 +611,9 @@
        N2=PATCHNY(I)
        N3=PATCHNZ(I)
 
-       DO KZ=0, N3+1
-       DO JY=0, N2+1
-       DO IX=0, N1+1
+       DO KZ=-2, N3+3
+       DO JY=-2, N2+3
+       DO IX=-2, N1+3
          ROTAX_1(IX,JY,KZ,I)=POT1(IX,JY,KZ,I)
        END DO
        END DO
@@ -673,9 +673,9 @@
        N2=PATCHNY(I)
        N3=PATCHNZ(I)
 
-       DO KZ=0, N3+1
-       DO JY=0, N2+1
-       DO IX=0, N1+1
+       DO KZ=-2, N3+3
+       DO JY=-2, N2+3
+       DO IX=-2, N1+3
          ROTAY_1(IX,JY,KZ,I)=POT1(IX,JY,KZ,I)
        END DO
        END DO
@@ -732,9 +732,9 @@
        N1=PATCHNX(I)
        N2=PATCHNY(I)
        N3=PATCHNZ(I)
-       DO KZ=0, N3+1
-       DO JY=0, N2+1
-       DO IX=0, N1+1
+       DO KZ=-2, N3+3
+       DO JY=-2, N2+3
+       DO IX=-2, N1+3
           ROTAZ_1(IX,JY,KZ,I)=POT1(IX,JY,KZ,I)
        END DO
        END DO
@@ -871,7 +871,7 @@
         END DO
        END DO
 
-       CALL ROTARY(NX,NY,NZ,NL,NPATCH,PARE,PATCHNX,PATCHNY,PATCHNZ,
+       CALL ROTARY_2(NX,NY,NZ,NL,NPATCH,PARE,PATCHNX,PATCHNY,PATCHNZ,
      &             PATCHX,PATCHY,PATCHZ,PATCHRX,PATCHRY,PATCHRZ)
 
 *       Correct the values of the velocities in the boundaries

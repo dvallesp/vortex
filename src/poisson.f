@@ -259,8 +259,8 @@
       INTEGER I,J,K,IX,JY,KZ,I1,J2,K3,II,IR
       INTEGER NX,NY,NZ,NL
 
-      real  U11(NAMRX,NAMRY,NAMRZ,NPALEV)
-      real  APOT1(0:NAMRX+1,0:NAMRY+1,0:NAMRZ+1,NPALEV)
+      real  U11(-1:NAMRX+2,-1:NAMRY+2,-1:NAMRZ+2,NPALEV)
+      real  APOT1(-2:NAMRX+3,-2:NAMRY+3,-2:NAMRZ+3,NPALEV)
       COMMON /UAMR/U11,APOT1
 
       real  U1(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
@@ -277,7 +277,7 @@
       INTEGER PATCHZ(NPALEV)
 
 *     Here pot1 is local !!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      real POT1(0:NAMRX+1,0:NAMRY+1,0:NAMRZ+1)
+      real POT1(-2:NAMRX+3,-2:NAMRY+3,-2:NAMRZ+3)
 *     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
       real BAS,ERROR,ERRMAX,BASS, PI
@@ -328,7 +328,7 @@
 
 !$OMP PARALLEL DO SHARED(IR,DX,DXPA,POT,APOT1,NX,NY,NZ,NPATCH,
 !$OMP+         PATCHNX,PATCHNY,PATCHNZ,PATCHX,PATCHY,PATCHZ,
-!$OMP+         U11,PI,PRECIS,CR3AMR1X,CR3AMR1Y,CR3AMR1Z),
+!$OMP+         U11,PI,PRECIS,CR3AMR1X,CR3AMR1Y,CR3AMR1Z,U1),
 !$OMP+      PRIVATE(I,N1,N2,N3,L1,L2,L3,NP1,NP2,NP3,JY,KZ,IX,
 !$OMP+         I1,J2,K3,II,SSS,BAS,BASS,SNOR,RESNOR,ERR,ERRTOT,
 !$OMP+         WWW,RADIUS,ERROR,ERRMAX,CR1,CR2,CR3,POT1,MARCA,
@@ -347,9 +347,9 @@
        NP2=NY
        NP3=NZ
 
-       DO KZ=0,N3+1
-       DO JY=0,N2+1
-       DO IX=0,N1+1
+       DO KZ=-2,N3+3
+       DO JY=-2,N2+3
+       DO IX=-2,N1+3
 
         KR1=CR3AMR1X(IX,JY,KZ,I)
         KR2=CR3AMR1Y(IX,JY,KZ,I)
@@ -363,10 +363,31 @@
        END DO
        END DO
 
+       DO KZ=-1,N3+2
+       DO JY=-1,N2+2
+       DO IX=-1,N1+2
+
+        if(ix.lt.1.or.ix.gt.n1.or.
+     &     jy.lt.1.or.jy.gt.n2.or.
+     &     kz.lt.1.or.kz.gt.n3) then
+          KR1=CR3AMR1X(IX,JY,KZ,I)
+          KR2=CR3AMR1Y(IX,JY,KZ,I)
+          KR3=CR3AMR1Z(IX,JY,KZ,I)
+
+          UBAS(1:3,1:3,1:3)=U1(KR1-1:KR1+1,KR2-1:KR2+1,KR3-1:KR3+1)
+          CALL LININT52D_NEW(IX,JY,KZ,UBAS,FUIN)
+          U11(IX,JY,KZ,I)=FUIN
+
+        end if
+
+       END DO
+       END DO
+       END DO
+
        SNOR=0.0
-       DO KZ=1,N3
-       DO JY=1,N2
-       DO IX=1,N1
+       DO KZ=-1,N3+2
+       DO JY=-1,N2+2
+       DO IX=-1,N1+2
          SSS=DXPA*DXPA*U11(IX,JY,KZ,I)
          SNOR=SNOR+ABS(SSS)
        END DO
@@ -374,7 +395,7 @@
        END DO
 
 
-       RADIUS=COS(PI/((N1+N2+N3)/3.0))
+       RADIUS=COS(PI/((N1+N2+N3+12)/3.0))
        WWW=1.0
        RESNOR=SNOR
        II=0
@@ -384,9 +405,9 @@
         RESNOR=0.0
 
         ERRTOT=-1.0
-        DO KZ=1,N3
-        DO JY=1,N2
-        DO IX=1,N1
+        DO KZ=-1,N3+2
+        DO JY=-1,N2+2
+        DO IX=-1,N1+2
          IF (MOD((IX+JY+KZ),2).EQ.MOD((II+1),2)) THEN
 *         POISSON EQUATION
           SSS=DXPA*DXPA*U11(IX,JY,KZ,I)
@@ -415,7 +436,7 @@
         IF (II.GT.MAXIT) MARCA=1
        END DO
 
-      APOT1(0:N1+1,0:N2+1,0:N3+1,I)=POT1(0:N1+1,0:N2+1,0:N3+1)
+      APOT1(-2:N1+3,-2:N2+3,-2:N3+3,I)=POT1(-2:N1+3,-2:N2+3,-2:N3+3)
       END DO
 
 
@@ -431,7 +452,7 @@
 !$OMP+        PATCHNX,PATCHNY,PATCHNZ,PATCHX,PATCHY,PATCHZ,
 !$OMP+        U11,PI,PRECIS,LOW1,LOW2,
 !$OMP+        CR3AMR1,CR3AMR1X,CR3AMR1Y,CR3AMR1Z,PARE,
-!$OMP+        RX,RY,RZ,RADX,RADY,RADZ),
+!$OMP+        RX,RY,RZ,RADX,RADY,RADZ,U1),
 !$OMP+     PRIVATE(I,N1,N2,N3,L1,L2,L3,NP1,NP2,NP3,JY,KZ,IX,MARCA,
 !$OMP+        I1,J2,K3,II,SSS,BAS,BASS,RESNOR,SNOR,ERR,ERRTOT,
 !$OMP+        WWW,RADIUS,ERROR,ERRMAX,CR1,CR2,CR3,POT1,
@@ -451,9 +472,9 @@
        NP3=PATCHNZ(PARE(I))
 
 
-       DO KZ=0,N3+1
-       DO JY=0,N2+1
-       DO IX=0,N1+1
+       DO KZ=-2,N3+3
+       DO JY=-2,N2+3
+       DO IX=-2,N1+3
 
         KARE=CR3AMR1(IX,JY,KZ,I)
         KR1=CR3AMR1X(IX,JY,KZ,I)
@@ -492,11 +513,57 @@
        END DO
        END DO
 
+       DO KZ=-1,N3+2
+       DO JY=-1,N2+2
+       DO IX=-1,N1+2
+
+         if(ix.lt.1.or.ix.gt.n1.or.
+     &     jy.lt.1.or.jy.gt.n2.or.
+     &     kz.lt.1.or.kz.gt.n3) then
+
+          KARE=CR3AMR1(IX,JY,KZ,I)
+          KR1=CR3AMR1X(IX,JY,KZ,I)
+          KR2=CR3AMR1Y(IX,JY,KZ,I)
+          KR3=CR3AMR1Z(IX,JY,KZ,I)
+
+          AAA=RX(IX,I)
+          BBB=RY(JY,I)
+          CCC=RZ(KZ,I)
+
+          IF (KARE.GT.0) THEN
+            UBAS(1:3,1:3,1:3)=
+     &        U11(KR1-1:KR1+1,KR2-1:KR2+1,KR3-1:KR3+1,KARE)
+
+            RXBAS(1:3)=RX(KR1-1:KR1+1,KARE)
+            RYBAS(1:3)=RY(KR2-1:KR2+1,KARE)
+            RZBAS(1:3)=RZ(KR3-1:KR3+1,KARE)
+
+            CALL LININT52D_NEW_REAL(AAA,BBB,CCC,
+     &                   RXBAS,RYBAS,RZBAS,UBAS,FUIN)
+            U11(IX,JY,KZ,I)=FUIN
+          ELSE
+            UBAS(1:3,1:3,1:3)=
+     &        U1(KR1-1:KR1+1,KR2-1:KR2+1,KR3-1:KR3+1)
+
+            RXBAS(1:3)=RADX(KR1-1:KR1+1)
+            RYBAS(1:3)=RADY(KR2-1:KR2+1)
+            RZBAS(1:3)=RADZ(KR3-1:KR3+1)
+
+            CALL LININT52D_NEW_REAL(AAA,BBB,CCC,
+     &                   RXBAS,RYBAS,RZBAS,UBAS,FUIN)
+            U11(IX,JY,KZ,I)=FUIN
+          ENDIF
+        end if
+
+       END DO
+       END DO
+       END DO
+
 
        SNOR=0.0
-       DO KZ=1,N3
-       DO JY=1,N2
-       DO IX=1,N1
+       DO KZ=-1,N3+2
+       DO JY=-1,N2+2
+       DO IX=-1,N1+2
          SSS=DXPA*DXPA*U11(IX,JY,KZ,I)
          SNOR=SNOR+ABS(SSS)
        END DO
@@ -504,7 +571,7 @@
        END DO
 
 
-       RADIUS=COS(PI/((N1+N2+N3)/3.0))
+       RADIUS=COS(PI/((N1+N2+N3+12)/3.0))
 *
        WWW=1.0
        II=0
@@ -515,9 +582,9 @@
         RESNOR=0.0
 
         ERRTOT=-1.0
-        DO KZ=1,N3
-        DO JY=1,N2
-        DO IX=1,N1
+        DO KZ=-1,N3+2
+        DO JY=-1,N2+2
+        DO IX=-1,N1+2
          IF (MOD((IX+JY+KZ),2).EQ.MOD((II+1),2)) THEN
 *         POISSON EQUATION
           SSS=DXPA*DXPA*U11(IX,JY,KZ,I)
@@ -545,7 +612,7 @@
        END DO
 
 
-      APOT1(0:N1+1,0:N2+1,0:N3+1,I)=POT1(0:N1+1,0:N2+1,0:N3+1)
+      APOT1(-2:N1+3,-2:N2+3,-2:N3+3,I)=POT1(-2:N1+3,-2:N2+3,-2:N3+3)
 
       END DO
       END DO
