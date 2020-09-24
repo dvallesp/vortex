@@ -10,40 +10,20 @@
 
        IMPLICIT NONE
 
-       !!!! runtime parameters
+*      COMPILATION-TIME PARAMETERS
        INCLUDE 'vortex_parameters.dat'
 
-       INTEGER I,J,K,LOW1,LOW2
-
-       INTEGER NX,NY,NZ,ITER,NDXYZ
-       COMMON /ITERI/ NX,NY,NZ,ITER,NDXYZ
-
-       real T
-       COMMON /ITERR/ T
+*      GLOBAL VARIABLES
+       INTEGER NX,NY,NZ,ITER
+       COMMON /ITERI/ NX,NY,NZ,ITER
 
        real  RADX(0:NMAX+1),RADMX(0:NMAX+1),
      &         RADY(0:NMAY+1),RADMY(0:NMAY+1),
      &         RADZ(0:NMAZ+1),RADMZ(0:NMAZ+1)
        COMMON /GRID/  RADX,RADMX,RADY,RADMY,RADZ,RADMZ
 
-       real ACHE
-       real ZI,LADO,LADO0
-       real OMEGA0,GAMMA, MUM
-       real A1,B1,C1,CS,DXPA,DYPA,DZPA
-
-       INTEGER NFILE,FIRST,EVERY,IFI,LAST
-       INTEGER IX,JY,KZ,NL
-       INTEGER CR1,CR2,CR3,L1,L2,L3,IR
-
        real DX,DY,DZ
        COMMON /ESPACIADO/ DX,DY,DZ
-
-       COMMON /DOS/ ACHE
-
-       INTEGER NPATCH(0:NLEVELS),PARE(NPALEV)
-       INTEGER PATCHNX(NPALEV),PATCHNY(NPALEV),PATCHNZ(NPALEV)
-       INTEGER PATCHX(NPALEV),PATCHY(NPALEV),PATCHZ(NPALEV)
-       real  PATCHRX(NPALEV),PATCHRY(NPALEV),PATCHRZ(NPALEV)
 
        real U1(0:NMAX+1,0:NMAY+1,0:NMAZ+1)     ! source in poisson equation
        real POT(0:NMAX+1,0:NMAY+1,0:NMAZ+1)    ! field to solve
@@ -51,11 +31,9 @@
 
        real  U11(-1:NAMRX+2,-1:NAMRY+2,-1:NAMRZ+2,NPALEV)    !source in Poisson eq.
        real  POT1(-2:NAMRX+3,-2:NAMRY+3,-2:NAMRZ+3,NPALEV)   !field to solve
-       COMMON /UAMR/U11,POT1
+       COMMON /UAMR/ U11,POT1
 
-       real KKK(NMAX,NMAY,NMAZ)    !KKK coeficients of Fourier series
-
-* Redefinitions for v4 in VELOC and VELOC_P:
+       ! original velocities (reused afterwards)
        real U2(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
        real U3(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
        real U4(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
@@ -64,6 +42,7 @@
        real U14(0:NAMRX+1,0:NAMRY+1,0:NAMRZ+1,NPALEV)
        COMMON /VELOC/ U2,U3,U4,U12,U13,U14
 
+       ! compressive velocities will be saved here
        real U2P(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
        real U3P(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
        real U4P(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
@@ -72,7 +51,7 @@
        real U14P(0:NAMRX+1,0:NAMRY+1,0:NAMRZ+1,NPALEV)
        COMMON /VELOC_P/ U2P,U3P,U4P,U12P,U13P,U14P
 
-*      to save the original velocities and reuse U2, U3, ...
+       ! to save the original velocities and reuse U2, U3, ...
        real UORI2(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
        real UORI3(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
        real UORI4(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
@@ -81,6 +60,7 @@
        real UORI14(0:NAMRX+1,0:NAMRY+1,0:NAMRZ+1,NPALEV)
        COMMON /VELOC_ORIGINAL/ UORI2,UORI3,UORI4,UORI12,UORI13,UORI14
 
+       ! differential operators (reused as potentials afterwards)
        real ROTAX_0(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
        real ROTAY_0(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
        real ROTAZ_0(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
@@ -93,26 +73,13 @@
        real DIVER(-2:NAMRX+3,-2:NAMRY+3,-2:NAMRZ+3,NPALEV)
        COMMON /DIVERGENCE/ DIVER0, DIVER
 
-       INTEGER II,JJ,KK1,KK2,KK,IT
+       ! runtime flags
        INTEGER FLAG_VERBOSE, FLAG_W_DIVROT, FLAG_W_POTENTIALS,
      &         FLAG_W_VELOCITIES
-       LOGICAL FILE_EXISTS
        COMMON /FLAGS/ FLAG_VERBOSE, FLAG_W_DIVROT, FLAG_W_POTENTIALS,
      &                FLAG_W_VELOCITIES
-       real ZETA,LIM,BAS
-       INTEGER N1,N2,N3,NTOT,AXIS,VAR
 
-       CHARACTER*14 FILE5
-       CHARACTER*30 FILERR5
-       real TIEMPOI, TIEMPOF
-
-       real, ALLOCATABLE::SCR4(:,:,:)
-
-* New definitions for v4:
-       real UBAS(3,3,3),RXBAS(3),RYBAS(3),RZBAS(3),FUIN
-       real AAA,BBB,CCC
-       INTEGER KARE,KR1,KR2,KR3
-
+       ! AMR grid parent cells
        INTEGER CR3AMR1(-2:NAMRX+3,-2:NAMRY+3,-2:NAMRZ+3,NPALEV)
        INTEGER CR3AMR1X(-2:NAMRX+3,-2:NAMRY+3,-2:NAMRZ+3,NPALEV)
        INTEGER CR3AMR1Y(-2:NAMRX+3,-2:NAMRY+3,-2:NAMRZ+3,NPALEV)
@@ -126,21 +93,31 @@
        real RMY(-2:NAMRX+3,NPALEV)
        real RMZ(-2:NAMRX+3,NPALEV)
        COMMON /MINIGRIDS/ RX,RY,RZ,RMX,RMY,RMZ
-*
 
-*      SOR precision parameter and max num of iterations
+       ! SOR precision parameter and max num of iterations
        real PRECIS
        INTEGER MAXIT
        COMMON /SOR/ PRECIS,MAXIT
 
-*      error threshold (larger error gets interpolated)
-       real ERR_THR
+*      LOCAL VARIABLES
+       INTEGER I,J,K,LOW1,LOW2,II,JJ,IX,JY,KZ,NL,IR,N1,N2,N3,VAR
+       INTEGER NFILE,FIRST,EVERY,IFI,LAST
+       real ZI,LADO,LADO0,ZETA,LIM,ERR_THR,T
+       LOGICAL FILE_EXISTS
+       CHARACTER*14 FILE5
+       CHARACTER*30 FILERR5
+
+       ! grids
+       INTEGER NPATCH(0:NLEVELS),PARE(NPALEV)
+       INTEGER PATCHNX(NPALEV),PATCHNY(NPALEV),PATCHNZ(NPALEV)
+       INTEGER PATCHX(NPALEV),PATCHY(NPALEV),PATCHZ(NPALEV)
+       real  PATCHRX(NPALEV),PATCHRY(NPALEV),PATCHRZ(NPALEV)
+
+       real KKK(NMAX,NMAY,NMAZ)    !KKK coeficients of Fourier series
 
 *      ---PARALLEL---
        INTEGER NUM,OMP_GET_NUM_THREADS,NUMOR, FLAG_PARALLEL
        COMMON /PROCESADORES/ NUM
-
-       TIEMPOI=SECNDS(0.0E0_4)
 
 
 ****************************************************
@@ -155,8 +132,6 @@
        READ(1,*) NX,NY,NZ
        READ(1,*)
        READ(1,*) ZI,LADO0
-       READ(1,*)
-       READ(1,*) GAMMA,MUM
        READ(1,*)
        READ(1,*) NL
        READ(1,*)
@@ -228,7 +203,7 @@
        NZ=NMAZ
 
 *      READING DATA
-       CALL LEER(VAR,ITER,NX,NY,NZ,NDXYZ,T,ZETA,NL,NPATCH,
+       CALL LEER(VAR,ITER,NX,NY,NZ,T,ZETA,NL,NPATCH,
      &          PARE,PATCHNX,PATCHNY,PATCHNZ,PATCHX,PATCHY,PATCHZ,
      &          PATCHRX,PATCHRY,PATCHRZ)
 

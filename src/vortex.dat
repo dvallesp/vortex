@@ -5,8 +5,6 @@ cells on each direction,nx,ny,nz --------->
 128,128,128
 initial redshift, box size --------------->
 100.0,40.0
-adiabatic exponent, mean atomic weight --->
-1.66666666,0.6
 numero de nivels  ------------------------>
 9
 SOR presion parameter, SOR max iter ---------->

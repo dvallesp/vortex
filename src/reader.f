@@ -1,5 +1,5 @@
 ***********************************************************************
-       SUBROUTINE LEER(VAR,ITER,NX,NY,NZ,NDXYZ,T,ZETA,NL,NPATCH,
+       SUBROUTINE LEER(VAR,ITER,NX,NY,NZ,T,ZETA,NL,NPATCH,
      &            PARE,PATCHNX,PATCHNY,PATCHNZ,PATCHX,PATCHY,PATCHZ,
      &            PATCHRX,PATCHRY,PATCHRZ)
 ***********************************************************************
