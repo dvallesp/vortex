@@ -1,6 +1,6 @@
 *************PARAMETERS FOR VORTEX**********
 files: first, last, every ---50-4050------------->
-1000,1000,50
+4000,4000,50
 cells on each direction,nx,ny,nz --------->
 128,128,128
 dmparticles ------------------------------>
@@ -14,6 +14,8 @@ adiabatic exponent, mean atomic weight --->
 numero de nivels  ------------------------>
 9
 SOR presion parameter, SOR max iter ---------->
-1e-6,500
+1e-9,1000
+Error threshold ---------->
+0.05
 flags_writing (1=yes; 0=no): verbose, write_divrot, write_potentials, write_velocities---------------->
 1,1,1,1

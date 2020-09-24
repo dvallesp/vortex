@@ -133,6 +133,9 @@
        INTEGER MAXIT
        COMMON /SOR/ PRECIS,MAXIT
 
+*      error threshold (larger error gets interpolated)
+       real ERR_THR
+
 *      ---PARALLEL---
        INTEGER NUM,OMP_GET_NUM_THREADS,NUMOR, FLAG_PARALLEL
        COMMON /PROCESADORES/ NUM
@@ -162,6 +165,8 @@
        READ(1,*) NL
        READ(1,*)
        READ(1,*) PRECIS, MAXIT
+       READ(1,*)
+       READ(1,*) ERR_THR
        READ(1,*)
        READ(1,*) FLAG_VERBOSE, FLAG_W_DIVROT, FLAG_W_POTENTIALS,
      &           FLAG_W_VELOCITIES
@@ -884,7 +889,8 @@
      &                       PATCHX,PATCHY,PATCHZ,PATCHRX,PATCHRY,
      &                       PATCHRZ)
 
-       CALL CORRECT_OUTLIERS(NL,NX,NY,NZ,NPATCH,PATCHNX,PATCHNY,PATCHNZ)
+       CALL CORRECT_OUTLIERS(NL,NX,NY,NZ,NPATCH,PATCHNX,PATCHNY,PATCHNZ,
+     &                       ERR_THR)
 
         IF (FLAG_VERBOSE.EQ.1) THEN
           WRITE(*,*) '...Compressional velocity...'

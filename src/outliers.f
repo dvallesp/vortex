@@ -1,6 +1,6 @@
 ***********************************************************************
       SUBROUTINE CORRECT_OUTLIERS(NL,NX,NY,NZ,NPATCH,
-     &           PATCHNX,PATCHNY,PATCHNZ)
+     &           PATCHNX,PATCHNY,PATCHNZ, ERR_THR)
 ***********************************************************************
 
       IMPLICIT NONE
@@ -11,6 +11,7 @@
       INTEGER NL, NX, NY, NZ
       INTEGER NPATCH(0:NLEVELS)
       INTEGER PATCHNX(NPALEV),PATCHNY(NPALEV),PATCHNZ(NPALEV)
+      real err_thr
 
 *     GLOBAL VARIABLES
 *     Grid
@@ -67,13 +68,11 @@
 *     private variables
       INTEGER IR,I,N1,N2,N3,LOW1,LOW2,IX,JY,KZ
       real UBAS(3,3,3),RXBAS(3),RYBAS(3),RZBAS(3),FUIN
-      real AAA, BBB, CCC, ERRBAS, ERR_THR, BAS2, BAS3, BAS4, BAS
+      real AAA, BBB, CCC, ERRBAS, BAS2, BAS3, BAS4, BAS
       real U2PBAS, U3PBAS, U4PBAS, U2RBAS, U3RBAS, U4RBAS, EU2, EU3, EU4
       INTEGER KARE,KR1,KR2,KR3
 
       integer c1, c2, c3
-
-      ERR_THR = 0.05 ! we will un-hard code this eventually
 
       CALL CELLWISE_ERROR(NX,NY,NZ,NL,NPATCH,PATCHNX,PATCHNY,PATCHNZ)
 
