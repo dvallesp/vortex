@@ -154,10 +154,6 @@
        READ(1,*)
        READ(1,*) NX,NY,NZ
        READ(1,*)
-       READ(1,*) NDXYZ
-       READ(1,*)
-       READ(1,*) ACHE,OMEGA0
-       READ(1,*)
        READ(1,*) ZI,LADO0
        READ(1,*)
        READ(1,*) GAMMA,MUM

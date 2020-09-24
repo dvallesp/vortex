@@ -3,10 +3,6 @@ files: first, last, every ---50-4050------------->
 4000,4000,50
 cells on each direction,nx,ny,nz --------->
 128,128,128
-dmparticles ------------------------------>
-24097152
-Hubble constant , h, omega matter -------->
-0.678,0.31
 initial redshift, box size --------------->
 100.0,40.0
 adiabatic exponent, mean atomic weight --->
