@@ -93,6 +93,11 @@ C      INTEGER, ALLOCATABLE::SCR4_INT(:,:,:)
        END DO
        CLOSE(33)
 
+       IF(SUM(NPATCH(0:NLEVELS)).GT.NPALEV) THEN
+         write(*,*) "NPALEV too small!! Should at least be",
+     &               SUM(NPATCH(0:NLEVELS))
+       END IF
+
 *      BARYONIC (clus file)
        READ(31)
        IR=0
