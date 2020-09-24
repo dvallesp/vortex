@@ -312,13 +312,6 @@
 *      ---PARALLEL---
       INTEGER NUM,OMP_GET_NUM_THREADS,NUMOR, FLAG_PARALLEL
       COMMON /PROCESADORES/ NUM
-
-
-*     en POTAMR ademas de resolver la ecuacion de poisson
-*     el potencial se extiende llamando a POTAMR_BOUND en PEQUES
-*     aqui solo hace falta extender una celda !!!
-
-
 *     ---------------------------------------------------------------------------
 
       PI=ACOS(-1.0)
@@ -347,6 +340,7 @@
        NP2=NY
        NP3=NZ
 
+       ! initialize the potential (real and ficticious cells) by interpolation
        DO KZ=-2,N3+3
        DO JY=-2,N2+3
        DO IX=-2,N1+3
@@ -363,6 +357,7 @@
        END DO
        END DO
 
+       ! extend the source (ficticious cells) by interpolation
        DO KZ=-1,N3+2
        DO JY=-1,N2+2
        DO IX=-1,N1+2
@@ -377,7 +372,6 @@
           UBAS(1:3,1:3,1:3)=U1(KR1-1:KR1+1,KR2-1:KR2+1,KR3-1:KR3+1)
           CALL LININT52D_NEW(IX,JY,KZ,UBAS,FUIN)
           U11(IX,JY,KZ,I)=FUIN
-
         end if
 
        END DO
@@ -400,7 +394,7 @@
        RESNOR=SNOR
        II=0
        MARCA=0
-       DO WHILE (MARCA.EQ.0.OR.II.LT.2)
+       DO WHILE (MARCA.EQ.0.OR.II.LT.2) ! SOR iteration
         II=II+1
         RESNOR=0.0
 

@@ -17,23 +17,19 @@
       real DX,DY,DZ
       COMMON /ESPACIADO/ DX,DY,DZ
 
-
 *     GENERAL INITIAL CONDITIONS
 *     GRID LIMITS
        A=-LADO/2.0
        B=LADO/2.0
 
-
 *     GRID
-
 *     X-AXIS
       C=(B-A)/(NX-1)
       RADX(1)=A
       DO I=2,NX
         RADX(I)=RADX(I-1)+C
       END DO
-
-*     FICTICIUS CELLS
+*     FICTICIOUS CELLS
       RADX(0)=RADX(1)-C
       RADX(NX+1)=RADX(NX)+C
 
@@ -43,17 +39,16 @@
       DO J=2,NY
         RADY(J)=RADY(J-1)+C
       END DO
-
-*     FICTICIUS CELLS
+*     FICTICIOUS CELLS
       RADY(0)=RADY(1)-C
       RADY(NY+1)=RADY(NY)+C
+
 *     Z-AXIS
       C=(B-A)/(NZ-1)
       RADZ(1)=A
       DO K=2,NZ
         RADZ(K)=RADZ(K-1)+C
       END DO
-
 *     FICTICIUS CELLS
       RADZ(0)=RADZ(1)-C
       RADZ(NZ+1)=RADZ(NZ)+C
@@ -146,12 +141,6 @@
       COMMON /PROCESADORES/ NUM
 
 
-*     modificado 10/5/2012
-*     marca celdas al borde en niveles recursivos
-*     solo hasta el nivel 2 porque el nivel 1 nunca se acerca
-*     a las caras de la malla base
-
-
       DO IR=NL,2,-1
       LOW1=SUM(NPATCH(0:IR-1))+1
       LOW2=SUM(NPATCH(0:IR))
@@ -188,9 +177,9 @@
         IF (CR1.LT.2.OR.CR1.GT.PATCHNX(ABUELO)-1.OR.   !----------------
      &      CR2.LT.2.OR.CR2.GT.PATCHNY(ABUELO)-1.OR.
      &      CR3.LT.2.OR.CR3.GT.PATCHNZ(ABUELO)-1) THEN
-*        la celda madre de la celda ix,jy,kz
-*        esta en el borde de su parche, hay que buscar
-*        recursivamente que celda no esta en la cara
+*        the progenitor cell of the cell ix,jy,kz
+*        is in the boundary of its patch. we need to recursively look
+*        for a cell not in the boundary
 
          CR1=PATCHX(ABUELO)-1+INT((KR1+1)/2)
          CR2=PATCHY(ABUELO)-1+INT((KR2+1)/2)
@@ -212,34 +201,13 @@
           CR3AMR1X(IX,JY,KZ,I)=KR1
           CR3AMR1Y(IX,JY,KZ,I)=KR2
           CR3AMR1Z(IX,JY,KZ,I)=KR3
-
-*          IF (KR1.LT.1) WRITE(*,*) 'X OUT <', ABUELO,IR,I,KR1
-*          IF (KR2.LT.1) WRITE(*,*) 'Y OUT <', ABUELO,IR,I,KR2
-*          IF (KR3.LT.1) WRITE(*,*) 'Z OUT <', ABUELO,IR,I,KR3
-*
-*          IF (KR1.GT.NX) WRITE(*,*) 'X OUT >', ABUELO,IR,I,KR1
-*          IF (KR2.GT.NY) WRITE(*,*) 'Y OUT >', ABUELO,IR,I,KR2
-*          IF (KR3.GT.NZ) WRITE(*,*) 'Z OUT >', ABUELO,IR,I,KR3
-
          END IF
         ELSE                                           !----------------
          CR3AMR1(IX,JY,KZ,I)=ABUELO
          CR3AMR1X(IX,JY,KZ,I)=KR1
          CR3AMR1Y(IX,JY,KZ,I)=KR2
          CR3AMR1Z(IX,JY,KZ,I)=KR3
-
-*         IF (KR1.LT.1) WRITE(*,*) 'X OUT L <', ABUELO,IR,I,KR1
-*         IF (KR2.LT.1) WRITE(*,*) 'Y OUT L <', ABUELO,IR,I,KR2
-*         IF (KR3.LT.1) WRITE(*,*) 'Z OUT L <', ABUELO,IR,I,KR3
-*
-*         IF (KR1.GT.PATCHNX(ABUELO))
-*     &     WRITE(*,*) 'X OUT L >', ABUELO,IR,I,KR1,PATCHNX(ABUELO)
-*         IF (KR2.GT.PATCHNY(ABUELO))
-*     &     WRITE(*,*) 'Y OUT L >', ABUELO,IR,I,KR2,PATCHNY(ABUELO)
-*         IF (KR3.GT.PATCHNZ(ABUELO))
-*     &     WRITE(*,*) 'Z OUT L >', ABUELO,IR,I,KR3,PATCHNZ(ABUELO)
-
-*        esta celda si esta bien dentro de su parche padre
+*        this cell is well inside its parent patch!!
          MARCA=1                                       !----------------
         END IF
        END DO                 !...................
@@ -266,40 +234,27 @@
        DO JY=-2,PATCHNY(I)+3
        DO IX=-2,PATCHNX(I)+3
 
+         CR1=L1-1+INT((IX+1)/2)
+         CR2=L2-1+INT((JY+1)/2)
+         CR3=L3-1+INT((KZ+1)/2)
 
-       CR1=L1-1+INT((IX+1)/2)
-       CR2=L2-1+INT((JY+1)/2)
-       CR3=L3-1+INT((KZ+1)/2)
+         IF (IX.LT.-1) CR1=INT((IX+1)/2)+L1-2
+         IF (JY.LT.-1) CR2=INT((JY+1)/2)+L2-2
+         IF (KZ.LT.-1) CR3=INT((KZ+1)/2)+L3-2
 
-       IF (IX.LT.-1) CR1=INT((IX+1)/2)+L1-2
-       IF (JY.LT.-1) CR2=INT((JY+1)/2)+L2-2
-       IF (KZ.LT.-1) CR3=INT((KZ+1)/2)+L3-2
+         KR1=CR1
+         KR2=CR2
+         KR3=CR3
 
-       KR1=CR1
-       KR2=CR2
-       KR3=CR3
-
-
-       CR3AMR1(IX,JY,KZ,I)=0
-       CR3AMR1X(IX,JY,KZ,I)=KR1
-       CR3AMR1Y(IX,JY,KZ,I)=KR2
-       CR3AMR1Z(IX,JY,KZ,I)=KR3
-
-*       IF (KR1.LT.1) WRITE(*,*) '0 X OUT <', ABUELO,IR,I,KR1
-*       IF (KR2.LT.1) WRITE(*,*) '0 Y OUT <', ABUELO,IR,I,KR2
-*       IF (KR3.LT.1) WRITE(*,*) '0 Z OUT <', ABUELO,IR,I,KR3
-*
-*       IF (KR1.GT.NX) WRITE(*,*) '0 X OUT >', ABUELO,IR,I,KR1
-*       IF (KR2.GT.NY) WRITE(*,*) '0 Y OUT >', ABUELO,IR,I,KR2
-*       IF (KR3.GT.NZ) WRITE(*,*) '0 Z OUT >', ABUELO,IR,I,KR3
+         CR3AMR1(IX,JY,KZ,I)=0
+         CR3AMR1X(IX,JY,KZ,I)=KR1
+         CR3AMR1Y(IX,JY,KZ,I)=KR2
+         CR3AMR1Z(IX,JY,KZ,I)=KR3
 
        END DO
        END DO
        END DO
       END DO
-
-
-
 
 *     MINI GRIDS
       RX=0.0
@@ -345,10 +300,11 @@
       real RMX(-2:N1+3),RMY(-2:N2+3),RMZ(-2:N3+3)
       real RPAX,RPAY,RPAZ,DX,DY,DZ
 
-*     NEW DX
+*     X
       DO I=1,N1
         RX(I)=RPAX-(DX/2.0)+(I-1)*DX
       END DO
+
       RX(0)=RX(1)-DX
       RX(N1+1)=RX(N1)+DX
       RX(-1)=RX(0)-DX
@@ -360,9 +316,11 @@
         RMX(I)=(RX(I)+RX(I+1))/2.0
       END DO
 
+*     Y
       DO I=1,N2
         RY(I)=RPAY-(DY/2.0)+(I-1)*DY
       END DO
+
       RY(0)=RY(1)-DY
       RY(N2+1)=RY(N2)+DY
       RY(-1)=RY(0)-DY
@@ -374,9 +332,11 @@
         RMY(I)=(RY(I)+RY(I+1))/2.0
       END DO
 
+*     Z
       DO I=1,N3
         RZ(I)=RPAZ-(DZ/2.0)+(I-1)*DZ
       END DO
+
       RZ(0)=RZ(1)-DZ
       RZ(N3+1)=RZ(N3)+DZ
       RZ(-1)=RZ(0)-DZ
@@ -462,7 +422,7 @@
        COMMON /PROCESADORES/ NUM
 
 
-*      EXPANSION DE LAS MATRICES POR INTERPOLACION
+*      EXPANSION OF THE PATCHES BY INTERPOLATION
 
       IR=1
       DXPA=DX/(2.0**IR)
@@ -598,10 +558,6 @@
               U14(IX,JY,KZ,I)=FUIN
 
              ENDIF
-c          ELSE
-c              U12(IX,JY,KZ,I)=U12_Z(IX,JY,KZ,I)
-c              U13(IX,JY,KZ,I)=U13_Z(IX,JY,KZ,I)
-c              U14(IX,JY,KZ,I)=U14_Z(IX,JY,KZ,I)
           ENDIF
          END DO
          END DO
@@ -610,8 +566,7 @@ c              U14(IX,JY,KZ,I)=U14_Z(IX,JY,KZ,I)
         END DO
        END DO
 
-
-* IR=0
+* IR=0 (periodic boundary)
        DO K=0,NZ+1
        DO J=0,NY+1
        DO I=0,NX+1
@@ -633,13 +588,7 @@ c              U14(IX,JY,KZ,I)=U14_Z(IX,JY,KZ,I)
        END DO
        END DO
 
-***    ALL VARIALBES ARE EXTENDED ONE CELL
+***    ALL VARIABLES HAVE BEEN EXTENDED ONE CELL
 
        RETURN
        END
-
-
-
-***********************************************************************
-*******   END PROGRAM  ************************************************
-***********************************************************************

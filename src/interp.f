@@ -14,7 +14,6 @@
       real LIM,LIMA
       real DXCEN,DYCEN,DZCEN
 
-
       LIM=8.0
 
       II=-1
@@ -27,7 +26,6 @@
       DXX=0.0
       DYY=0.0
       DZZ=0.0
-
 
 *     DU/DX
       DXMAS=U(3,2,2)-U(2,2,2)
@@ -80,7 +78,6 @@
       END IF
       IF (LIMA.GT.LIM) DZZ=0.0
 
-
       XX=0.25
       YY=0.25
       ZZ=0.25
@@ -89,7 +86,6 @@
       IF (KK.LT.0) ZZ=-0.25
 
       FUIN=U(2,2,2) + XX*DXX + YY*DYY + ZZ*DZZ
-
 
       RETURN
       END
@@ -111,13 +107,11 @@
       real LIM,LIMA
       real DXCEN,DYCEN,DZCEN
 
-
       LIM=8.0
 
       DXX=0.0
       DYY=0.0
       DZZ=0.0
-
 
 *     DU/DX
       DXMAS=(U(3,2,2)-U(2,2,2))/(RX(3)-RX(2))
@@ -128,8 +122,7 @@
      &     MAX(1.E-30,ABS(MIN(U(3,2,2),U(1,2,2))))
 
       IF ((DXMIN*DXMAS).GT.0.0) THEN
-       !DXX=MIN(ABS(DXCEN),ABS(DXMIN),ABS(DXMAS))
-       DXX = ABS(DXCEN) !! change DV: use always centered differences
+       DXX = ABS(DXCEN)
        SIGNO=1.0
        IF (DXCEN.LT.0.0) SIGNO=-1.0
        DXX=DXX*SIGNO
@@ -147,8 +140,7 @@
      &     MAX(1.E-30,ABS(MIN(U(2,3,2),U(2,1,2))))
 
       IF ((DYMIN*DYMAS).GT.0.0) THEN
-       !DYY=MIN(ABS(DYCEN),ABS(DYMIN),ABS(DYMAS))
-       DYY = ABS(DYCEN) !! change DV: use always centered differences
+       DYY = ABS(DYCEN)
        SIGNO=1.0
        IF (DYCEN.LT.0.0) SIGNO=-1.0
        DYY=DYY*SIGNO
@@ -166,8 +158,7 @@
      &     MAX(1.E-30,ABS(MIN(U(2,2,3),U(2,2,1))))
 
       IF ((DZMIN*DZMAS).GT.0.0) THEN
-       !DZZ=MIN(ABS(DZCEN),ABS(DZMIN),ABS(DZMAS))
-       DZZ = ABS(DZCEN) !! change DV: use always centered differences
+       DZZ = ABS(DZCEN)
        SIGNO=1.0
        IF (DZCEN.LT.0.0) SIGNO=-1.0
        DZZ=DZZ*SIGNO
@@ -176,13 +167,11 @@
       END IF
       IF (LIMA.GT.LIM) DZZ=0.0
 
-
       XXX=XX-RX(2)
       YYY=YY-RY(2)
       ZZZ=ZZ-RZ(2)
 
       FUIN=U(2,2,2) + XXX*DXX + YYY*DYY + ZZZ*DZZ
-
 
       RETURN
       END

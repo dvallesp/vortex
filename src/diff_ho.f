@@ -337,12 +337,6 @@
       INTEGER NUM,OMP_GET_NUM_THREADS,NUMOR, FLAG_PARALLEL
       COMMON /PROCESADORES/ NUM
 
-*-------------------------------------
-*      Divergencia fina  (DIVER)
-*            (IR: 1 ---> NL)
-*            (celdas: 2 ----> NX-1) (excluimos los bordes)
-*-------------------------------------
-
       coef4 = (/1.0/280,-4.0/105,1.0/5,-4.0/5,0.0,4.0/5,-1.0/5,4.0/105,
      &           -1.0/280 /)
       coef3 = (/-1.0/60,3.0/20,-3.0/4,0.0,3.0/4,-3.0/20,1.0/60/)
@@ -598,12 +592,6 @@
        INTEGER NUM,OMP_GET_NUM_THREADS,NUMOR, FLAG_PARALLEL
        COMMON /PROCESADORES/ NUM
 
-*-------------------------------------
-*      Divergencia fina  (DIVER)
-*            (IR: 1 ---> NL)
-*            (celdas: 2 ----> NX-1)
-*-------------------------------------
-
        coef4 = (/1.0/280,-4.0/105,1.0/5,-4.0/5,0.0,4.0/5,-1.0/5,4.0/105,
      &           -1.0/280 /)
        coef3 = (/-1.0/60,3.0/20,-3.0/4,0.0,3.0/4,-3.0/20,1.0/60/)
@@ -843,12 +831,6 @@
 *      ---PARALLEL---
        INTEGER NUM,OMP_GET_NUM_THREADS,NUMOR, FLAG_PARALLEL
        COMMON /PROCESADORES/ NUM
-
-*-------------------------------------
-*      Divergencia fina  (DIVER)
-*            (IR: 1 ---> NL)
-*            (celdas: 2 ----> NX-1)
-*-------------------------------------
 
        coef4 = (/1.0/280,-4.0/105,1.0/5,-4.0/5,0.0,4.0/5,-1.0/5,4.0/105,
      &           -1.0/280 /)
