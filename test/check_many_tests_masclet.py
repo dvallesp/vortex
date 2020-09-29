@@ -77,6 +77,11 @@ for it in range(itini, itfin+every, every):
     ev = {}
     frac_vcomp = {}
     frac_vrot = {}
+
+    maxvx = max([np.max(abs(vxi)) for vxi in vx])
+    maxvy = max([np.max(abs(vyi)) for vyi in vy])
+    maxvz = max([np.max(abs(vzi)) for vzi in vz])
+
     for l in range(maxl + 1):
         if l == 0:
             minipatch = 0
@@ -118,9 +123,9 @@ for it in range(itini, itfin+every, every):
         velrecy_l = velcompy_l + velroty_l
         velrecz_l = velcompz_l + velrotz_l
 
-        ev[l] = [np.percentile(np.sqrt(((vx_l / v_l) ** 2 * np.abs(velrecx_l - vx_l) / (abs(vx_l) + eps_err * np.max(abs(vx_l)))) ** 2 +
-                                       ((vy_l / v_l) ** 2 * np.abs(velrecy_l - vy_l) / (abs(vy_l) + eps_err * np.max(abs(vy_l)))) ** 2 +
-                                       ((vz_l / v_l) ** 2 * np.abs(velrecz_l - vz_l) / (abs(vz_l) + eps_err * np.max(abs(vz_l)))) ** 2),
+        ev[l] = [np.percentile(np.sqrt(((vx_l / v_l) ** 2 * np.abs(velrecx_l - vx_l) / (abs(vx_l) + eps_err * maxvx)) ** 2 +
+                                       ((vy_l / v_l) ** 2 * np.abs(velrecy_l - vy_l) / (abs(vy_l) + eps_err * maxvy)) ** 2 +
+                                       ((vz_l / v_l) ** 2 * np.abs(velrecz_l - vz_l) / (abs(vz_l) + eps_err * maxvz)) ** 2),
                                perc) for perc in percentiles]
         frac_vcomp[l] = [np.percentile(velcomp_l / v_l, perc) for perc in percentiles]
         frac_vrot[l] = [np.percentile(velrot_l / v_l, perc) for perc in percentiles]

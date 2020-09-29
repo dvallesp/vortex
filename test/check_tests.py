@@ -26,6 +26,7 @@ mockit = 4000
 ncores = 8
 verbose = True
 
+eps_err = 0.01
 percentiles = [5, 25, 50, 75, 95]
 file_dictionary = {}
 
@@ -100,6 +101,11 @@ for ipatch in range(len(vx)):
 ev = {}
 frac_vcomp = {}
 frac_vrot = {}
+
+maxvx = max([np.max(abs(vxi)) for vxi in vx])
+maxvy = max([np.max(abs(vyi)) for vyi in vy])
+maxvz = max([np.max(abs(vzi)) for vzi in vz])
+
 for l in range(maxl + 1):
     if l == 0:
         minipatch = 0
@@ -127,9 +133,9 @@ for l in range(maxl + 1):
     velrecy_l = velcompy_l + velroty_l
     velrecz_l = velcompz_l + velrotz_l
 
-    ev[l] = [np.percentile(np.sqrt(((vx_l / v_l) ** 2 * np.abs(velrecx_l / vx_l - 1)) ** 2 +
-                                   ((vy_l / v_l) ** 2 * np.abs(velrecy_l / vy_l - 1)) ** 2 +
-                                   ((vz_l / v_l) ** 2 * np.abs(velrecz_l / vz_l - 1)) ** 2),
+    ev[l] = [np.percentile(np.sqrt(((vx_l / v_l) ** 2 * np.abs(velrecx_l - vx_l) / (abs(vx_l) + eps_err * maxvx)) ** 2 +
+                                   ((vy_l / v_l) ** 2 * np.abs(velrecy_l - vy_l) / (abs(vy_l) + eps_err * maxvy)) ** 2 +
+                                   ((vz_l / v_l) ** 2 * np.abs(velrecz_l - vz_l) / (abs(vz_l) + eps_err * maxvz)) ** 2),
                            perc) for perc in percentiles]
     frac_vcomp[l] = [np.percentile(velcomp_l / v_l, perc) for perc in percentiles]
     frac_vrot[l] = [np.percentile(velrot_l / v_l, perc) for perc in percentiles]
@@ -223,6 +229,11 @@ for ipatch in range(len(vx)):
 ev = {}
 frac_vcomp = {}
 frac_vrot = {}
+
+maxvx = max([np.max(abs(vxi)) for vxi in vx])
+maxvy = max([np.max(abs(vyi)) for vyi in vy])
+maxvz = max([np.max(abs(vzi)) for vzi in vz])
+
 for l in range(maxl + 1):
     if l == 0:
         minipatch = 0
@@ -247,8 +258,8 @@ for l in range(maxl + 1):
     velrecy_l = velcompy_l + velroty_l
     velrecz_l = velcompz_l + velrotz_l
 
-    ev[l] = [np.percentile(np.sqrt(((vx_l / v_l) ** 2 * np.abs(velrecx_l / vx_l - 1)) ** 2 +
-                                   ((vy_l / v_l) ** 2 * np.abs(velrecy_l / vy_l - 1)) ** 2),
+    ev[l] = [np.percentile(np.sqrt(((vx_l / v_l) ** 2 * np.abs(velrecx_l - vx_l) / (abs(vx_l) + eps_err * maxvx)) ** 2 +
+                                   ((vy_l / v_l) ** 2 * np.abs(velrecy_l - vy_l) / (abs(vy_l) + eps_err * maxvy)) ** 2),
                            perc) for perc in percentiles]
     frac_vcomp[l] = [np.percentile(velcomp_l / v_l, perc) for perc in percentiles]
     frac_vrot[l] = [np.percentile(velrot_l / v_l, perc) for perc in percentiles]
@@ -354,6 +365,11 @@ for ipatch in range(len(vx)):
 ev = {}
 evcomp = {}
 evrot = {}
+
+maxvx = max([np.max(abs(vxi)) for vxi in vx])
+maxvy = max([np.max(abs(vyi)) for vyi in vy])
+maxvz = max([np.max(abs(vzi)) for vzi in vz])
+
 for l in range(maxl + 1):
     if l == 0:
         minipatch = 0
@@ -394,14 +410,14 @@ for l in range(maxl + 1):
                                    ((vz_l / v_l) ** 2 * np.abs(velrecz_l / vz_l - 1)) ** 2),
                            perc) for perc in percentiles]
 
-    evcomp[l] = [np.percentile(np.sqrt(((truevelcompx_l / truevelcomp_l) ** 2 * np.abs(velcompx_l / truevelcompx_l - 1)) ** 2 +
-                                       ((truevelcompx_l / truevelcomp_l) ** 2 * np.abs(velcompy_l / truevelcompy_l - 1)) ** 2 +
-                                       ((truevelcompx_l / truevelcomp_l) ** 2 * np.abs(velcompz_l / truevelcompz_l - 1)) ** 2),
+    evcomp[l] = [np.percentile(np.sqrt(((truevelcompx_l / truevelcomp_l) ** 2 * np.abs(velcompx_l - truevelcompx_l) / (abs(truevelcompx_l) + eps_err * maxvx)) ** 2 +
+                                       ((truevelcompy_l / truevelcomp_l) ** 2 * np.abs(velcompy_l - truevelcompy_l) / (abs(truevelcompy_l) + eps_err * maxvy)) ** 2 +
+                                       ((truevelcompz_l / truevelcomp_l) ** 2 * np.abs(velcompz_l - truevelcompz_l) / (abs(truevelcompz_l) + eps_err * maxvz)) ** 2),
                                perc) for perc in percentiles]
 
-    evrot[l] = [np.percentile(np.sqrt(((truevelrotx_l / truevelrot_l) ** 2 * np.abs(velrotx_l / truevelrotx_l - 1)) ** 2 +
-                                      ((truevelrotx_l / truevelrot_l) ** 2 * np.abs(velroty_l / truevelroty_l - 1)) ** 2 +
-                                      ((truevelrotx_l / truevelrot_l) ** 2 * np.abs(velrotz_l / truevelrotz_l - 1)) ** 2),
+    evrot[l] = [np.percentile(np.sqrt(((truevelrotx_l / truevelrot_l) ** 2 * np.abs(velrotx_l - truevelrotx_l) / (abs(truevelrotx_l) + eps_err * maxvx)) ** 2 +
+                                      ((truevelroty_l / truevelrot_l) ** 2 * np.abs(velroty_l - truevelroty_l) / (abs(truevelroty_l) + eps_err * maxvy)) ** 2 +
+                                      ((truevelrotz_l / truevelrot_l) ** 2 * np.abs(velrotz_l - truevelrotz_l) / (abs(truevelrotz_l) + eps_err * maxvz)) ** 2),
                               perc) for perc in percentiles]
 
     print('* At level {}, percentiles: '.format(l), percentiles)

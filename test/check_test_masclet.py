@@ -11,7 +11,7 @@ initialpath = os.getcwd()
 os.chdir('../')  # go to the root of the project
 cwd = os.getcwd()
 sys.path.append(os.path.join(cwd, 'test/'))
-solapst_path = os.path.join(cwd, '../../TFM/Compute_solapst/solapst')
+solapst_path = os.path.join(cwd, '/scratch/Simulations/new_cluster/solapst_new')
 # sys.path.append(os.path.join(cwd, 'src/'))
 
 import numpy as np
@@ -53,10 +53,10 @@ pare = masclet.read_masclet.read_grids(it, path=os.path.join(output_path, 'simu_
                                        read_patchcellposition=True, read_patchposition=True, read_patchparent=True,
                                        nparray=True)
 
-truevx, truevy, truevz = masclet.read_masclet.read_clus(it, path=os.path.join(output_path, 'simu_masclet'),
+truevx, truevy, truevz, cr0amr = masclet.read_masclet.read_clus(it, path=os.path.join(output_path, 'simu_masclet'),
                                                         parameters_path=output_path, digits=5, output_delta=False,
                                                         output_pres=False, output_pot=False,
-                                                        output_temp=False, output_metalicity=False, output_cr0amr=False,
+                                                        output_temp=False, output_metalicity=False, output_cr0amr=True,
                                                         output_solapst=False)
 # for the usual solapst
 solapst = masclet.read_masclet.read_npz_field('solapst_bool' + '{:05d}'.format(it), solapst_path)
@@ -73,6 +73,11 @@ velroty, velrotz = masclet.read_masclet.read_vortex(it, path=os.path.join(output
 ev = {}
 frac_vcomp = {}
 frac_vrot = {}
+
+maxvx = max([np.max(abs(vxi)) for vxi in vx])
+maxvy = max([np.max(abs(vyi)) for vyi in vy])
+maxvz = max([np.max(abs(vzi)) for vzi in vz])
+
 for l in range(maxl + 1):
     if l == 0:
         minipatch = 0
@@ -105,9 +110,9 @@ for l in range(maxl + 1):
     velrecy_l = velcompy_l + velroty_l
     velrecz_l = velcompz_l + velrotz_l
 
-    ev[l] = [np.percentile(np.sqrt(((vx_l / v_l) ** 2 * np.abs(velrecx_l - vx_l) / (abs(vx_l) + eps_err * np.max(abs(vx_l)))) ** 2 +
-                                   ((vy_l / v_l) ** 2 * np.abs(velrecy_l - vy_l) / (abs(vy_l) + eps_err * np.max(abs(vy_l)))) ** 2 +
-                                   ((vz_l / v_l) ** 2 * np.abs(velrecz_l - vz_l) / (abs(vz_l) + eps_err * np.max(abs(vz_l)))) ** 2),
+    ev[l] = [np.percentile(np.sqrt(((vx_l / v_l) ** 2 * np.abs(velrecx_l - vx_l) / (abs(vx_l) + eps_err * maxvx)) ** 2 +
+                                   ((vy_l / v_l) ** 2 * np.abs(velrecy_l - vy_l) / (abs(vy_l) + eps_err * maxvy)) ** 2 +
+                                   ((vz_l / v_l) ** 2 * np.abs(velrecz_l - vz_l) / (abs(vz_l) + eps_err * maxvz)) ** 2),
                            perc) for perc in percentiles]
     frac_vcomp[l] = [np.percentile(velcomp_l / v_l, perc) for perc in percentiles]
     frac_vrot[l] = [np.percentile(velrot_l / v_l, perc) for perc in percentiles]
