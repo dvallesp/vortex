@@ -79,7 +79,7 @@
       integer mini, maxi, minj, maxj, mink, maxk
       real rx1, rx2, ry1, ry2, rz1, rz2, rxx1, rxx2, ryy1, ryy2,
      &     rzz1, rzz2
-      real u(2,2,2), fuin
+      real u(2,2,2), fuin, uw(2,2,2)
       character*13 filenom
       character*30 filerr5
 
@@ -622,36 +622,40 @@ C     &                                                k,iter,l,err
             JJ = PATCHY(JPATCH) + int((J-1)/2)
             KK = PATCHZ(JPATCH) + int((K-1)/2)
             if (jpatch.ne.0) then
+              uw(1:2,1:2,1:2) = dens1(I:I+1,J:J+1,K:K+1,IPATCH)
+
               u(1:2,1:2,1:2) = L1(I:I+1,J:J+1,K:K+1,IPATCH)
-              call finer_to_coarser(u,fuin)
+              call finer_to_coarser(u,uw,fuin)
               L1(II,JJ,KK,JPATCH) = FUIN
 
               u(1:2,1:2,1:2) = u12bulk(I:I+1,J:J+1,K:K+1,IPATCH)
-              call finer_to_coarser(u,fuin)
+              call finer_to_coarser(u,uw,fuin)
               u12bulk(II,JJ,KK,JPATCH) = FUIN
 
               u(1:2,1:2,1:2) = u13bulk(I:I+1,J:J+1,K:K+1,IPATCH)
-              call finer_to_coarser(u,fuin)
+              call finer_to_coarser(u,uw,fuin)
               u13bulk(II,JJ,KK,JPATCH) = FUIN
 
               u(1:2,1:2,1:2) = u14bulk(I:I+1,J:J+1,K:K+1,IPATCH)
-              call finer_to_coarser(u,fuin)
+              call finer_to_coarser(u,uw,fuin)
               u14bulk(II,JJ,KK,JPATCH) = FUIN
             else
+              uw(1:2,1:2,1:2) = dens1(I:I+1,J:J+1,K:K+1,IPATCH)
+
               u(1:2,1:2,1:2) = L1(I:I+1,J:J+1,K:K+1,IPATCH)
-              call finer_to_coarser(u,fuin)
+              call finer_to_coarser(u,uw,fuin)
               L0(II,JJ,KK) = FUIN
 
               u(1:2,1:2,1:2) = u12bulk(I:I+1,J:J+1,K:K+1,IPATCH)
-              call finer_to_coarser(u,fuin)
+              call finer_to_coarser(u,uw,fuin)
               U2bulk(II,JJ,KK) = FUIN
 
               u(1:2,1:2,1:2) = u13bulk(I:I+1,J:J+1,K:K+1,IPATCH)
-              call finer_to_coarser(u,fuin)
+              call finer_to_coarser(u,uw,fuin)
               u3bulk(II,JJ,KK) = FUIN
 
               u(1:2,1:2,1:2) = u14bulk(I:I+1,J:J+1,K:K+1,IPATCH)
-              call finer_to_coarser(u,fuin)
+              call finer_to_coarser(u,uw,fuin)
               u4bulk(II,JJ,KK) = FUIN
             end if
           END DO
@@ -699,22 +703,25 @@ C     &                                                k,iter,l,err
 
 
 ************************************************************************
-       SUBROUTINE finer_to_coarser(U,FUIN)
+       SUBROUTINE finer_to_coarser(u,uw,fuin)
 ************************************************************************
         REAL U(2,2,2)
-        REAL FUIN
+        REAL UW(2,2,2) ! weights!!
+        REAL FUIN, WSUM
         INTEGER I,J,K
 
         FUIN = 0.0
+        WSUM = 0.0
         DO I=1,2
           DO J=1,2
             DO K=1,2
-              FUIN = FUIN + U(I,J,K)
+              FUIN = FUIN + U(I,J,K)*UW(I,J,K)
+              WSUM = WSUM + UW(I,J,K)
             END DO
           END DO
         END DO
 
-        FUIN = FUIN/8.0
+        FUIN = FUIN/WSUM
 
         RETURN
        END
