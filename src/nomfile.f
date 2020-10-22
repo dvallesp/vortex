@@ -48,3 +48,51 @@
 
        RETURN
        END
+
+*****************************************************************
+      SUBROUTINE NOMFILEMACH5(ITER,FILE5)
+*****************************************************************
+
+      IMPLICIT NONE
+      INTEGER ITER
+      CHARACTER*14 FILE5
+      CHARACTER*5 NOM
+      INTEGER CONTA,I,N10,IT
+
+      CONTA=0
+
+      DO I=4,0,-1
+        N10=10**I
+        IT=ITER/N10 - CONTA
+        CONTA=(CONTA+IT)*10
+        NOM(5-I:5-I)=CHAR(48+IT)
+      END DO
+
+      FILE5='MachNum_'//NOM
+
+      RETURN
+      END
+
+*****************************************************************
+       SUBROUTINE NOMFILE_FILTLEN(ITER,FILE5)
+*****************************************************************
+
+       IMPLICIT NONE
+       INTEGER ITER
+       CHARACTER*14 FILE5
+       CHARACTER*5 NOM
+       INTEGER CONTA,I,N10,IT
+
+       CONTA=0
+
+       DO I=4,0,-1
+         N10=10**I
+         IT=ITER/N10 - CONTA
+         CONTA=(CONTA+IT)*10
+         NOM(5-I:5-I)=CHAR(48+IT)
+       END DO
+
+       FILE5='filtlen_'//NOM
+
+       RETURN
+       END

@@ -33,6 +33,14 @@
        real  POT1(-2:NAMRX+3,-2:NAMRY+3,-2:NAMRZ+3,NPALEV)   !field to solve
        COMMON /UAMR/ U11,POT1
 
+       real dens0(1:NMAX,1:NMAY,1:NMAZ)
+       real dens1(1:NAMRX,1:NAMRY,1:NAMRZ,NPALEV)
+       common /dens/ dens0,dens1
+
+       integer cr0amr(1:NMAX,1:NMAY,1:NMAZ)
+       integer cr0amr1(1:NAMRX,1:NAMRY,1:NAMRZ,NPALEV)
+       common /cr0/ cr0amr, cr0amr1
+
        ! original velocities (reused afterwards)
        real U2(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
        real U3(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
@@ -75,7 +83,7 @@
 
        ! runtime flags
        INTEGER FLAG_VERBOSE, FLAG_W_DIVROT, FLAG_W_POTENTIALS,
-     &         FLAG_W_VELOCITIES
+     &         FLAG_W_VELOCITIES, FLAG_FILTER, FLAG_W_FILTLEN
        COMMON /FLAGS/ FLAG_VERBOSE, FLAG_W_DIVROT, FLAG_W_POTENTIALS,
      &                FLAG_W_VELOCITIES
 
@@ -100,9 +108,9 @@
        COMMON /SOR/ PRECIS,MAXIT
 
 *      LOCAL VARIABLES
-       INTEGER I,J,K,LOW1,LOW2,II,JJ,IX,JY,KZ,NL,IR,N1,N2,N3
+       INTEGER I,J,K,LOW1,LOW2,II,JJ,IX,JY,KZ,NL,IR,N1,N2,N3,FILT_MAXIT
        INTEGER NFILE,FIRST,EVERY,IFI,LAST
-       real ZI,LADO,LADO0,ZETA,LIM,ERR_THR,T
+       real ZI,LADO,LADO0,ZETA,LIM,ERR_THR,T,FILT_TOL,FILT_STEP
        LOGICAL FILE_EXISTS
        CHARACTER*14 FILE5
        CHARACTER*30 FILERR5
@@ -141,6 +149,9 @@
        READ(1,*)
        READ(1,*) FLAG_VERBOSE, FLAG_W_DIVROT, FLAG_W_POTENTIALS,
      &           FLAG_W_VELOCITIES
+       READ(1,*)
+       READ(1,*) FLAG_FILTER, FLAG_W_FILTLEN, FILT_TOL, FILT_STEP,
+     &           FILT_MAXIT
 
        CLOSE(1)
 
@@ -299,6 +310,23 @@
         write(*,*) maxval(u3),maxval(u13)
         write(*,*) minval(u4),minval(u14)
         write(*,*) maxval(u4),maxval(u14)
+      END IF
+
+*     filter velocities
+      IF (flag_filter.eq.1) then
+        call MULTISCALE_FILTER(NX,NY,NZ,NL,NPATCH,pare,
+     &            PATCHNX,PATCHNY,PATCHNZ,patchx,patchy,patchz,
+     &            patchrx,patchry,patchrz,DX,ITER,FLAG_W_FILTLEN,
+     &            FILT_TOL,FILT_STEP, FILT_MAXIT)
+        IF (FLAG_VERBOSE.EQ.1) THEN
+         write(*,*) 'filtered velocity: min and max values'
+         write(*,*) minval(u2),minval(u12)
+         write(*,*) maxval(u2),maxval(u12)
+         write(*,*) minval(u3),minval(u13)
+         write(*,*) maxval(u3),maxval(u13)
+         write(*,*) minval(u4),minval(u14)
+         write(*,*) maxval(u4),maxval(u14)
+        END IF
       END IF
 
 *     All patches are extended with one extra cell per direction
@@ -908,3 +936,4 @@
       INCLUDE 'overlaps.f'
       INCLUDE 'boundaries.f'
       INCLUDE 'outliers.f'
+      INCLUDE 'filter.f'

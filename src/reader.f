@@ -19,7 +19,7 @@
 
 *      R4 VARIABLES
        real*4, ALLOCATABLE::SCR4(:,:,:)
-C      INTEGER, ALLOCATABLE::SCR4_INT(:,:,:)
+       INTEGER, ALLOCATABLE::SCR4_INT(:,:,:)
 
        INTEGER NPATCH(0:NLEVELS),PARE(NPALEV)
        INTEGER PATCHNX(NPALEV),PATCHNY(NPALEV),PATCHNZ(NPALEV)
@@ -32,6 +32,10 @@ C      INTEGER, ALLOCATABLE::SCR4_INT(:,:,:)
        CHARACTER*24 FIL1,FIL2,FIL4
        CHARACTER*25 FIL3
 
+       real U1(1:NMAX,1:NMAY,1:NMAZ)
+       real U11(1:NAMRX,1:NAMRY,1:NAMRZ,NPALEV)
+       common /dens/ u1,u11
+
        real U2(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
        real U3(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
        real U4(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
@@ -40,6 +44,9 @@ C      INTEGER, ALLOCATABLE::SCR4_INT(:,:,:)
        real U14(0:NAMRX+1,0:NAMRY+1,0:NAMRZ+1,NPALEV)
        COMMON /VELOC/ U2,U3,U4,U12,U13,U14
 
+       integer cr0amr(1:NMAX,1:NMAY,1:NMAZ)
+       integer cr0amr1(1:NAMRX,1:NAMRY,1:NAMRZ,NPALEV)
+       common /cr0/ cr0amr, cr0amr1
 *      ---PARALLEL---
        INTEGER NUM,OMP_GET_NUM_THREADS,NUMOR, FLAG_PARALLEL
        COMMON /PROCESADORES/ NUM
@@ -103,7 +110,7 @@ C      INTEGER, ALLOCATABLE::SCR4_INT(:,:,:)
        IR=0
        ALLOCATE(SCR4(0:NMAX+1,0:NMAY+1,0:NMAZ+1))
        SCR4=0.0
-C       ALLOCATE(SCR4_INT(0:NMAX+1,0:NMAY+1,0:NMAZ+1))
+       ALLOCATE(SCR4_INT(0:NMAX+1,0:NMAY+1,0:NMAZ+1))
 C       SCR4_INT=0
        N1=NX
        N2=NY
@@ -120,11 +127,11 @@ C       SCR4_INT=0
        READ(31) !OPOT
        READ(31) !(((TTT(I,J,K),I=1,N1),J=1,N2),K=1,N3)
        READ(31) !!new: metalicity!! depends on MASCLET version!: TRACER
-       READ(31) !!(((SCR4_INT(I,J,K),I=1,N1),J=1,N2),K=1,N3)
-c        CR0AMR(1:NX,1:NY,1:NZ)=SCR4_INT(1:NX,1:NY,1:NZ)
+       READ(31) (((SCR4_INT(I,J,K),I=1,N1),J=1,N2),K=1,N3)
+       CR0AMR(1:NX,1:NY,1:NZ)=SCR4_INT(1:NX,1:NY,1:NZ)
 
        DEALLOCATE(SCR4)
-C        DEALLOCATE(SCR4_INT)
+       DEALLOCATE(SCR4_INT)
 
 
        DO IR=1,NL
@@ -136,7 +143,7 @@ C        DEALLOCATE(SCR4_INT)
           N3=PATCHNZ(I)
           ALLOCATE(SCR4(NAMRX,NAMRY,NAMRZ))
           SCR4=0.0
-C        ALLOCATE(SCR4_INT(NAMRX,NAMRY,NAMRZ))
+         ALLOCATE(SCR4_INT(NAMRX,NAMRY,NAMRZ))
 C        SCR4_INT=0
           READ(31) !(((U11(IX,J,K,I),IX=1,N1),J=1,N2),K=1,N3)
           READ(31) (((SCR4(IX,J,K),IX=1,N1),J=1,N2),K=1,N3)
@@ -150,12 +157,12 @@ C        SCR4_INT=0
           READ(31) !OPOT
           READ(31) !(((TTT1(IX,J,K,I),IX=1,N1),J=1,N2),K=1,N3)
           READ(31) !!new: metalicity!! depends on MASCLET version! TRACER
-          READ(31) !!(((SCR4_INT(IX,J,K),IX=1,N1),J=1,N2),K=1,N3)
-c           CR0AMR1(:,:,:,I)=SCR4_INT(:,:,:)
+          READ(31) (((SCR4_INT(IX,J,K),IX=1,N1),J=1,N2),K=1,N3)
+          CR0AMR1(:,:,:,I)=SCR4_INT(:,:,:)
           READ(31) !!(((SCR4_INT(IX,J,K),IX=1,N1),J=1,N2),K=1,N3)
 c           SOLAP(:,:,:,I)=SCR4_INT(:,:,:)
           DEALLOCATE(SCR4)
-C        DEALLOCATE(SCR4_INT)
+          DEALLOCATE(SCR4_INT)
          END DO
        END DO
 
@@ -163,3 +170,67 @@ C        DEALLOCATE(SCR4_INT)
 
        RETURN
        END
+
+
+************************************************************************
+      SUBROUTINE LEE_MACH(ITER,NPATCH,PARE,PATCHNX,PATCHNY,
+     &            PATCHNZ,SHOCK0,SHOCK1)
+************************************************************************
+      IMPLICIT NONE
+
+      INCLUDE 'vortex_parameters.dat'
+
+*     Parameters: input
+      INTEGER ITER, NPATCH(0:NLEVELS), PARE(NPALEV), PATCHNX(NPALEV),
+     &        PATCHNY(NPALEV), PATCHNZ(NPALEV)
+
+*     Parameters: output
+      INTEGER SHOCK0(NMAX,NMAY,NMAZ), SHOCK1(NAMRX,NAMRY,NAMRZ,NPALEV)
+
+*     Private variables
+      INTEGER I,J,K,IPATCH,N1,N2,N3
+      REAL BAS, THR
+      CHARACTER*20 FILNOM,FIL1
+      real*4, allocatable::scr4(:,:,:)
+
+      thr = 1.3 ! mach no. threshold (>thr --> shocked, <thr --> unshocked)
+
+      CALL NOMFILEMACH5(ITER,FILNOM)
+      FIL1='shocks/'//FILNOM
+      OPEN (31,FILE=FIL1,
+     &       STATUS='UNKNOWN',ACTION='READ',FORM='UNFORMATTED')
+
+      shock0 = 0
+      allocate(scr4(nmax,nmay,nmaz))
+      read(31) (((scr4(i,j,k),i=1,n1),j=1,n2),k=1,n3)
+      n1 = nmax
+      n2 = nmay
+      n3 = nmaz
+      do i=1,n1
+        do j=1,n2
+          do k=1,n3
+            if (scr4(i,j,k).ge.thr) shock0(i,j,k) = 1
+          end do
+        end do
+      end do
+      deallocate(scr4)
+
+      allocate(scr4(namrx,namry,namrz))
+      do ipatch=1,sum(npatch)
+        n1 = patchnx(ipatch)
+        n2 = patchny(ipatch)
+        n3 = patchnz(ipatch)
+        read(31) (((scr4(i,j,k),i=1,n1),j=1,n2),k=1,n3)
+        shock1(:,:,:,ipatch) = 0
+        do i=1,n1
+          do j=1,n2
+            do k=1,n3
+              if (scr4(i,j,k).ge.thr) shock1(i,j,k,ipatch) = 1
+            end do
+          end do
+        end do
+      end do
+      deallocate(scr4)
+
+      RETURN
+      END

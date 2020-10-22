@@ -452,3 +452,53 @@
       CLOSE(25)
 
       END
+
+
+**********************************************************************
+       SUBROUTINE WRITE_FILTLEN(FILERR5,NX,NY,NZ,ITER,NL,NPATCH,
+     &            PATCHNX,PATCHNY,PATCHNZ,L0,L1)
+***********************************************************************
+      IMPLICIT NONE
+
+      INCLUDE 'vortex_parameters.dat'
+
+*     FUNCTION ARGUMENTS
+      CHARACTER*30 FILERR5
+      INTEGER NX, NY, NZ, NL, ITER
+      INTEGER NPATCH(0:NLEVELS)
+      INTEGER PATCHNX(NPALEV),PATCHNY(NPALEV),PATCHNZ(NPALEV)
+      real L0(1:NMAX,1:NMAY,1:NMAZ)
+      real L1(1:NAMRX,1:NAMRY,1:NAMRZ,NPALEV)
+
+*     VARIABLES
+      INTEGER IR, I, LOW1, LOW2, IX, J, K, N1, N2, N3
+      real*4, ALLOCATABLE::SCR4(:,:,:)
+
+*     OPEN THE OUTPUT FILE
+      OPEN(25,FILE=FILERR5,STATUS='UNKNOWN',FORM='UNFORMATTED',
+     &     POSITION='APPEND')
+
+*     WRITE THE 'COHERENCE' LENGTH
+
+      ALLOCATE(SCR4(NMAX,NMAY,NMAZ))
+      SCR4(1:NX,1:NY,1:NZ) = L0(1:NX,1:NY,1:NZ)
+      WRITE(25) (((SCR4(I,J,K),I=1,NX),J=1,NY),K=1,NZ)
+      DEALLOCATE(SCR4)
+
+      ALLOCATE(SCR4(NAMRX,NAMRY,NAMRZ))
+      DO IR=1,NL
+        LOW1=SUM(NPATCH(0:IR-1))+1
+        LOW2=SUM(NPATCH(0:IR))
+        DO I=LOW1,LOW2
+          N1=PATCHNX(I)
+          N2=PATCHNY(I)
+          N3=PATCHNZ(I)
+          SCR4(1:N1,1:N2,1:N3)=L1(1:N1,1:N2,1:N3,I)
+          WRITE(25) (((SCR4(IX,J,K),IX=1,N1),J=1,N2),K=1,N3)
+        END DO
+      END DO
+      DEALLOCATE(SCR4)
+
+      CLOSE(25)
+
+      END
