@@ -80,7 +80,8 @@
       real rx1, rx2, ry1, ry2, rz1, rz2, rxx1, rxx2, ryy1, ryy2,
      &     rzz1, rzz2
       real u(2,2,2), fuin
-      character*30 filenom
+      character*13 filenom
+      character*30 filerr5
 
       integer exectime, time
 
@@ -133,7 +134,8 @@
 !$OMP+                    JPATCH,NN1,NN2,NN3,IIXX,JJYY,KKZZ,ERR,
 !$OMP+                    DV2,DV3,DV4,DV2PREV,DV3PREV,DV4PREV,
 !$OMP+                    MINI,MAXI,MINJ,MAXJ,MINK,MAXK,rx1,rx2,ry1,
-!$OMP+                    ry2,rz1,rz2,rxx1,rxx2,ryy1,ryy2,rzz1,rzz2)
+!$OMP+                    ry2,rz1,rz2,rxx1,rxx2,ryy1,ryy2,rzz1,rzz2),
+!$OMP+            schedule(dynamic)
       do i=1,nx
         do j=1,ny
           do k=1,nz
@@ -362,7 +364,8 @@
 !$OMP+                    DV2,DV3,DV4,DV2PREV,DV3PREV,DV4PREV,
 !$OMP+                    MINI,MAXI,MINJ,MAXJ,MINK,MAXK,rx1,rx2,ry1,
 !$OMP+                    ry2,rz1,rz2,rxx1,rxx2,ryy1,ryy2,rzz1,rzz2,
-!$OMP+                    ipatch,n1,n2,n3,exectime)
+!$OMP+                    ipatch,n1,n2,n3,exectime),
+!$OMP+            schedule(dynamic)
       DO ipatch=LOW1,LOW2
         exectime = time()
         n1 = patchnx(ipatch)
@@ -620,35 +623,35 @@ C     &                                                k,iter,l,err
             KK = PATCHZ(JPATCH) + int((K-1)/2)
             if (jpatch.ne.0) then
               u(1:2,1:2,1:2) = L1(I:I+1,J:J+1,K:K+1,IPATCH)
-              call linint_23_naive(u,fuin)
+              call finer_to_coarser(u,fuin)
               L1(II,JJ,KK,JPATCH) = FUIN
 
               u(1:2,1:2,1:2) = u12bulk(I:I+1,J:J+1,K:K+1,IPATCH)
-              call linint_23_naive(u,fuin)
+              call finer_to_coarser(u,fuin)
               u12bulk(II,JJ,KK,JPATCH) = FUIN
 
               u(1:2,1:2,1:2) = u13bulk(I:I+1,J:J+1,K:K+1,IPATCH)
-              call linint_23_naive(u,fuin)
+              call finer_to_coarser(u,fuin)
               u13bulk(II,JJ,KK,JPATCH) = FUIN
 
               u(1:2,1:2,1:2) = u14bulk(I:I+1,J:J+1,K:K+1,IPATCH)
-              call linint_23_naive(u,fuin)
+              call finer_to_coarser(u,fuin)
               u14bulk(II,JJ,KK,JPATCH) = FUIN
             else
               u(1:2,1:2,1:2) = L1(I:I+1,J:J+1,K:K+1,IPATCH)
-              call linint_23_naive(u,fuin)
+              call finer_to_coarser(u,fuin)
               L0(II,JJ,KK) = FUIN
 
               u(1:2,1:2,1:2) = u12bulk(I:I+1,J:J+1,K:K+1,IPATCH)
-              call linint_23_naive(u,fuin)
+              call finer_to_coarser(u,fuin)
               U2bulk(II,JJ,KK) = FUIN
 
               u(1:2,1:2,1:2) = u13bulk(I:I+1,J:J+1,K:K+1,IPATCH)
-              call linint_23_naive(u,fuin)
+              call finer_to_coarser(u,fuin)
               u3bulk(II,JJ,KK) = FUIN
 
               u(1:2,1:2,1:2) = u14bulk(I:I+1,J:J+1,K:K+1,IPATCH)
-              call linint_23_naive(u,fuin)
+              call finer_to_coarser(u,fuin)
               u4bulk(II,JJ,KK) = FUIN
             end if
           END DO
@@ -685,9 +688,9 @@ C     &                                                k,iter,l,err
       end do
 
       if (flag_w_filtlen.eq.1) then
-        CALL NOMFILE_FILTLEN(ITER,FILENOM)
-        FILENOM = './output_files/'//FILENOM
-        CALL WRITE_FILTLEN(FILENOM,NX,NY,NZ,ITER,NL,NPATCH,
+        CALL NOMFILE_FILTLEN(output_iter,FILENOM)
+        FILERR5 = './output_files/'//FILENOM
+        CALL WRITE_FILTLEN(FILERR5,NX,NY,NZ,ITER,NL,NPATCH,
      &            PATCHNX,PATCHNY,PATCHNZ,L0,L1)
       end if
 
@@ -696,17 +699,22 @@ C     &                                                k,iter,l,err
 
 
 ************************************************************************
-       SUBROUTINE linint_23_naive(U,FUIN)
+       SUBROUTINE finer_to_coarser(U,FUIN)
 ************************************************************************
         REAL U(2,2,2)
         REAL FUIN
-        REAL DXX, DYY, DZZ
+        INTEGER I,J,K
 
-        DXX = U(2,1,1) - U(1,1,1)
-        DYY = U(1,2,1) - U(1,1,1)
-        DZZ = U(1,1,2) - U(1,1,1)
+        FUIN = 0.0
+        DO I=1,2
+          DO J=1,2
+            DO K=1,2
+              FUIN = FUIN + U(I,J,K)
+            END DO
+          END DO
+        END DO
 
-        FUIN = U(1,1,1) + 0.5*(DXX+DYY+DZZ)
+        FUIN = FUIN/8.0
 
         RETURN
        END
