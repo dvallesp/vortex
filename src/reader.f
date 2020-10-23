@@ -202,7 +202,7 @@ c           SOLAP(:,:,:,I)=SCR4_INT(:,:,:)
 
       shock0 = 0
       allocate(scr4(nmax,nmay,nmaz))
-      read(31) (((scr4(i,j,k),i=1,n1),j=1,n2),k=1,n3)
+      read(31) (((scr4(i,j,k),k=1,n3),j=1,n2),i=1,n1)
       n1 = nmax
       n2 = nmay
       n3 = nmaz
@@ -220,7 +220,7 @@ c           SOLAP(:,:,:,I)=SCR4_INT(:,:,:)
         n1 = patchnx(ipatch)
         n2 = patchny(ipatch)
         n3 = patchnz(ipatch)
-        read(31) (((scr4(i,j,k),i=1,n1),j=1,n2),k=1,n3)
+        read(31) (((scr4(i,j,k),k=1,n3),j=1,n2),i=1,n1)
         shock1(:,:,:,ipatch) = 0
         do i=1,n1
           do j=1,n2
