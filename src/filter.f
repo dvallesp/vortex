@@ -73,7 +73,7 @@
       integer ii, jj, kk, iixx, jjyy, kkzz, ipatch, jpatch, llow1, llow2
       integer nn1, nn2, nn3
       integer marca, iter
-      real BAS1, BAS2, BAS3, bas4, DXPA, L, l2, err
+      real BAS1, BAS2, BAS3, bas4, DXPA, L, l2, err, dxpa_i
       real thisx, thisy, thisz, dv2, dv3, dv4, dv2prev, dv3prev, dv4prev
       real lado0
       integer mini, maxi, minj, maxj, mink, maxk
@@ -95,7 +95,7 @@
       DO IR=1,NL
        LOW1=SUM(NPATCH(0:IR-1))+1
        LOW2=SUM(NPATCH(0:IR))
-       DXPA = DX / 2.0**IR
+       DXPA = DX / (2.0**IR)
        DO I=LOW1,LOW2
          DENS1(:,:,:,I) = DENS1(:,:,:,I) / 8.0**IR
        END DO
@@ -113,7 +113,7 @@
       DO IR=1,NL
        LOW1=SUM(NPATCH(0:IR-1))+1
        LOW2=SUM(NPATCH(0:IR))
-       DXPA = DX / 2.0**IR
+       DXPA = DX / (2.0**IR)
        DO I=LOW1,LOW2
          L1(:,:,:,I) = 2.0 * DXPA
        END DO
@@ -129,7 +129,8 @@
 !$OMP+                    JPATCH,NN1,NN2,NN3,IIXX,JJYY,KKZZ,ERR,
 !$OMP+                    DV2,DV3,DV4,DV2PREV,DV3PREV,DV4PREV,
 !$OMP+                    MINI,MAXI,MINJ,MAXJ,MINK,MAXK,rx1,rx2,ry1,
-!$OMP+                    ry2,rz1,rz2,rxx1,rxx2,ryy1,ryy2,rzz1,rzz2),
+!$OMP+                    ry2,rz1,rz2,rxx1,rxx2,ryy1,ryy2,rzz1,rzz2,
+!$OMP+                    dxpa),
 !$OMP+            schedule(dynamic)
       do i=1,nx
         do j=1,ny
@@ -359,13 +360,19 @@
 !$OMP+                    DV2,DV3,DV4,DV2PREV,DV3PREV,DV4PREV,
 !$OMP+                    MINI,MAXI,MINJ,MAXJ,MINK,MAXK,rx1,rx2,ry1,
 !$OMP+                    ry2,rz1,rz2,rxx1,rxx2,ryy1,ryy2,rzz1,rzz2,
-!$OMP+                    ipatch,n1,n2,n3,exectime),
+!$OMP+                    ipatch,n1,n2,n3,exectime,dxpa,dxpa_i,ir),
 !$OMP+            schedule(dynamic)
       DO ipatch=LOW1,LOW2
         exectime = time()
         n1 = patchnx(ipatch)
         n2 = patchny(ipatch)
         n3 = patchnz(ipatch)
+        ! get the level
+        DO IR=1,NL
+          IF (IPATCH.LE.SUM(NPATCH(0:IR))) EXIT
+        END DO
+        dxpa_i = dx/(2.0**ir)
+
 c        write(*,*) ipatch, sum(cr0amr1(1:n1,1:n2,1:n3,ipatch) *
 c     &                         solap(1:n1,1:n2,1:n3,ipatch))
         do i=1,n1
@@ -431,7 +438,7 @@ c     &                         solap(1:n1,1:n2,1:n3,ipatch))
             outer1: DO irr=1,NL
              LLOW1=SUM(NPATCH(0:IRR-1))+1
              LLOW2=SUM(NPATCH(0:IRR))
-             dxpa = dx / 2.0 ** irr
+             dxpa = dx / (2.0 ** irr)
              DO jpatch=LLOW1,LLOW2
                nn1 = patchnx(jpatch)
                nn2 = patchny(jpatch)
@@ -572,7 +579,7 @@ c     &                         solap(1:n1,1:n2,1:n3,ipatch))
      &                     thisz+0.5*lado0,0.5*lado0-thisz)) marca=0
 
 *             the sphere grows
-            if (marca.eq.1) l = max(l*step, l+dx)
+            if (marca.eq.1) l = max(l*step, l+dxpa_i)
             iter = iter+1
           end do iter_while
           l1(i,j,k,ipatch) = l
@@ -587,7 +594,7 @@ C     &                                                k,iter,l,err
         end do ! do i=1,n1
         exectime = time() - exectime
         write(*,*) ipatch, sum(cr0amr1(1:n1,1:n2,1:n3,ipatch) *
-     &             solap(1:n1,1:n2,1:n3,ipatch)), exectime
+     &             solap(1:n1,1:n2,1:n3,ipatch)), exectime, dx, dxpa_i
       END DO
 
 
