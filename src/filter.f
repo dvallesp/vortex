@@ -88,10 +88,6 @@
 
       lado0 = nx * dx
 
-      !tol = 0.1 ! we will unhardcode this !!!
-      !step = 1.05 ! we will unhardcode this !!!
-      !maxit = 200 ! we will unhardcode this !!!
-
       dens0 = dens0 + 1.0
       dens1 = dens1 + 1.0
 
@@ -105,22 +101,21 @@
        END DO
       END DO
 
-      call veinsgrid_all_l(NL,NPATCH,PARE,PATCHNX,PATCHNY,
-     &            PATCHNZ,PATCHX,PATCHY,PATCHZ,PATCHRX,PATCHRY,PATCHRZ,
-     &            solap)
+      call veinsgrid_all_l(NL,NPATCH,PARE,PATCHNX,PATCHNY,PATCHNZ,
+     &            PATCHX,PATCHY,PATCHZ,PATCHRX,PATCHRY,PATCHRZ,solap)
 
       call lee_mach(output_iter,NPATCH,PARE,PATCHNX,PATCHNY,
      &              PATCHNZ,SHOCK0,SHOCK1)
 
 !!!!! for each cell, we ought to find the optimum coherence length
       ! we first initialize the lengths
-      L0 = 4.0 * DX
+      L0 = 2.0 * DX
       DO IR=1,NL
        LOW1=SUM(NPATCH(0:IR-1))+1
        LOW2=SUM(NPATCH(0:IR))
        DXPA = DX / 2.0**IR
        DO I=LOW1,LOW2
-         L1(:,:,:,I) = 4.0 * DXPA
+         L1(:,:,:,I) = 2.0 * DXPA
        END DO
       END DO
 
