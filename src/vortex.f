@@ -314,11 +314,13 @@
 
 *     filter velocities
       IF (flag_filter.eq.1) then
+        IF (flag_verbose.eq.1) write(*,*) 'Applying multiscale filter'
         call MULTISCALE_FILTER(NX,NY,NZ,NL,NPATCH,pare,
      &            PATCHNX,PATCHNY,PATCHNZ,patchx,patchy,patchz,
      &            patchrx,patchry,patchrz,DX,ITER,FLAG_W_FILTLEN,
      &            FILT_TOL,FILT_STEP, FILT_MAXIT)
         IF (FLAG_VERBOSE.EQ.1) THEN
+         write(*,*) 'Computation ended!'
          write(*,*) 'filtered velocity: min and max values'
          write(*,*) minval(u2),minval(u12)
          write(*,*) maxval(u2),maxval(u12)

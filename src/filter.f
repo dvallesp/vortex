@@ -342,7 +342,7 @@
             !if (cr0amr(i,j,k).eq.1) write(*,*) i,j,k,iter,l,err !DEBUGGING
           end do
         end do
-        write(*,*) i, 'done'
+        !write(*,*) i, 'done'
       end do ! do i=1,nx
 
 
@@ -593,7 +593,7 @@ C     &                                                k,iter,l,err
         end do
         end do ! do i=1,n1
         exectime = time() - exectime
-        write(*,*) ipatch, sum(cr0amr1(1:n1,1:n2,1:n3,ipatch) *
+        !write(*,*) ipatch, sum(cr0amr1(1:n1,1:n2,1:n3,ipatch) *
      &             solap(1:n1,1:n2,1:n3,ipatch)), exectime, dx, dxpa_i
       END DO
 
