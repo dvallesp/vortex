@@ -88,15 +88,13 @@
 
       lado0 = nx * dx
 
-      dens0 = dens0 + 1.0
-      dens1 = dens1 + 1.0
-
 *     DENS0, DENS1 PROPORTIONAL TO CELLS MASSES!!!
+      dens0 = dens0 + 1.0
       DO IR=1,NL
        LOW1=SUM(NPATCH(0:IR-1))+1
        LOW2=SUM(NPATCH(0:IR))
-       DXPA = DX / (2.0**IR)
        DO I=LOW1,LOW2
+         DENS1(:,:,:,I) = DENS1(:,:,:,I) + 1.0
          DENS1(:,:,:,I) = DENS1(:,:,:,I) / 8.0**IR
        END DO
       END DO
@@ -121,9 +119,9 @@
 
 !$OMP PARALLEL DO SHARED(NX,NY,NZ,L0,RADX,RADY,RADZ,LADO0,CR0AMR,
 !$OMP+                   DENS0,U2,U3,U4,NL,NPATCH,PATCHNX,PATCHNY,
-!$OMP+                   PATCHNZ,CR0AMR1,SOLAP,RX,RY,RZ,DENS1,
-!$OMP+                   U12,U13,U14,TOL,U2BULK,U3BULK,U4BULK,STEP,DX,
-!$OMP+                   SHOCK0,SHOCK1),
+!$OMP+                   PATCHNZ,PATCHRX,PATCHRY,PATCHRZ,CR0AMR1,SOLAP,
+!$OMP+                   RX,RY,RZ,DENS1,U12,U13,U14,TOL,U2BULK,U3BULK,
+!$OMP+                   U4BULK,STEP,MAXIT,DX,SHOCK0,SHOCK1),
 !$OMP+            PRIVATE(I,J,K,MARCA,ITER,L,THISX,THISY,THISZ,BAS1,
 !$OMP+                    BAS2,BAS3,BAS4,L2,II,JJ,KK,IRR,LLOW1,LLOW2,
 !$OMP+                    JPATCH,NN1,NN2,NN3,IIXX,JJYY,KKZZ,ERR,
@@ -142,10 +140,6 @@
             thisx = radx(i)
             thisy = rady(j)
             thisz = radz(k)
-
-            if (l.gt.min(thisx+0.5*lado0,0.5*lado0-thisx,
-     &                     thisy+0.5*lado0,0.5*lado0-thisy,
-     &                     thisz+0.5*lado0,0.5*lado0-thisz)) marca=0
 
             iter_while_c: do while (marca.eq.1)
               bas1 = 0.0
@@ -304,12 +298,18 @@
 
               if (marca.eq.0) exit iter_while_c
 
-              bas2 = bas2 / bas1
-              bas3 = bas3 / bas1
-              bas4 = bas4 / bas1
+              if (bas1.ne.0) then
+                bas2 = bas2 / bas1
+                bas3 = bas3 / bas1
+                bas4 = bas4 / bas1
+              else
+                bas2 = 0.0
+                bas3 = 0.0
+                bas4 = 0.0
+              end if
 
               !!! 2. ERROR CALCULATION
-              if (iter.eq.1) then
+              if (iter.eq.0) then
                 err = 2.0 * tol
               else
                 dv2prev = u2(i,j,k) - u2bulk(i,j,k)
@@ -345,15 +345,16 @@
         !write(*,*) i, 'done'
       end do ! do i=1,nx
 
+      write(*,*) 'base grid done!'
 
  !!! REFINED CELLS
       LOW1=1
       LOW2=SUM(NPATCH)
-!$OMP PARALLEL DO SHARED(L1,radx,rady,radz,LADO0,CR0AMR,
+!$OMP PARALLEL DO SHARED(NX,NY,NZ,L1,radx,rady,radz,LADO0,CR0AMR,
 !$OMP+                   DENS0,U2,U3,U4,NL,NPATCH,PATCHNX,PATCHNY,
-!$OMP+                   PATCHNZ,CR0AMR1,SOLAP,RX,RY,RZ,DENS1,
-!$OMP+                   U12,U13,U14,TOL,U12BULK,U13BULK,U14BULK,STEP,
-!$OMP+                   DX,SHOCK0,SHOCK1,LOW1,LOW2),
+!$OMP+                   PATCHNZ,PATCHRX,PATCHRY,PATCHRZ,CR0AMR1,SOLAP,
+!$OMP+                   RX,RY,RZ,DENS1,U12,U13,U14,TOL,U12BULK,U13BULK,
+!$OMP+                   U14BULK,STEP,MAXIT,DX,SHOCK0,SHOCK1,LOW1,LOW2),
 !$OMP+            PRIVATE(I,J,K,MARCA,ITER,L,THISX,THISY,THISZ,BAS1,
 !$OMP+                    BAS2,BAS3,BAS4,L2,II,JJ,KK,IRR,LLOW1,LLOW2,
 !$OMP+                    JPATCH,NN1,NN2,NN3,IIXX,JJYY,KKZZ,ERR,
@@ -386,10 +387,6 @@ c     &                         solap(1:n1,1:n2,1:n3,ipatch))
           thisx = rx(i,ipatch)
           thisy = ry(j,ipatch)
           thisz = rz(k,ipatch)
-
-          if (l.gt.min(thisx+0.5*lado0,0.5*lado0-thisx,
-     &                     thisy+0.5*lado0,0.5*lado0-thisy,
-     &                     thisz+0.5*lado0,0.5*lado0-thisz)) marca=0
 
           iter_while: do while (marca.eq.1)
             bas1 = 0.0
@@ -459,8 +456,8 @@ c     &                         solap(1:n1,1:n2,1:n3,ipatch))
                RZZ2 = thisz + l
 
                IF (rxx1.le.rx2.AND.rx1.le.rxx2.AND.
-     &               ryy1.le.ry2.AND.ry1.le.ryy2.AND.
-     &               rzz1.le.rz2.AND.rz1.le.rzz2) then
+     &             ryy1.le.ry2.AND.ry1.le.ryy2.AND.
+     &             rzz1.le.rz2.AND.rz1.le.rzz2) then
 
                 !X
                 IF (RXX1.GE.RX1.AND.RXX2.LE.RX2) THEN
@@ -548,12 +545,18 @@ c     &                         solap(1:n1,1:n2,1:n3,ipatch))
 
             if (marca.eq.0) exit iter_while
 
-            bas2 = bas2 / bas1
-            bas3 = bas3 / bas1
-            bas4 = bas4 / bas1
+            if (bas1.ne.0) then
+              bas2 = bas2 / bas1
+              bas3 = bas3 / bas1
+              bas4 = bas4 / bas1
+            else
+              bas2 = 0.0
+              bas3 = 0.0
+              bas4 = 0.0
+            end if
 
             !!! 2. ERROR CALCULATION
-            if (iter.eq.1) then
+            if (iter.eq.0) then
               err = 2.0 * tol
             else
               dv2prev = u12(i,j,k,ipatch) - u12bulk(i,j,k,ipatch)
@@ -592,22 +595,20 @@ C     &                                                k,iter,l,err
         end do
         end do
         end do ! do i=1,n1
-        exectime = time() - exectime
-        !write(*,*) ipatch, sum(cr0amr1(1:n1,1:n2,1:n3,ipatch) *
-     &             solap(1:n1,1:n2,1:n3,ipatch)), exectime, dx, dxpa_i
       END DO
 
+      write(*,*) 'refinement levels done!'
 
 *     refill refined and overlapping cells
       DO IR=NL,1,-1
         CALL SYNC_AMR_FILTER(IR,NPATCH,PARE,PATCHNX,PATCHNY,PATCHNZ,
-     &    PATCHX,PATCHY,PATCHZ,PATCHRX,PATCHRY,PATCHRZ,L1)
+     &    PATCHX,PATCHY,PATCHZ,PATCHRX,PATCHRY,PATCHRZ,L1,nl)
         CALL SYNC_AMR_FILTER(IR,NPATCH,PARE,PATCHNX,PATCHNY,PATCHNZ,
-     &    PATCHX,PATCHY,PATCHZ,PATCHRX,PATCHRY,PATCHRZ,U12BULK)
+     &    PATCHX,PATCHY,PATCHZ,PATCHRX,PATCHRY,PATCHRZ,U12BULK,nl)
         CALL SYNC_AMR_FILTER(IR,NPATCH,PARE,PATCHNX,PATCHNY,PATCHNZ,
-     &    PATCHX,PATCHY,PATCHZ,PATCHRX,PATCHRY,PATCHRZ,U13BULK)
+     &    PATCHX,PATCHY,PATCHZ,PATCHRX,PATCHRY,PATCHRZ,U13BULK,nl)
         CALL SYNC_AMR_FILTER(IR,NPATCH,PARE,PATCHNX,PATCHNY,PATCHNZ,
-     &    PATCHX,PATCHY,PATCHZ,PATCHRX,PATCHRY,PATCHRZ,U14BULK)
+     &    PATCHX,PATCHY,PATCHZ,PATCHRX,PATCHRY,PATCHRZ,U14BULK,nl)
 
         LOW1=SUM(NPATCH(0:IR-1))+1
         LOW2=SUM(NPATCH(0:IR))
@@ -620,9 +621,9 @@ C     &                                                k,iter,l,err
           DO I=1,N1,2
           DO J=1,N2,2
           DO K=1,N3,2
-            II = PATCHX(JPATCH) + int((I-1)/2)
-            JJ = PATCHY(JPATCH) + int((J-1)/2)
-            KK = PATCHZ(JPATCH) + int((K-1)/2)
+            II = PATCHX(ipatch) + int((I-1)/2)
+            JJ = PATCHY(ipatch) + int((J-1)/2)
+            KK = PATCHZ(ipatch) + int((K-1)/2)
             if (jpatch.ne.0) then
               uw(1:2,1:2,1:2) = dens1(I:I+1,J:J+1,K:K+1,IPATCH)
 
@@ -1033,7 +1034,7 @@ C     &                                                k,iter,l,err
 ************************************************************************
        SUBROUTINE SYNC_AMR_FILTER(IR,NPATCH,PARE,PATCHNX,PATCHNY,
      &            PATCHNZ,PATCHX,PATCHY,PATCHZ,PATCHRX,PATCHRY,PATCHRZ,
-     &            VARIABLE)
+     &            VARIABLE,NL)
 ************************************************************************
 
 *     modified VQ 23-4-2020, DV 23-4-2020
@@ -1054,6 +1055,7 @@ C     &                                                k,iter,l,err
        real  PATCHRZ(NPALEV)
        INTEGER PARE(NPALEV)
 
+       INTEGER NL
        INTEGER CR1,CR2,CR3,CR4,CR5,CR6
        INTEGER IR,I,J,IX,JY,KZ,II,JJ,KK
        INTEGER N1,N2,N3,L1,L2,L3
@@ -1064,8 +1066,13 @@ C     &                                                k,iter,l,err
        INTEGER NV,A2,B2,C2,K,LOW1, LOW2
 
        INTEGER SOLAP(NAMRX,NAMRY,NAMRZ,NPALEV)
-       INTEGER MARCA(NAMRX,NAMRY,NAMRZ,NPALEV)
+       INTEGER MARCA(NAMRX,NAMRY,NAMRZ,NPALEV) ! this variable is used
+       ! to find whether a level l cell is parent of some l+1 cell
        REAL VARIABLE(NAMRX,NAMRY,NAMRZ,NPALEV) !PARAMETER
+
+       integer cr0amr(1:NMAX,1:NMAY,1:NMAZ)
+       integer cr0amr1(1:NAMRX,1:NAMRY,1:NAMRZ,NPALEV)
+       common /cr0/ cr0amr, cr0amr1
 
        real A1,B1,C1,RIV1,RIV2,RIV3
        INTEGER CONTROL(3)
@@ -1090,6 +1097,7 @@ C     &                                                k,iter,l,err
        INTEGER IG1,IG2,JG1,JG2,KG1,KG2,IG3,JG3,KG3,IG4,JG4,KG4
        real RXFIX,RYFIX,RZFIX
        INTEGER NPALEV2
+       integer low1ch, low2ch
 
         NPALEV2=MAX(100,INT(NPALEV/10))
         ALLOCATE(VECINO(NPALEV2,NPATCH(IR)))
@@ -1106,6 +1114,52 @@ C     &                                                k,iter,l,err
 
         LOW1=SUM(NPATCH(0:IR-1))+1
         LOW2=SUM(NPATCH(0:IR))
+
+        MARCA(:,:,:,LOW1:LOW2) = 1
+        if (ir.lt.nl) then
+          low1ch=SUM(NPATCH(0:IR))+1
+          low2ch=SUM(NPATCH(0:IR+1))
+          do i=low1ch,low2ch
+            n1=patchnx(i)
+            n2=patchny(i)
+            n3=patchnz(i)
+            do ix=1,n1,2
+            do jy=1,n2,2
+            do kz=1,n3,2
+              ii=patchx(i) + int((ix-1)/2)
+              jj=patchy(i) + int((jy-1)/2)
+              kk=patchz(i) + int((kz-1)/2)
+              j=pare(i)
+              marca(ii,jj,kk,j)=0
+            end do
+            end do
+            end do
+          end do
+          do i=low1,low2
+            n1=patchnx(i)
+            n2=patchny(i)
+            n3=patchnz(i)
+            do ix=1,n1
+            do jy=1,n2
+            do kz=1,n3
+              ! if it is not refined --> normal veinsgrid behaviour
+              if (cr0amr1(ix,jy,kz,i).eq.1) then
+                marca(ix,jy,kz,i)=1
+              else if (cr0amr1(ix,jy,kz,i).eq.0) then
+                ! if it has a child cell (marca=0) --> normal veinsgrid
+                !   behaviour (marca=1)
+                ! if it does not have a child cell (marca=1) --> its
+                !   value must be elsewhere, dont use it to overwrite
+                !   anything! (marca=0)
+                marca(ix,jy,kz,i) = 1 - marca(ix,jy,kz,i)
+              end if
+            end do
+            end do
+            end do
+          end do
+        end if
+
+
         DO I=LOW1,LOW2
 
          I2=I-LOW1+1
@@ -1309,7 +1363,8 @@ C     &                                                k,iter,l,err
               IX=II-CORNXX1+CORNX1
               JY=JJ-CORNYY1+CORNY1
               KZ=KK-CORNZZ1+CORNZ1
-              IF (SOLAP(IX,JY,KZ,I).EQ.1) THEN
+              IF (SOLAP(IX,JY,KZ,I).EQ.1.and.
+     &            marca(ix,jy,kz,i).eq.1) THEN
                 SOLAP(II,JJ,KK,J)=0
                 VARIABLE(II,JJ,KK,J) = VARIABLE(IX,JY,KZ,I)
               END IF
