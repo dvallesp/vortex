@@ -1,12 +1,51 @@
-*********************************************************************
+*-------------------------------------------------------------------*
 *********************************************************************
        PROGRAM VORTEX
-*      Implements Helmholtz-Hodge decomposition for an AMR velocity
-*      field
-*      AUTHORS: Susana Planelles, Vicent Quilis and David Valles-Perez
 *********************************************************************
+*-------------------------------------------------------------------*
+*      AUTHORS:  David Vallés-Pérez, Susana Planelles and Vicent Quilis
+*      'vortex' has been developed at the Departament d'Astronomia
+*      i Astrofísica of the Universitat de València, in the
+*      Computational Cosmology group. This project has been supported
+*      by the Spanish Ministerio de Ciencia e Innovación (MICINN,
+*      grants AYA2016-77237-C3-3-P and PID2019-107427GB-C33) and by
+*      the Generalitat Valenciana (grant PROMETEO/2019/071).
+*-------------------------------------------------------------------*
+*      'vortex' is a code which implements the Helmholtz-Hodge
+*      decomposition for an AMR velocity field.
+*      It has been designed to be coupled to the outputs of the
+*      cosmological code MASCLET (Quilis 2004), although it can be
+*      straightforwardly applied to any block-based AMR code or even
+*      to particle-based outputs by means of a smoothing scheme.
+*---------------------GENERAL CONSIDERATIONS------------------------*
+*      Besides the source code, the following files are needed:
+*      1) vortex_parameters.dat. This file dimensions the arrays,
+*         and therefore the code needs to be compiled when these
+*         parameters are changed.
+*      2) vortex.dat. This file contains runtime parameters. They
+*         can be changed once the code has been compiled.
+*      3) simulation data. By default, we read the simulation data
+*         in a folder simu_masclet, which contains the "gas" files.
+*         In order to use vortex on other code's outputs, the
+*         functions in "reader.f" (actual reader of the outputs)
+*         and "nomfile.f" (names of the simulation data files) need
+*         to be adapted.
+*
+*      The outputs of the code are written, by default, inside a
+*      folder "output_files". This folder needs to be created before
+*      running vortex. The output file will be saved as
+*      "velocitiesXXXXX" (XXXXX is the iteration number). This
+*      behaviour can be changed in "nomfile.f". As an additional
+*      safety measure, the code stops if a file with the same name is
+*      already in the folder.
+*
+*      The code is parallelised according to the OpenMP standard
+*      directives. For the code to run in parallel, it has to be
+*      compiled with the flag -fopenmp (gfortran), and the environment
+*      variable OMP_NUM_THREADS needs to be set to the number of cores
+*      set to run the code.
 *********************************************************************
-
+*-------------------------------------------------------------------*
 
        IMPLICIT NONE
 
