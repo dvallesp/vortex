@@ -2,6 +2,9 @@
        SUBROUTINE WRITE_DIVROT(FILERR5,NX,NY,NZ,ITER,T,ZETA,NL,NPATCH,
      &            PATCHNX,PATCHNY,PATCHNZ)
 ***********************************************************************
+*     Writes the divergence and each component of the rotational
+*     of the velocity field to a file.
+***********************************************************************
       IMPLICIT NONE
 
       INCLUDE 'vortex_parameters.dat'
@@ -114,6 +117,8 @@
        SUBROUTINE WRITE_POTENTIALS(FILERR5,NX,NY,NZ,ITER,T,ZETA,NL,
      &            NPATCH,PATCHNX,PATCHNY,PATCHNZ)
 ***********************************************************************
+*     Writes the scalar and the vector potentials to a file
+***********************************************************************
       IMPLICIT NONE
 
       INCLUDE 'vortex_parameters.dat'
@@ -220,6 +225,8 @@
        SUBROUTINE WRITE_TOTALVELOCITY(FILERR5,NX,NY,NZ,ITER,T,ZETA,NL,
      &                             NPATCH,PATCHNX,PATCHNY,PATCHNZ)
 ***********************************************************************
+*     Writes the initial velocity field to a file (DEPRECATED)
+***********************************************************************
       IMPLICIT NONE
 
       INCLUDE 'vortex_parameters.dat'
@@ -294,6 +301,9 @@
 ***********************************************************************
        SUBROUTINE WRITE_VELOCITIES(FILERR5,NX,NY,NZ,ITER,T,ZETA,NL,
      &                             NPATCH,PATCHNX,PATCHNY,PATCHNZ)
+***********************************************************************
+*     Writes the total, the compressive and the rotational velocities
+*     to a file.
 ***********************************************************************
       IMPLICIT NONE
 
@@ -457,6 +467,8 @@
 **********************************************************************
        SUBROUTINE WRITE_FILTLEN(FILERR5,NX,NY,NZ,ITER,NL,NPATCH,
      &            PATCHNX,PATCHNY,PATCHNZ,L0,L1)
+***********************************************************************
+*     Writes the filter length to a separate file.
 ***********************************************************************
       IMPLICIT NONE
 

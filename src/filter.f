@@ -4,6 +4,9 @@
      &            patchrx,patchry,patchrz,DX,output_iter,flag_w_filtlen,
      &            tol,step,maxit)
 ************************************************************************
+*     Implements the multiscale filtering technique described in
+*     Vazza et al. 2012 to an AMR grid (instead of a fixed grid).
+************************************************************************
 
       IMPLICIT NONE
 
@@ -708,6 +711,9 @@ C     &                                                k,iter,l,err
 ************************************************************************
        SUBROUTINE finer_to_coarser(u,uw,fuin)
 ************************************************************************
+*     Computes a mass-weighted mean to interpolate from a fine grid
+*     to a coarse grid (conservatively).
+************************************************************************
         REAL U(2,2,2)
         REAL UW(2,2,2) ! weights!!
         REAL FUIN, WSUM
@@ -734,6 +740,9 @@ C     &                                                k,iter,l,err
        SUBROUTINE veinsgrid_all_l(NL,NPATCH,PARE,PATCHNX,PATCHNY,
      &            PATCHNZ,PATCHX,PATCHY,PATCHZ,PATCHRX,PATCHRY,PATCHRZ,
      &            solap)
+************************************************************************
+*     Computes the solap variable (=1, keep; =0, not keep, it's
+*     overlapped) for all refinement levels.
 ************************************************************************
 
 *     modified VQ 23-4-2020, DV 23-4-2020
@@ -1035,6 +1044,9 @@ C     &                                                k,iter,l,err
        SUBROUTINE SYNC_AMR_FILTER(IR,NPATCH,PARE,PATCHNX,PATCHNY,
      &            PATCHNZ,PATCHX,PATCHY,PATCHZ,PATCHRX,PATCHRY,PATCHRZ,
      &            VARIABLE,NL)
+************************************************************************
+*     Ensures overlapping cells get the same values of the bulk velocity
+*     and filter length.
 ************************************************************************
 
 *     modified VQ 23-4-2020, DV 23-4-2020

@@ -3,6 +3,20 @@
      &            PARE,PATCHNX,PATCHNY,PATCHNZ,PATCHX,PATCHY,PATCHZ,
      &            PATCHRX,PATCHRY,PATCHRZ)
 ***********************************************************************
+*     Reads the outputs of the simulation. This subroutine may be
+*     changed for different simulation codes. In particular, in any
+*     case we'll need to feed the main code with:
+****  GRIDS info:
+*     NPATCH: number of patches per refinement level
+*     PATCHNX, PATCHNY, PATCHNZ: cell extensions of each refinement patch
+*     PATCHX, PATCHY, PATCHZ: grid coordinates of the leftmost cell of each patch
+*     PATCHRX, PATCHRY, PATCHRZ: origin position of each patch (position of the leftmost "mother" cell)
+*     PARE: coarser patch a given patch is embedded in
+****  CLUS info:
+*     U2, U3, U4: initial velocity field (base level, i.e coarse grid)
+*     U12, U13, U14: initial velocity field (refinement patches)
+*     CR0AMR: whether a cell is refined (=0) or it isn't (=1)
+***********************************************************************
 
        IMPLICIT NONE
 
@@ -176,6 +190,9 @@ c           SOLAP(:,:,:,I)=SCR4_INT(:,:,:)
       SUBROUTINE LEE_MACH(ITER,NPATCH,PARE,PATCHNX,PATCHNY,
      &            PATCHNZ,SHOCK0,SHOCK1)
 ************************************************************************
+*     Only used for the filter. Reads the outputs of a shock finder,
+*     and identifies the shocked cells (M >= 1.3)
+***********************************************************************
       IMPLICIT NONE
 
       INCLUDE 'vortex_parameters.dat'

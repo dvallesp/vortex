@@ -3,6 +3,9 @@
      &            PARE,PATCHNX,PATCHNY,PATCHNZ,PATCHX,PATCHY,PATCHZ,
      &            PATCHRX,PATCHRY,PATCHRZ)
 ***********************************************************************
+*     Computes the rotational of the velocity field (U2,U3,U4,U12,U13,
+*     U14) using a first-order centered scheme.
+************************************************************************
 
        IMPLICIT NONE
 
@@ -50,13 +53,6 @@
        INTEGER NUM,OMP_GET_NUM_THREADS,NUMOR, FLAG_PARALLEL
        COMMON /PROCESADORES/ NUM
 
-*-------------------------------------
-*      Divergencia fina  (DIVER)
-*            (IR: 1 ---> NL)
-*            (celdas: 2 ----> NX-1) (excluimos los bordes)
-*-------------------------------------
-
-
        DO IR=1,NL
 
        DXPA=0.0
@@ -85,31 +81,23 @@
         BAS21=U14(IX,JY+1,KZ,I)-U14(IX,JY-1,KZ,I)
         BAS32=U13(IX,JY,KZ+1,I)-U13(IX,JY,KZ-1,I)
 
-        ROTAX_1(IX,JY,KZ,I)=(BAS21-BAS32)/(2.0*DXPA)   !OJO
+        ROTAX_1(IX,JY,KZ,I)=(BAS21-BAS32)/(2.0*DXPA)
 
 * Y
         BAS21=U12(IX,JY,KZ+1,I)-U12(IX,JY,KZ-1,I)
         BAS32=U14(IX+1,JY,KZ,I)-U14(IX-1,JY,KZ,I)
 
-        ROTAY_1(IX,JY,KZ,I)=(BAS21-BAS32)/(2.0*DYPA)   !OJO
+        ROTAY_1(IX,JY,KZ,I)=(BAS21-BAS32)/(2.0*DYPA)
 
 * Z
         BAS21=U13(IX+1,JY,KZ,I)-U13(IX-1,JY,KZ,I)
         BAS32=U12(IX,JY+1,KZ,I)-U12(IX,JY-1,KZ,I)
 
-        ROTAZ_1(IX,JY,KZ,I)=(BAS21-BAS32)/(2.0*DZPA)   !OJO
+        ROTAZ_1(IX,JY,KZ,I)=(BAS21-BAS32)/(2.0*DZPA)
 
        END DO
        END DO
        END DO
-
-c       WRITE(*,*) MINVAL(ROTAX_1(1:N1,1:N2,1:N3,I)),
-c     &            MAXVAL(ROTAX_1(1:N1,1:N2,1:N3,I))
-c       WRITE(*,*) MINVAL(ROTAY_1(1:N1,1:N2,1:N3,I)),
-c     &            MAXVAL(ROTAY_1(1:N1,1:N2,1:N3,I))
-c       WRITE(*,*) MINVAL(ROTAZ_1(1:N1,1:N2,1:N3,I)),
-c     &            MAXVAL(ROTAZ_1(1:N1,1:N2,1:N3,I))
-
 
        END DO
        END DO
@@ -117,7 +105,6 @@ c     &            MAXVAL(ROTAZ_1(1:N1,1:N2,1:N3,I))
 *-------------------------------*
 *      COARSE LEVEL
 *-------------------------------*
-
 
        DO KZ=1,NZ
        DO JY=1,NY
@@ -130,25 +117,23 @@ c     &            MAXVAL(ROTAZ_1(1:N1,1:N2,1:N3,I))
         BAS21=U4(IX,JY+1,KZ)-U4(IX,JY-1,KZ)
         BAS32=U3(IX,JY,KZ+1)-U3(IX,JY,KZ-1)
 
-        ROTAX_0(IX,JY,KZ)=(BAS21-BAS32)/(2.0*DX)     !OJO
+        ROTAX_0(IX,JY,KZ)=(BAS21-BAS32)/(2.0*DX)
 
 * Y
         BAS21=U2(IX,JY,KZ+1)-U2(IX,JY,KZ-1)
         BAS32=U4(IX+1,JY,KZ)-U4(IX-1,JY,KZ)
 
-        ROTAY_0(IX,JY,KZ)=(BAS21-BAS32)/(2.0*DY)     !OJO
+        ROTAY_0(IX,JY,KZ)=(BAS21-BAS32)/(2.0*DY)
 
 * Z
         BAS21=U3(IX+1,JY,KZ)-U3(IX-1,JY,KZ)
         BAS32=U2(IX,JY+1,KZ)-U2(IX,JY-1,KZ)
 
-        ROTAZ_0(IX,JY,KZ)=(BAS21-BAS32)/(2.0*DZ)     !OJO
-
+        ROTAZ_0(IX,JY,KZ)=(BAS21-BAS32)/(2.0*DZ)
 
        END DO
        END DO
        END DO
-
 
         RETURN
        END
@@ -158,6 +143,9 @@ c     &            MAXVAL(ROTAZ_1(1:N1,1:N2,1:N3,I))
      &            PARE,PATCHNX,PATCHNY,PATCHNZ,PATCHX,PATCHY,PATCHZ,
      &            PATCHRX,PATCHRY,PATCHRZ)
 ***********************************************************************
+*     Computes the divergence of the velocity field (U2,U3,U4,U12,U13,
+*     U14) using a first-order centered scheme.
+************************************************************************
 
        IMPLICIT NONE
 
@@ -202,15 +190,6 @@ c     &            MAXVAL(ROTAZ_1(1:N1,1:N2,1:N3,I))
        INTEGER NUM,OMP_GET_NUM_THREADS,NUMOR, FLAG_PARALLEL
        COMMON /PROCESADORES/ NUM
 
-*-------------------------------------
-*      Divergencia fina  (DIVER)
-*            (IR: 1 ---> NL)
-*            (celdas: 2 ----> NX-1)
-*-------------------------------------
-
-cxx2       DIVER=0.0
-cxx2       DIVER0=0.0
-
        DO IR=1,NL
 
        DXPA=0.0
@@ -239,7 +218,7 @@ cxx2       DIVER0=0.0
         BAS32=U13(IX,JY+1,KZ,I)-U13(IX,JY-1,KZ,I)
         BAS43=U14(IX,JY,KZ+1,I)-U14(IX,JY,KZ-1,I)
 
-        DIVER(IX,JY,KZ,I)=(BAS21+BAS32+BAS43)/(2.0*DXPA)   !OJO
+        DIVER(IX,JY,KZ,I)=(BAS21+BAS32+BAS43)/(2.0*DXPA)
 
        END DO
        END DO
@@ -247,7 +226,6 @@ cxx2       DIVER0=0.0
 
        END DO
        END DO
-
 
 *-------------------------------*
 *      COARSE LEVEL
@@ -264,7 +242,7 @@ cxx2       DIVER0=0.0
         BAS32=U3(IX,JY+1,KZ)-U3(IX,JY-1,KZ)
         BAS43=U4(IX,JY,KZ+1)-U4(IX,JY,KZ-1)
 
-        DIVER0(IX,JY,KZ)=(BAS21+BAS32+BAS43)/(2.0*DX)  !OJO
+        DIVER0(IX,JY,KZ)=(BAS21+BAS32+BAS43)/(2.0*DX)
 
        END DO
        END DO
@@ -278,6 +256,9 @@ cxx2       DIVER0=0.0
        SUBROUTINE GRADIENTE(NX,NY,NZ,NL,NPATCH,
      &            PARE,PATCHNX,PATCHNY,PATCHNZ,PATCHX,PATCHY,PATCHZ,
      &            PATCHRX,PATCHRY,PATCHRZ)
+***********************************************************************
+*     Computes the gradient of the scalar potential (stored in DIVER0,
+*     DIVER) using a first-order scheme.
 ***********************************************************************
 
        IMPLICIT NONE
@@ -331,13 +312,6 @@ cxx2       DIVER0=0.0
 *      ---PARALLEL---
        INTEGER NUM,OMP_GET_NUM_THREADS,NUMOR, FLAG_PARALLEL
        COMMON /PROCESADORES/ NUM
-
-*-------------------------------------
-*      Divergencia fina  (DIVER)
-*            (IR: 1 ---> NL)
-*            (celdas: 2 ----> NX-1)
-*-------------------------------------
-
 
       GRAD_P_X=0.0
       GRAD_P_Y=0.0

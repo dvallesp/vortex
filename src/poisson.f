@@ -1,6 +1,9 @@
 ************************************************************************
       SUBROUTINE POFFT3D(NX,NY,NZ,KKK)
 ************************************************************************
+*     Solve Poisson's equation in Fourier space, assuming periodic
+*     boundary conditions.
+************************************************************************
 
       IMPLICIT NONE
 
@@ -94,6 +97,10 @@
 ************************************************************************
       SUBROUTINE MOMENTO(DX,NX,NY,NZ,KKK)
 ************************************************************************
+*     Computes the momentum indices (i.e., the Green function) to
+*     solve Poisson's equation in Fourier space, and stores them in
+*     the array KKK
+************************************************************************
 
       IMPLICIT NONE
 
@@ -172,6 +179,13 @@
 ***********************************************************************
       SUBROUTINE FOURN(DATA,NN,NDIM,ISIGN)
 ***********************************************************************
+*     Computes the FFT (in NDIM dimensions). These function has been
+*     adapted from the following reference:
+*---------------------------------------------------------------------*
+*     Ref.: Numerical Recipes in FORTRAN 77: Volume 1                 *
+*     W.H. Press, B.P. Flannery, S.A. Teukolsky, W.T. Vetterling      *
+*     1992, Cambridge University Press                                *
+***********************************************************************
 
       IMPLICIT real(A-H,O-Z)
 
@@ -249,6 +263,13 @@
 ************************************************************************
       SUBROUTINE POTAMR(NL,NX,NY,NZ,DX,NPATCH,PARE,
      &           PATCHNX,PATCHNY,PATCHNZ,PATCHX,PATCHY,PATCHZ)
+************************************************************************
+*     Solves Poisson equation for the refinement patches, taking into
+*     account the boundary conditions imposed by the coarser cells.
+*     It uses a SOR method with Chebyshev acceleration procedure to
+*     set the overrelaxation parameter. It uses 3 ficticious cell at
+*     each boundary. Boundary conditions are enforced in the ficticious
+*     boundary (cells -2 and N+3).
 ************************************************************************
 
       IMPLICIT NONE

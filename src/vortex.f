@@ -52,7 +52,7 @@
 *      COMPILATION-TIME PARAMETERS
        INCLUDE 'vortex_parameters.dat'
 
-*      GLOBAL VARIABLES
+*      GLOBAL VARIABLES (COMMON MODULES)
        INTEGER NX,NY,NZ,ITER
        COMMON /ITERI/ NX,NY,NZ,ITER
 
@@ -168,7 +168,7 @@
 
 
 ****************************************************
-*      READING INITIAL DATAS                       *
+*      READING INITIAL DATA                        *
 ****************************************************
        OPEN(1,FILE='vortex.dat',STATUS='UNKNOWN',ACTION='READ')
 
@@ -242,7 +242,7 @@
 
        ITER=FIRST+EVERY*(IFI-1)
 
-*      define the output file name; check it does not exist
+*      define the output file name
        CALL NOMFILE2(ITER,FILE5)
        FILERR5='./output_files/'//FILE5
 
@@ -337,10 +337,11 @@
        IF (ZETA.LT.0.0) ZETA=0.0
 
 
-*     AMR grid:
+*     Build the AMR grid:
       CALL GRIDAMR(NX,NY,NZ,NL,NPATCH,PATCHNX,PATCHNY,PATCHNZ,
      &      PATCHX,PATCHY,PATCHZ,PATCHRX,PATCHRY,PATCHRZ,PARE)
-*    check velocities have been read
+
+*     Runtime check: velocities have been read properly
       IF (FLAG_VERBOSE.EQ.1) THEN
         write(*,*) 'velocity: min and max values'
         write(*,*) minval(u2),minval(u12)
@@ -351,7 +352,7 @@
         write(*,*) maxval(u4),maxval(u14)
       END IF
 
-*     filter velocities
+*     Filter velocities (if specified to do so in vortex.dat)
       IF (flag_filter.eq.1) then
         IF (flag_verbose.eq.1) write(*,*) 'Applying multiscale filter'
         call MULTISCALE_FILTER(NX,NY,NZ,NL,NPATCH,pare,
@@ -374,10 +375,8 @@
       CALL EXTEND_VAR(NX,NY,NZ,NL,NPATCH,PARE,PATCHNX,PATCHNY,PATCHNZ,
      &                PATCHX,PATCHY,PATCHZ,PATCHRX,PATCHRY,PATCHRZ)
 
-
-
 *------------------------------------------------------------------*
-*      Calculamos rotacional y divergencia de la velocidad
+*      We compute the velocity divergence and curl
 *------------------------------------------------------------------*
 
         WRITE(*,*) 'Computing the velocity rotational...'
@@ -394,11 +393,6 @@
      &                  PATCHZ,PATCHRX,PATCHRY,PATCHRZ)
 
         WRITE(*,*) 'Computation ends!'
-
-*       Correct the values of the diff operators in the boundaries
-*       by interpolation from the most refined coarser grid.
-*        CALL CORRECT_SOURCE_BOUNDARIES(NL,NX,NY,NZ,NPATCH,
-*     &           PATCHNX,PATCHNY,PATCHNZ)
 
         IF (FLAG_VERBOSE.EQ.1) THEN
           write(*,*) 'rotational: min and max values'
@@ -425,17 +419,19 @@
 *      NABLA(FIELD)=SOURCE
 *      SOURCE: SOURCE OF POISSON EQUATION, ARRAY(0:NX+1,0:NY+1,0:NZ+1)
 *      FIELD: SOLUTION OF POISSON EQUATION, ARRAY(0:NX+1,0:NY+1,0:NZ+1)
-*      ONE FICTICIUS CELL IN EACH DIRECTION ASSUMING PERIODIC BOUNDARY CONDITIONS
+*      ONE FICTICIOUS CELL IN EACH DIRECTION ASSUMING PERIODIC BOUNDARY CONDITIONS
 *      real POT(0:NMAX+1,0:NMAY+1,0:NMAZ+1)    ! field to solve
 *      real U1(0:NMAX+1,0:NMAY+1,0:NMAZ+1)     ! source in poisson equation
 *      COMMON /BASE/ U1,POT
 *
 *      WE 'MUST' SOLVE 4 DIFFERENT POISSON EQUATIONS --> 4 CALLS:
-*       --> IR=0: we call to POFFT3D
-*       --> IR>0: we call to POTAMR
+*       --> IR=0, i.e. base level: we call to POFFT3D
+*       --> IR>0, i.e. refinement patches: we call to POTAMR
 *
-*      GENERAL WARNING: WE MULTIPLY BY -1.0
-*
+*      To save memory, we then copy the potentials to the source arrays.
+*      So after this calculations, DIVER0/DIVER will contain the scalar
+*      potential, and ROTA(X,Y,Z)_0/1 will contain the vector potential.
+
       WRITE(*,*) 'Solving Poisson eqns. Base level'
       WRITE(*,*) 'Scalar potential'
 
@@ -535,8 +531,6 @@
       END DO
 
       WRITE(*,*) 'Solving Poisson eqns. AMR levels'
-      WRITE(*,*) 'Scalar potential'
-
 *      AMR levels:
 *
 *      Source and field are too large, must be sent by COMMON
@@ -548,6 +542,7 @@
 *
 
 ** 1ST CALL:
+      WRITE(*,*) 'Scalar potential'
 !$OMP PARALLEL DO SHARED(NX,NY,NZ,POT,DIVER0),
 !$OMP+            PRIVATE(I,J,K)
       DO K=0, NZ+1
@@ -919,16 +914,16 @@
        CALL ROTARY_2(NX,NY,NZ,NL,NPATCH,PARE,PATCHNX,PATCHNY,PATCHNZ,
      &             PATCHX,PATCHY,PATCHZ,PATCHRX,PATCHRY,PATCHRZ)
 
-*       Correct the values of the velocities in the boundaries
-*       by interpolation from the most refined coarser grid.
 
-*       CALL CORRECT_VELOCITY_BOUNDARIES(NL,NX,NY,NZ,NPATCH,
-*     &                                  PATCHNX,PATCHNY,PATCHNZ)
 
+*      Ensure that overlapping cells have the same value of the velocity
+*      after the calculations
        CALL SYNC_AMR_VELOCITIES(NL,NPATCH,PARE,PATCHNX,PATCHNY,PATCHNZ,
      &                       PATCHX,PATCHY,PATCHZ,PATCHRX,PATCHRY,
      &                       PATCHRZ)
 
+*      Outliers (cells where differentiation noise has produced large
+*      relative errors) get corrected by interpolation from coarser grids
        CALL CORRECT_OUTLIERS(NL,NX,NY,NZ,NPATCH,PATCHNX,PATCHNY,PATCHNZ,
      &                       ERR_THR)
 
@@ -966,15 +961,26 @@
 *********************************************************************
 *********************************************************************
 
-      !!!! code functions
+      !!!! FUNCTIONS in EXTERNAL FILES
+*     Differential operators
       INCLUDE 'diff_ho.f' ! diff.f for first order
+*     Filenames
       INCLUDE 'nomfile.f'
+*     Build the base and AMR grids
       INCLUDE 'grids.f'
+*     Linear interpolation routines
       INCLUDE 'interp.f'
+*     Solve elliptic equations at base and refined levels
       INCLUDE 'poisson.f'
+*     Read the input data
       INCLUDE 'reader.f'
+*     Write the outputs
       INCLUDE 'writer.f'
+*     Handle the overlaps between different patches
       INCLUDE 'overlaps.f'
+*     Handle the boundaries of AMR patches
       INCLUDE 'boundaries.f'
+*     Detect cells with large errors and interpolate from coarser levels
       INCLUDE 'outliers.f'
+*     Multiscale filter as in (Vazza, 2012) to extract turbulent field
       INCLUDE 'filter.f'

@@ -2,6 +2,13 @@
       SUBROUTINE CELLWISE_ERROR(NX,NY,NZ,NL,NPATCH,
      &            PATCHNX,PATCHNY,PATCHNZ)
 ************************************************************************
+*     Computes the cell-wise relative error in reconstructing the
+*     velocity field, as ABS((UP + UR) / U - 1), being U, UP and UR
+*     the total, compressive and solenoidal velocity components,
+*     respectively. This is done for each component and the total
+*     error is found by a weighted mean (corresponds to variance
+*     propagation to sqrt(u2**2 + u3**2 + u4**2)).
+************************************************************************
 
       IMPLICIT NONE
 
@@ -178,6 +185,11 @@
 ************************************************************************
        SUBROUTINE SYNC_AMR_VELOCITIES(NL,NPATCH,PARE,PATCHNX,PATCHNY,
      &            PATCHNZ,PATCHX,PATCHY,PATCHZ,PATCHRX,PATCHRY,PATCHRZ)
+************************************************************************
+*     Ensures overlapping cells at a given refinement levels have
+*     the same values of the reconstructed velocities. This
+*     subroutine is based on the last version of the "VEINSGRID"
+*     subroutine in MASCLET to detect the overlaps.
 ************************************************************************
 
 *     modified VQ 23-4-2020, DV 23-4-2020

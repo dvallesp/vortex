@@ -3,6 +3,10 @@
      &            PARE,PATCHNX,PATCHNY,PATCHNZ,PATCHX,PATCHY,PATCHZ,
      &            PATCHRX,PATCHRY,PATCHRZ)
 ***********************************************************************
+*     Computes the rotational of the velocity field (U2,U3,U4,U12,U13,
+*     U14) using a 9-point stencil (8th order accurate), less accurate
+*     near the boundary (reaching first-order in the boundary)
+***********************************************************************
 
        IMPLICIT NONE
 
@@ -53,18 +57,11 @@
        INTEGER NUM,OMP_GET_NUM_THREADS,NUMOR, FLAG_PARALLEL
        COMMON /PROCESADORES/ NUM
 
-*-------------------------------------
-*      Divergencia fina  (DIVER)
-*            (IR: 1 ---> NL)
-*            (celdas: 2 ----> NX-1) (excluimos los bordes)
-*-------------------------------------
-
        coef4 = (/1.0/280,-4.0/105,1.0/5,-4.0/5,0.0,4.0/5,-1.0/5,4.0/105,
      &           -1.0/280 /)
        coef3 = (/-1.0/60,3.0/20,-3.0/4,0.0,3.0/4,-3.0/20,1.0/60/)
        coef2 = (/1.0/12,-2.0/3,0.0,2.0/3,-1.0/12/)
        coef1 = (/-1.0/2,0.0,1.0/2/)
-
 
        DO IR=1,NL
 
@@ -184,7 +181,6 @@
 *      COARSE LEVEL
 *-------------------------------*
 
-
        DO KZ=1,NZ
        DO JY=1,NY
        DO IX=1,NX
@@ -278,7 +274,6 @@
        END DO
        END DO
 
-
         RETURN
        END
 
@@ -286,6 +281,12 @@
       SUBROUTINE ROTARY_2(NX,NY,NZ,NL,NPATCH,
      &            PARE,PATCHNX,PATCHNY,PATCHNZ,PATCHX,PATCHY,PATCHZ,
      &            PATCHRX,PATCHRY,PATCHRZ)
+***********************************************************************
+*     Computes the rotational of the velocity field (U2,U3,U4,U12,U13,
+*     U14) using a 9-point stencil (8th order accurate). Variables are
+*     extended with 3 ficticious cells, so that one can keep 9-point
+*     stencil everywhere but in the boundary, where it uses 7-point
+*     stencil.
 ***********************************************************************
 
       IMPLICIT NONE
@@ -431,7 +432,6 @@
       END DO
       END DO
 
-
       END DO
       END DO
 
@@ -536,7 +536,6 @@
       END DO
       END DO
 
-
        RETURN
       END
 
@@ -544,6 +543,10 @@
        SUBROUTINE DIVER_FINA(NX,NY,NZ,NL,NPATCH,
      &            PARE,PATCHNX,PATCHNY,PATCHNZ,PATCHX,PATCHY,PATCHZ,
      &            PATCHRX,PATCHRY,PATCHRZ)
+***********************************************************************
+*     Computes the divergence of the velocity field (U2,U3,U4,U12,U13,
+*     U14) using a 9-point stencil (8th order accurate), less accurate
+*     near the boundary (reaching first-order in the boundary)
 ***********************************************************************
 
        IMPLICIT NONE
@@ -690,7 +693,6 @@
        END DO
        END DO
 
-
 *-------------------------------*
 *      COARSE LEVEL
 *-------------------------------*
@@ -775,6 +777,10 @@
        SUBROUTINE GRADIENTE(NX,NY,NZ,NL,NPATCH,
      &            PARE,PATCHNX,PATCHNY,PATCHNZ,PATCHX,PATCHY,PATCHZ,
      &            PATCHRX,PATCHRY,PATCHRZ)
+***********************************************************************
+*     Computes the gradient of the scalar potential (DIVER0, DIVER)
+*     using a 9-point stencil (8th order accurate), less accurate
+*     near the boundary (reaching first-order in the boundary)
 ***********************************************************************
 
        IMPLICIT NONE

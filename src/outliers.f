@@ -2,6 +2,9 @@
       SUBROUTINE CORRECT_OUTLIERS(NL,NX,NY,NZ,NPATCH,
      &           PATCHNX,PATCHNY,PATCHNZ, ERR_THR)
 ***********************************************************************
+*     Cells with large relative error get their values obtained by
+*     interpolation from a coarser grid.
+************************************************************************
 
       IMPLICIT NONE
 

@@ -2,6 +2,11 @@
       SUBROUTINE CORRECT_SOURCE_BOUNDARIES(NL,NX,NY,NZ,NPATCH,
      &           PATCHNX,PATCHNY,PATCHNZ)
 ***********************************************************************
+*     The sources at the boundary of each patch get updated with a
+*     value obtained by interpolation from a coarser grid (now,
+*     this is DEPRECATED in favour of using high-order derivatives
+*     and extended patches).
+***********************************************************************
 
       IMPLICIT NONE
 
@@ -221,6 +226,11 @@
 ***********************************************************************
       SUBROUTINE CORRECT_VELOCITY_BOUNDARIES(NL,NX,NY,NZ,NPATCH,
      &           PATCHNX,PATCHNY,PATCHNZ)
+***********************************************************************
+*     The velocities (compressive and solenoidal) at the boundary of
+*     each patch get updated with a value obtained by interpolation
+*     from a coarser grid (now, this is DEPRECATED in favour of using
+*     high-order derivatives and extended patches).
 ***********************************************************************
 
       IMPLICIT NONE

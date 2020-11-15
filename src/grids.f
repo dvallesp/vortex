@@ -1,6 +1,9 @@
 ***********************************************************************
       SUBROUTINE MALLA(NX,NY,NZ,LADO)
 ***********************************************************************
+*     Build the coarse grid: gets the cells center coordinates and
+*     interface coordinates.
+***********************************************************************
 
       IMPLICIT NONE
 
@@ -79,6 +82,11 @@
      &                   PATCHNX,PATCHNY,PATCHNZ,
      &                   PATCHX,PATCHY,PATCHZ,
      &                   PATCHRX,PATCHRY,PATCHRZ,PARE)
+************************************************************************
+*     Build the AMR grid: cells center and interface positions for each
+*     refinement patch. Also computes the CR3AMR variables, which
+*     contain the "parent" cell of a given one which is well-inside its
+*     parent patch.
 ************************************************************************
 
       IMPLICIT NONE
@@ -290,6 +298,8 @@
       SUBROUTINE MINIMALLA(N1,N2,N3,DX,DY,DZ,RPAX,RPAY,RPAZ,
      &                     RX,RY,RZ,RMX,RMY,RMZ)
 **********************************************************************
+*     Build the grid for each patch
+************************************************************************
 
       IMPLICIT NONE
 
@@ -356,6 +366,9 @@
        SUBROUTINE EXTEND_VAR(NX,NY,NZ,NL,NPATCH,
      &            PARE,PATCHNX,PATCHNY,PATCHNZ,PATCHX,PATCHY,PATCHZ,
      &            PATCHRX,PATCHRY,PATCHRZ)
+***********************************************************************
+*     Extend variables one cell on each side by interpolation from
+*     coarser patches.
 ***********************************************************************
 
        IMPLICIT NONE
