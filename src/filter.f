@@ -157,11 +157,11 @@
               maxj = int(((thisy + l) / lado0 + 0.5) * ny) + 1
               mink = int(((thisz - l) / lado0 + 0.5) * nz) + 1
               maxk = int(((thisz + l) / lado0 + 0.5) * nz) + 1
-              if (mini.lt.0) mini=1
+              if (mini.le.0) mini=1
               if (maxi.gt.nx) maxi=nx
-              if (minj.lt.0) minj=1
+              if (minj.le.0) minj=1
               if (maxj.gt.ny) maxj=ny
-              if (mink.lt.0) mink=1
+              if (mink.le.0) mink=1
               if (maxk.gt.nz) maxk=nz
 
               outer0_c: do ii=mini,maxi
