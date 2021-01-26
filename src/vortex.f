@@ -269,7 +269,8 @@
 
 !$OMP PARALLEL DO SHARED(NX,NY,NZ,U2P,U3P,U4P,U1,POT,DIVER0,
 !$OMP+                   ROTAX_0,ROTAY_0,ROTAZ_0),
-!$OMP+            PRIVATE(I,J,K)
+!$OMP+            PRIVATE(I,J,K),
+!$OMP+            DEFAULT(NONE)
       DO K=0, NZ+1
       DO J=0, NY+1
       DO I=0, NX+1
@@ -293,7 +294,8 @@
        LOW2=SUM(NPATCH(0:IR))
 !$OMP PARALLEL DO SHARED(PATCHNX,PATCHNY,PATCHNZ,LOW1,LOW2,
 !$OMP+                   U11),
-!$OMP+            PRIVATE(IX,JY,KZ,N1,N2,N3,I)
+!$OMP+            PRIVATE(IX,JY,KZ,N1,N2,N3,I),
+!$OMP+            DEFAULT(NONE)
        DO I=LOW1,LOW2
 
           N1=PATCHNX(I)
@@ -315,9 +317,10 @@
        LOW1=SUM(NPATCH(0:IR-1))+1
        LOW2=SUM(NPATCH(0:IR))
 !$OMP PARALLEL DO SHARED(PATCHNX,PATCHNY,PATCHNZ,LOW1,LOW2,
-!$OMP+                   U12,U13,U14,U12P,U13P,U14P,POT,DIVER,
+!$OMP+                   U12,U13,U14,U12P,U13P,U14P,POT1,DIVER,
 !$OMP+                   ROTAX_1,ROTAY_1,ROTAZ_1),
-!$OMP+            PRIVATE(IX,JY,KZ,N1,N2,N3,I)
+!$OMP+            PRIVATE(IX,JY,KZ,N1,N2,N3,I),
+!$OMP+            DEFAULT(NONE)
        DO I=LOW1,LOW2
           N1=PATCHNX(I)
           N2=PATCHNY(I)
@@ -460,7 +463,8 @@
 
 **     SOURCE=-DIVER0
 !$OMP PARALLEL DO SHARED(NX,NY,NZ,U1,DIVER0),
-!$OMP+            PRIVATE(I,J,K)
+!$OMP+            PRIVATE(I,J,K),
+!$OMP+            DEFAULT(NONE)
       DO K=0, NZ+1
       DO J=0, NY+1
       DO I=0, NX+1
@@ -472,7 +476,8 @@
       CALL POFFT3D(NX,NY,NZ,KKK)    ! returns field POT --> PHI
 
 !$OMP PARALLEL DO SHARED(NX,NY,NZ,DIVER0,POT),
-!$OMP+            PRIVATE(I,J,K)
+!$OMP+            PRIVATE(I,J,K),
+!$OMP+            DEFAULT(NONE)
       DO K=0, NZ+1
       DO J=0, NY+1
       DO I=0, NX+1
@@ -484,7 +489,8 @@
       WRITE(*,*) 'Vector potential: x component'
 **     SOURCE=-ROTAX_0
 !$OMP PARALLEL DO SHARED(NX,NY,NZ,U1,ROTAX_0),
-!$OMP+            PRIVATE(I,J,K)
+!$OMP+            PRIVATE(I,J,K),
+!$OMP+            DEFAULT(NONE)
       DO K=0, NZ+1
       DO J=0, NY+1
       DO I=0, NX+1
@@ -496,7 +502,8 @@
       CALL POFFT3D(NX,NY,NZ,KKK)    ! returns field POT --> W_x
 
 !$OMP PARALLEL DO SHARED(NX,NY,NZ,ROTAX_0,POT),
-!$OMP+            PRIVATE(I,J,K)
+!$OMP+            PRIVATE(I,J,K),
+!$OMP+            DEFAULT(NONE)
       DO K=0, NZ+1
       DO J=0, NY+1
       DO I=0, NX+1
@@ -508,7 +515,8 @@
       WRITE(*,*) 'Vector potential: y component'
 **     SOURCE=-ROTAY_0
 !$OMP PARALLEL DO SHARED(NX,NY,NZ,U1,ROTAY_0),
-!$OMP+            PRIVATE(I,J,K)
+!$OMP+            PRIVATE(I,J,K),
+!$OMP+            DEFAULT(NONE)
       DO K=0, NZ+1
       DO J=0, NY+1
       DO I=0, NX+1
@@ -520,7 +528,8 @@
       CALL POFFT3D(NX,NY,NZ,KKK)    ! returns field POT --> W_y
 
 !$OMP PARALLEL DO SHARED(NX,NY,NZ,ROTAY_0,POT),
-!$OMP+            PRIVATE(I,J,K)
+!$OMP+            PRIVATE(I,J,K),
+!$OMP+            DEFAULT(NONE)
       DO K=0, NZ+1
       DO J=0, NY+1
       DO I=0, NX+1
@@ -532,7 +541,8 @@
       WRITE(*,*) 'Vector potential: z component'
 **     SOURCE=-ROTAZ_0
 !$OMP PARALLEL DO SHARED(NX,NY,NZ,U1,ROTAZ_0),
-!$OMP+            PRIVATE(I,J,K)
+!$OMP+            PRIVATE(I,J,K),
+!$OMP+            DEFAULT(NONE)
       DO K=0, NZ+1
       DO J=0, NY+1
       DO I=0, NX+1
@@ -544,7 +554,8 @@
       CALL POFFT3D(NX,NY,NZ,KKK)    ! returns field POT --> W_z
 
 !$OMP PARALLEL DO SHARED(NX,NY,NZ,ROTAZ_0,POT),
-!$OMP+            PRIVATE(I,J,K)
+!$OMP+            PRIVATE(I,J,K),
+!$OMP+            DEFAULT(NONE)
       DO K=0, NZ+1
       DO J=0, NY+1
       DO I=0, NX+1
@@ -567,7 +578,8 @@
 ** 1ST CALL:
       WRITE(*,*) 'Scalar potential'
 !$OMP PARALLEL DO SHARED(NX,NY,NZ,POT,DIVER0,U1,DIVER0BKP),
-!$OMP+            PRIVATE(I,J,K)
+!$OMP+            PRIVATE(I,J,K),
+!$OMP+            DEFAULT(NONE)
       DO K=0, NZ+1
       DO J=0, NY+1
       DO I=0, NX+1
@@ -583,7 +595,8 @@
        LOW2=SUM(NPATCH(0:IR))
 !$OMP PARALLEL DO SHARED(PATCHNX,PATCHNY,PATCHNZ,LOW1,LOW2,
 !$OMP+                   U11,DIVER),
-!$OMP+            PRIVATE(IX,JY,KZ,N1,N2,N3,I)
+!$OMP+            PRIVATE(IX,JY,KZ,N1,N2,N3,I),
+!$OMP+            DEFAULT(NONE)
        DO I=LOW1,LOW2
           N1=PATCHNX(I)
           N2=PATCHNY(I)
@@ -608,7 +621,8 @@
        LOW2=SUM(NPATCH(0:IR))
 !$OMP PARALLEL DO SHARED(PATCHNX,PATCHNY,PATCHNZ,LOW1,LOW2,
 !$OMP+                   POT1,DIVER),
-!$OMP+            PRIVATE(IX,JY,KZ,N1,N2,N3,I)
+!$OMP+            PRIVATE(IX,JY,KZ,N1,N2,N3,I),
+!$OMP+            DEFAULT(NONE)
        DO I=LOW1,LOW2
        N1=PATCHNX(I)
        N2=PATCHNY(I)
@@ -628,7 +642,8 @@
 ** 2ND CALL:
        WRITE(*,*) 'Vector potential: x component'
 !$OMP PARALLEL DO SHARED(NX,NY,NZ,POT,ROTAX_0,U1,ROTAX_0BKP),
-!$OMP+            PRIVATE(I,J,K)
+!$OMP+            PRIVATE(I,J,K),
+!$OMP+            DEFAULT(NONE)
        DO K=0, NZ+1
        DO J=0, NY+1
        DO I=0, NX+1
@@ -644,7 +659,8 @@
        LOW2=SUM(NPATCH(0:IR))
 !$OMP PARALLEL DO SHARED(PATCHNX,PATCHNY,PATCHNZ,LOW1,LOW2,
 !$OMP+                   U11,ROTAX_1),
-!$OMP+            PRIVATE(IX,JY,KZ,N1,N2,N3,I)
+!$OMP+            PRIVATE(IX,JY,KZ,N1,N2,N3,I),
+!$OMP+            DEFAULT(NONE)
        DO I=LOW1,LOW2
        N1=PATCHNX(I)
        N2=PATCHNY(I)
@@ -670,7 +686,8 @@
        LOW2=SUM(NPATCH(0:IR))
 !$OMP PARALLEL DO SHARED(PATCHNX,PATCHNY,PATCHNZ,LOW1,LOW2,
 !$OMP+                   ROTAX_1,POT1),
-!$OMP+            PRIVATE(IX,JY,KZ,N1,N2,N3,I)
+!$OMP+            PRIVATE(IX,JY,KZ,N1,N2,N3,I),
+!$OMP+            DEFAULT(NONE)
        DO I=LOW1,LOW2
        N1=PATCHNX(I)
        N2=PATCHNY(I)
@@ -690,7 +707,8 @@
 * 3RD CALL:
        WRITE(*,*) 'Vector potential: y component'
 !$OMP PARALLEL DO SHARED(NX,NY,NZ,POT,ROTAY_0,U1,ROTAY_0BKP),
-!$OMP+            PRIVATE(I,J,K)
+!$OMP+            PRIVATE(I,J,K),
+!$OMP+            DEFAULT(NONE)
        DO K=0, NZ+1
        DO J=0, NY+1
        DO I=0, NX+1
@@ -706,7 +724,8 @@
        LOW2=SUM(NPATCH(0:IR))
 !$OMP PARALLEL DO SHARED(PATCHNX,PATCHNY,PATCHNZ,LOW1,LOW2,
 !$OMP+                   U11,ROTAY_1),
-!$OMP+            PRIVATE(IX,JY,KZ,N1,N2,N3,I)
+!$OMP+            PRIVATE(IX,JY,KZ,N1,N2,N3,I),
+!$OMP+            DEFAULT(NONE)
        DO I=LOW1,LOW2
        N1=PATCHNX(I)
        N2=PATCHNY(I)
@@ -733,7 +752,8 @@
        LOW2=SUM(NPATCH(0:IR))
 !$OMP PARALLEL DO SHARED(PATCHNX,PATCHNY,PATCHNZ,LOW1,LOW2,
 !$OMP+                   ROTAY_1,POT1),
-!$OMP+            PRIVATE(IX,JY,KZ,N1,N2,N3,I)
+!$OMP+            PRIVATE(IX,JY,KZ,N1,N2,N3,I),
+!$OMP+            DEFAULT(NONE)
        DO I=LOW1,LOW2
        N1=PATCHNX(I)
        N2=PATCHNY(I)
@@ -753,7 +773,8 @@
 * 4TH CALL:
        WRITE(*,*) 'Vector potential: z component'
 !$OMP PARALLEL DO SHARED(NX,NY,NZ,POT,ROTAZ_0,U1,ROTAZ_0BKP),
-!$OMP+            PRIVATE(I,J,K)
+!$OMP+            PRIVATE(I,J,K),
+!$OMP+            DEFAULT(NONE)
        DO K=0, NZ+1
        DO J=0, NY+1
        DO I=0, NX+1
@@ -769,7 +790,8 @@
        LOW2=SUM(NPATCH(0:IR))
 !$OMP PARALLEL DO SHARED(PATCHNX,PATCHNY,PATCHNZ,LOW1,LOW2,
 !$OMP+                   U11,ROTAZ_1),
-!$OMP+            PRIVATE(IX,JY,KZ,N1,N2,N3,I)
+!$OMP+            PRIVATE(IX,JY,KZ,N1,N2,N3,I),
+!$OMP+            DEFAULT(NONE)
        DO I=LOW1,LOW2
        N1=PATCHNX(I)
        N2=PATCHNY(I)
@@ -794,7 +816,8 @@
        LOW2=SUM(NPATCH(0:IR))
 !$OMP PARALLEL DO SHARED(PATCHNX,PATCHNY,PATCHNZ,LOW1,LOW2,
 !$OMP+                   ROTAZ_1,POT1),
-!$OMP+            PRIVATE(IX,JY,KZ,N1,N2,N3,I)
+!$OMP+            PRIVATE(IX,JY,KZ,N1,N2,N3,I),
+!$OMP+            DEFAULT(NONE)
        DO I=LOW1,LOW2
        N1=PATCHNX(I)
        N2=PATCHNY(I)
@@ -833,7 +856,8 @@
 *       We backup the original velocities in UORI
 
 !$OMP PARALLEL DO SHARED(NX,NY,NZ,U2,U3,U4,UORI2,UORI3,UORI4),
-!$OMP+            PRIVATE(I,J,K)
+!$OMP+            PRIVATE(I,J,K),
+!$OMP+            DEFAULT(NONE)
        DO K=1, NZ
        DO J=1, NY
        DO I=1, NX
@@ -849,7 +873,8 @@
         LOW2=SUM(NPATCH(0:IR))
 !$OMP PARALLEL DO SHARED(PATCHNX,PATCHNY,PATCHNZ,LOW1,LOW2,
 !$OMP+                   U12,U13,U14,UORI12,UORI13,UORI14),
-!$OMP+            PRIVATE(IX,JY,KZ,N1,N2,N3,I)
+!$OMP+            PRIVATE(IX,JY,KZ,N1,N2,N3,I),
+!$OMP+            DEFAULT(NONE)
         DO I=LOW1,LOW2
         N1=PATCHNX(I)
         N2=PATCHNY(I)
@@ -876,7 +901,9 @@
 
 **       !!!! Por convenio hay que multiplicar los UP por -1
 
-!$OMP PARALLEL DO SHARED(NX,NY,NZ,U2P,U3P,U4P),PRIVATE(I,J,K)
+!$OMP PARALLEL DO SHARED(NX,NY,NZ,U2P,U3P,U4P),
+!$OMP+            PRIVATE(I,J,K),
+!$OMP+            DEFAULT(NONE)
        DO K=1, NZ
        DO J=1, NY
        DO I=1, NX
@@ -892,7 +919,8 @@
         LOW2=SUM(NPATCH(0:IR))
 !$OMP PARALLEL DO SHARED(PATCHNX,PATCHNY,PATCHNZ,LOW1,LOW2,
 !$OMP+                   U12P,U13P,U14P),
-!$OMP+            PRIVATE(IX,JY,KZ,N1,N2,N3,I)
+!$OMP+            PRIVATE(IX,JY,KZ,N1,N2,N3,I),
+!$OMP+            DEFAULT(NONE)
         DO I=LOW1,LOW2
         N1=PATCHNX(I)
         N2=PATCHNY(I)
@@ -914,7 +942,8 @@
 *      Note that we lose the original velocities (U2, U3, U4), as we overwrite them
 
 !$OMP PARALLEL DO SHARED(NX,NY,NZ,U2,U3,U4,ROTAX_0,ROTAY_0,ROTAZ_0),
-!$OMP+            PRIVATE(I,J,K)
+!$OMP+            PRIVATE(I,J,K),
+!$OMP+            DEFAULT(NONE)
       DO K=0, NZ+1
       DO J=0, NY+1
       DO I=0, NX+1

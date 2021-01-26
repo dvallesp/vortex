@@ -132,7 +132,8 @@
 !$OMP+                    MINI,MAXI,MINJ,MAXJ,MINK,MAXK,rx1,rx2,ry1,
 !$OMP+                    ry2,rz1,rz2,rxx1,rxx2,ryy1,ryy2,rzz1,rzz2,
 !$OMP+                    dxpa),
-!$OMP+            schedule(dynamic)
+!$OMP+            DEFAULT(NONE),
+!$OMP+            SCHEDULE(DYNAMIC)
       do i=1,nx
         do j=1,ny
           do k=1,nz
@@ -365,7 +366,8 @@
 !$OMP+                    MINI,MAXI,MINJ,MAXJ,MINK,MAXK,rx1,rx2,ry1,
 !$OMP+                    ry2,rz1,rz2,rxx1,rxx2,ryy1,ryy2,rzz1,rzz2,
 !$OMP+                    ipatch,n1,n2,n3,exectime,dxpa,dxpa_i,ir),
-!$OMP+            schedule(dynamic)
+!$OMP+            DEFAULT(NONE),
+!$OMP+            SCHEDULE(DYNAMIC)
       DO ipatch=LOW1,LOW2
         exectime = time()
         n1 = patchnx(ipatch)
@@ -813,11 +815,6 @@ C     &                                                k,iter,l,err
         RYFIX=RADY(1) - DY*0.5 + 0.5*DYPA
         RZFIX=RADZ(1) - DZ*0.5 + 0.5*DZPA
 
-*!$OMP PARALLEL DO SHARED(IR,NPATCH,PARE,PATCHX,PATCHY,PATCHZ,
-*!$OMP+    PATCHNX,PATCHNY,PATCHNZ,VECINO,NVECI),
-*!$OMP+  PRIVATE(I,L1,L2,L3,N1,N2,N3,CR1,CR2,CR3,NV,J,LL1,
-*!$OMP+         LL2,LL3,NN1,NN2,NN3,CR4,CR5,CR6,A1,A2,B1,B2,
-*!$OMP+         C1,C2)
         LOW1=SUM(NPATCH(0:IR-1))+1
         LOW2=SUM(NPATCH(0:IR))
         DO I=LOW1,LOW2

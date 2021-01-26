@@ -66,7 +66,9 @@
 *     UP will contain the relative error per component!!!!
 
 !$OMP PARALLEL DO SHARED(NX,NY,NZ,U2P,U3P,U4P,U2R,U3R,U4R,
-!$OMP+                   U2,U3,U4,EU2,EU3,EU4), PRIVATE(I,J,K)
+!$OMP+                   U2,U3,U4,EU2,EU3,EU4),
+!$OMP+            PRIVATE(I,J,K),
+!$OMP+            DEFAULT(NONE)
        DO K=1, NZ
        DO J=1, NY
        DO I=1, NX
@@ -86,7 +88,8 @@
 !$OMP PARALLEL DO SHARED(PATCHNX,PATCHNY,PATCHNZ,LOW1,LOW2,
 !$OMP+                   U12P,U13P,U14P,U12R,U13R,U14R,U12,U13,U14,
 !$OMP+                   EU12,EU13,EU14),
-!$OMP+            PRIVATE(IX,JY,KZ,N1,N2,N3,I)
+!$OMP+            PRIVATE(IX,JY,KZ,N1,N2,N3,I),
+!$OMP+            DEFAULT(NONE)
         DO I=LOW1,LOW2
         N1=PATCHNX(I)
         N2=PATCHNY(I)
@@ -117,7 +120,8 @@
 
 !$OMP PARALLEL DO SHARED(NX,NY,NZ,U2P,U3P,U4P,U2,U3,U4,ERR0,
 !$OMP+                   EU2,EU3,EU4),
-!$OMP+            PRIVATE(I,J,K,BAS,BAS1,BAS2,BAS3)
+!$OMP+            PRIVATE(I,J,K,BAS,BAS1,BAS2,BAS3),
+!$OMP+            DEFAULT(NONE)
        DO K=1, NZ
        DO J=1, NY
        DO I=1, NX
@@ -147,7 +151,8 @@
 !$OMP PARALLEL DO SHARED(PATCHNX,PATCHNY,PATCHNZ,LOW1,LOW2,
 !$OMP+                   U12P,U13P,U14P,U12,U13,U14,ERR1,
 !$OMP+                   EU12,EU13,EU14),
-!$OMP+            PRIVATE(IX,JY,KZ,N1,N2,N3,I,BAS,BAS1,BAS2,BAS3)
+!$OMP+            PRIVATE(IX,JY,KZ,N1,N2,N3,I,BAS,BAS1,BAS2,BAS3),
+!$OMP+            DEFAULT(NONE)
         DO I=LOW1,LOW2
         N1=PATCHNX(I)
         N2=PATCHNY(I)
@@ -296,11 +301,6 @@
         RYFIX=RADY(1) - DY*0.5 + 0.5*DYPA
         RZFIX=RADZ(1) - DZ*0.5 + 0.5*DZPA
 
-*!$OMP PARALLEL DO SHARED(IR,NPATCH,PARE,PATCHX,PATCHY,PATCHZ,
-*!$OMP+    PATCHNX,PATCHNY,PATCHNZ,VECINO,NVECI),
-*!$OMP+  PRIVATE(I,L1,L2,L3,N1,N2,N3,CR1,CR2,CR3,NV,J,LL1,
-*!$OMP+         LL2,LL3,NN1,NN2,NN3,CR4,CR5,CR6,A1,A2,B1,B2,
-*!$OMP+         C1,C2)
         LOW1=SUM(NPATCH(0:IR-1))+1
         LOW2=SUM(NPATCH(0:IR))
         DO I=LOW1,LOW2
