@@ -160,6 +160,12 @@
        INTEGER PATCHX(NPALEV),PATCHY(NPALEV),PATCHZ(NPALEV)
        real  PATCHRX(NPALEV),PATCHRY(NPALEV),PATCHRZ(NPALEV)
 
+       ! base-grid sources backup (they get overwritten)
+       real ROTAX_0BKP(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
+       real ROTAY_0BKP(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
+       real ROTAZ_0BKP(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
+       real DIVER0BKP(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
+
        real KKK(NMAX,NMAY,NMAZ)    !KKK coeficients of Fourier series
 
 *      ---PARALLEL---
@@ -407,6 +413,23 @@
           write(*,*) maxval(diver0),maxval(diver)
         END IF
 
+        ! we back-up the sources for later use (they will get overwritten
+        ! once the base grid is solved)
+!$OMP PARALLEL DO SHARED(NX,NY,NZ,DIVER0,ROTAX_0,ROTAY_0,ROTAZ_0,
+!$OMP+                   DIVER0BKP,ROTAX_0BKP,ROTAY_0BKP,ROTAZ_0BKP),
+!$OMP+            PRIVATE(I,J,K),
+!$OMP+            DEFAULT(NONE)
+        DO I=1,NX
+        DO J=1,NY
+        DO K=1,NZ
+         DIVER0BKP(I,J,K)=DIVER0(I,J,K)
+         ROTAX_0BKP(I,J,K)=ROTAX_0(I,J,K)
+         ROTAY_0BKP(I,J,K)=ROTAY_0(I,J,K)
+         ROTAZ_0BKP(I,J,K)=ROTAZ_0(I,J,K)
+        END DO
+        END DO
+        END DO
+
         IF (FLAG_W_DIVROT.EQ.1) THEN
           CALL WRITE_DIVROT(FILERR5,NX,NY,NZ,ITER,T,ZETA,NL,NPATCH,
      &                      PATCHNX,PATCHNY,PATCHNZ)
@@ -543,13 +566,14 @@
 
 ** 1ST CALL:
       WRITE(*,*) 'Scalar potential'
-!$OMP PARALLEL DO SHARED(NX,NY,NZ,POT,DIVER0),
+!$OMP PARALLEL DO SHARED(NX,NY,NZ,POT,DIVER0,U1,DIVER0BKP),
 !$OMP+            PRIVATE(I,J,K)
       DO K=0, NZ+1
       DO J=0, NY+1
       DO I=0, NX+1
           !Initial guess...
           POT(I,J,K)=DIVER0(I,J,K)
+          U1(I,J,K)=-1.0*DIVER0BKP(I,J,K)
       END DO
       END DO
       END DO
@@ -603,13 +627,14 @@
 
 ** 2ND CALL:
        WRITE(*,*) 'Vector potential: x component'
-!$OMP PARALLEL DO SHARED(NX,NY,NZ,POT,ROTAX_0),
+!$OMP PARALLEL DO SHARED(NX,NY,NZ,POT,ROTAX_0,U1,ROTAX_0BKP),
 !$OMP+            PRIVATE(I,J,K)
        DO K=0, NZ+1
        DO J=0, NY+1
        DO I=0, NX+1
             !Initial guess...
             POT(I,J,K)=ROTAX_0(I,J,K)
+            U1(I,J,K)=-1.0*ROTAX_0BKP(I,J,K)
        END DO
        END DO
        END DO
@@ -664,13 +689,14 @@
 
 * 3RD CALL:
        WRITE(*,*) 'Vector potential: y component'
-!$OMP PARALLEL DO SHARED(NX,NY,NZ,POT,ROTAY_0),
+!$OMP PARALLEL DO SHARED(NX,NY,NZ,POT,ROTAY_0,U1,ROTAY_0BKP),
 !$OMP+            PRIVATE(I,J,K)
        DO K=0, NZ+1
        DO J=0, NY+1
        DO I=0, NX+1
 !Initial guess...
         POT(I,J,K)=ROTAY_0(I,J,K)
+        U1(I,J,K)=-1.0*ROTAY_0BKP(I,J,K)
        END DO
        END DO
        END DO
@@ -726,13 +752,14 @@
 
 * 4TH CALL:
        WRITE(*,*) 'Vector potential: z component'
-!$OMP PARALLEL DO SHARED(NX,NY,NZ,POT,ROTAZ_0),
+!$OMP PARALLEL DO SHARED(NX,NY,NZ,POT,ROTAZ_0,U1,ROTAZ_0BKP),
 !$OMP+            PRIVATE(I,J,K)
        DO K=0, NZ+1
        DO J=0, NY+1
        DO I=0, NX+1
 !Initial guess...
          POT(I,J,K)=ROTAZ_0(I,J,K)
+         U1(I,J,K)=-1.0*ROTAZ_0BKP(I,J,K)
        END DO
        END DO
        END DO
