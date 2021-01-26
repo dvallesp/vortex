@@ -262,7 +262,7 @@
 
 ************************************************************************
       SUBROUTINE POTAMR(NL,NX,NY,NZ,DX,NPATCH,PARE,
-     &           PATCHNX,PATCHNY,PATCHNZ,PATCHX,PATCHY,PATCHZ)
+     &           PATCHNX,PATCHNY,PATCHNZ,PATCHX,PATCHY,PATCHZ,BOR)
 ************************************************************************
 *     Solves Poisson equation for the refinement patches, taking into
 *     account the boundary conditions imposed by the coarser cells.
@@ -277,7 +277,7 @@
       INCLUDE 'vortex_parameters.dat'
 
       INTEGER N1,N2,N3,NP1,NP2,NP3,L1,L2,L3
-      INTEGER I,J,K,IX,JY,KZ,I1,J2,K3,II,IR
+      INTEGER I,J,K,IX,JY,KZ,I1,J2,K3,II,IR,BOR
       INTEGER NX,NY,NZ,NL
 
       real  U11(-1:NAMRX+2,-1:NAMRY+2,-1:NAMRZ+2,NPALEV)
@@ -342,7 +342,7 @@
 
 !$OMP PARALLEL DO SHARED(IR,DX,DXPA,POT,APOT1,NX,NY,NZ,NPATCH,
 !$OMP+         PATCHNX,PATCHNY,PATCHNZ,PATCHX,PATCHY,PATCHZ,
-!$OMP+         U11,PI,PRECIS,CR3AMR1X,CR3AMR1Y,CR3AMR1Z,U1,MAXIT),
+!$OMP+         U11,PI,PRECIS,CR3AMR1X,CR3AMR1Y,CR3AMR1Z,U1,MAXIT,BOR),
 !$OMP+      PRIVATE(I,N1,N2,N3,L1,L2,L3,NP1,NP2,NP3,JY,KZ,IX,
 !$OMP+         I1,J2,K3,II,SSS,BAS,BASS,SNOR,RESNOR,ERR,ERRTOT,
 !$OMP+         WWW,RADIUS,ERROR,ERRMAX,CR1,CR2,CR3,POT1,MARCA,
@@ -380,9 +380,9 @@
        END DO
 
        ! extend the source (ficticious cells) by interpolation
-       DO KZ=-1,N3+2
-       DO JY=-1,N2+2
-       DO IX=-1,N1+2
+       DO KZ=1-BOR,N3+BOR
+       DO JY=1-BOR,N2+BOR
+       DO IX=1-BOR,N1+BOR
 
         if(ix.lt.1.or.ix.gt.n1.or.
      &     jy.lt.1.or.jy.gt.n2.or.
@@ -401,9 +401,9 @@
        END DO
 
        SNOR=0.0
-       DO KZ=-1,N3+2
-       DO JY=-1,N2+2
-       DO IX=-1,N1+2
+       DO KZ=1-BOR,N3+BOR
+       DO JY=1-BOR,N2+BOR
+       DO IX=1-BOR,N1+BOR
          SSS=DXPA*DXPA*U11(IX,JY,KZ,I)
          SNOR=SNOR+ABS(SSS)
        END DO
@@ -421,9 +421,9 @@
         RESNOR=0.0
 
         ERRTOT=-1.0
-        DO KZ=-1,N3+2
-        DO JY=-1,N2+2
-        DO IX=-1,N1+2
+        DO KZ=1-BOR,N3+BOR
+        DO JY=1-BOR,N2+BOR
+        DO IX=1-BOR,N1+BOR
          IF (MOD((IX+JY+KZ),2).EQ.MOD((II+1),2)) THEN
 *         POISSON EQUATION
           SSS=DXPA*DXPA*U11(IX,JY,KZ,I)
@@ -468,7 +468,7 @@
 !$OMP+        PATCHNX,PATCHNY,PATCHNZ,PATCHX,PATCHY,PATCHZ,
 !$OMP+        U11,PI,PRECIS,LOW1,LOW2,
 !$OMP+        CR3AMR1,CR3AMR1X,CR3AMR1Y,CR3AMR1Z,PARE,
-!$OMP+        RX,RY,RZ,RADX,RADY,RADZ,U1,MAXIT),
+!$OMP+        RX,RY,RZ,RADX,RADY,RADZ,U1,MAXIT,BOR),
 !$OMP+     PRIVATE(I,N1,N2,N3,L1,L2,L3,NP1,NP2,NP3,JY,KZ,IX,MARCA,
 !$OMP+        I1,J2,K3,II,SSS,BAS,BASS,RESNOR,SNOR,ERR,ERRTOT,
 !$OMP+        WWW,RADIUS,ERROR,ERRMAX,CR1,CR2,CR3,POT1,
@@ -530,9 +530,9 @@
        END DO
        END DO
 
-       DO KZ=-1,N3+2
-       DO JY=-1,N2+2
-       DO IX=-1,N1+2
+       DO KZ=1-BOR,N3+BOR
+       DO JY=1-BOR,N2+BOR
+       DO IX=1-BOR,N1+BOR
 
          if(ix.lt.1.or.ix.gt.n1.or.
      &     jy.lt.1.or.jy.gt.n2.or.
@@ -578,9 +578,9 @@
 
 
        SNOR=0.0
-       DO KZ=-1,N3+2
-       DO JY=-1,N2+2
-       DO IX=-1,N1+2
+       DO KZ=1-BOR,N3+BOR
+       DO JY=1-BOR,N2+BOR
+       DO IX=1-BOR,N1+BOR
          SSS=DXPA*DXPA*U11(IX,JY,KZ,I)
          SNOR=SNOR+ABS(SSS)
        END DO
@@ -599,9 +599,9 @@
         RESNOR=0.0
 
         ERRTOT=-1.0
-        DO KZ=-1,N3+2
-        DO JY=-1,N2+2
-        DO IX=-1,N1+2
+        DO KZ=1-BOR,N3+BOR
+        DO JY=1-BOR,N2+BOR
+        DO IX=1-BOR,N1+BOR
          IF (MOD((IX+JY+KZ),2).EQ.MOD((II+1),2)) THEN
 *         POISSON EQUATION
           SSS=DXPA*DXPA*U11(IX,JY,KZ,I)

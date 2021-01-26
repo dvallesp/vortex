@@ -7,8 +7,8 @@ initial redshift, box size --------------->
 100.0,40.0
 numero de nivels  ------------------------>
 9
-SOR presion parameter, SOR max iter ---------->
-1e-9,1000
+SOR presion parameter, SOR max iter, border for AMR patches ---------->
+1e-9,1000,2
 Error threshold ---------->
 0.05
 flags_writing (1=yes; 0=no): verbose, write_divrot, write_potentials, write_velocities---------------->
