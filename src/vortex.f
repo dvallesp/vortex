@@ -269,9 +269,9 @@
        ELSE
         ! HERE WE WILL CALL THE LEER_PARTICLES(), CREATE_MESH(),
         ! AND INTERPOLATE_PARTICLES() ROUTINES.
-        CALL LEER_PARTICLES(ITER,NX,NY,NZ,T,ZETA,NL,NPATCH,
-     &            PARE,PATCHNX,PATCHNY,PATCHNZ,PATCHX,PATCHY,PATCHZ,
-     &            PATCHRX,PATCHRY,PATCHRZ)
+        CALL LEER_PARTICLES(ITER,NX,NY,NZ,T,ZETA,NL,NL_PARTICLE_GRID,
+     &            NPATCH,PARE,PATCHNX,PATCHNY,PATCHNZ,PATCHX,PATCHY,
+     &            PATCHZ,PATCHRX,PATCHRY,PATCHRZ,LADO0)
        END IF
 
 
@@ -1051,3 +1051,5 @@
       INCLUDE 'outliers.f'
 *     Multiscale filter as in (Vazza, 2012) to extract turbulent field
       INCLUDE 'filter.f'
+*     Routines for working with particles
+      INCLUDE 'particles.f'

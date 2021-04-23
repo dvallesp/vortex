@@ -14,6 +14,6 @@ Error threshold ---------->
 flags_writing (1=yes; 0=no): verbose, write_divrot, write_potentials, write_velocities---------------->
 1,1,1,1
 multiscale filter: apply filter, write lengths, tolerance, step, maxit ------------------->
-1,1,0.1,1.05,200
+0,1,0.1,1.05,200
 particles (1=yes; 0=no, work with gas), number of levels of the particle grid ------------->
 1,9

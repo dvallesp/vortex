@@ -254,9 +254,9 @@ c           SOLAP(:,:,:,I)=SCR4_INT(:,:,:)
 
 
 ***********************************************************************
-       SUBROUTINE LEER_PARTICLES(ITER,NX,NY,NZ,T,ZETA,NL,NPATCH,
-     &            PARE,PATCHNX,PATCHNY,PATCHNZ,PATCHX,PATCHY,PATCHZ,
-     &            PATCHRX,PATCHRY,PATCHRZ)
+       SUBROUTINE LEER_PARTICLES(ITER,NX,NY,NZ,T,ZETA,NL,
+     &            NL_PARTICLE_GRID,NPATCH,PARE,PATCHNX,PATCHNY,PATCHNZ,
+     &            PATCHX,PATCHY,PATCHZ,PATCHRX,PATCHRY,PATCHRZ,LADO0)
 ***********************************************************************
 *     Reads the DM particles of the simulation, builds a set of AMR
 *     grids and interpolates a continuous velocity field.
@@ -280,8 +280,8 @@ c           SOLAP(:,:,:,I)=SCR4_INT(:,:,:)
        INCLUDE 'vortex_parameters.dat'
 
        INTEGER NX,NY,NZ,ITER,NDXYZ,LOW1, LOW2
-       real T,AAA,BBB,CCC,MAP,ZETA
-       INTEGER I,J,K,IX,NL,IR,IRR,N1,N2,N3
+       real T,AAA,BBB,CCC,MAP,ZETA,LADO0
+       INTEGER I,J,K,IX,NL,IR,IRR,N1,N2,N3,NL_PARTICLE_GRID
 
        INTEGER FLAG_VERBOSE, FLAG_W_DIVROT, FLAG_W_POTENTIALS,
      &         FLAG_W_VELOCITIES
@@ -333,6 +333,8 @@ c           SOLAP(:,:,:,I)=SCR4_INT(:,:,:)
        FIL2='simu_masclet/'//FILNOM2
        FIL3='simu_masclet/'//FILNOM3
 
+       NPART(:)=0
+
        OPEN (33,FILE=FIL3,STATUS='UNKNOWN',ACTION='READ')
 
 *      pointers and general data (grids file)
@@ -362,7 +364,6 @@ c           SOLAP(:,:,:,I)=SCR4_INT(:,:,:)
      &       STATUS='UNKNOWN',ACTION='READ',FORM='UNFORMATTED')
         READ(32)
         IR=0
-
         LOW1=1
         LOW2=NPART(IR)
 
@@ -407,28 +408,34 @@ c           SOLAP(:,:,:,I)=SCR4_INT(:,:,:)
         READ(32) (U4DM(I),I=LOW1,LOW2)
         READ(32) (MASAP(I),I=LOW1,LOW2)
         READ(32) ! particle ID
-
-        WRITE(*,*) 'RXPA=',MINVAL(RXPA(LOW1:LOW2)),
-     &                       MAXVAL(RXPA(LOW1:LOW2))
-        WRITE(*,*) 'RYPA=',MINVAL(RYPA(LOW1:LOW2)),
-     &                       MAXVAL(RYPA(LOW1:LOW2))
-        WRITE(*,*) 'RZPA=',MINVAL(RZPA(LOW1:LOW2)),
-     &                       MAXVAL(RZPA(LOW1:LOW2))
-        WRITE(*,*) 'U2DM=',MINVAL(U2DM(LOW1:LOW2)),
-     &                       MAXVAL(U2DM(LOW1:LOW2))
-        WRITE(*,*) 'U3DM=',MINVAL(U3DM(LOW1:LOW2)),
-     &                       MAXVAL(U3DM(LOW1:LOW2))
-        WRITE(*,*) 'U4DM=',MINVAL(U4DM(LOW1:LOW2)),
-     &                       MAXVAL(U4DM(LOW1:LOW2))
-        WRITE(*,*) 'MASAP=',MINVAL(MASAP(LOW1:LOW2)),
-     &                       MAXVAL(MASAP(LOW1:LOW2))
        END DO
 
        CLOSE(32)
 
-*       CALL CREATE_MESH(NX,NY,NZ,NL_PARTICLE_GRID,NPATCH,
-*     &            PARE,PATCHNX,PATCHNY,PATCHNZ,PATCHX,PATCHY,PATCHZ,
-*     &            PATCHRX,PATCHRY,PATCHRZ)
+       LOW1=1
+       LOW2=SUM(NPART(0:NL))
+       WRITE(*,*) 'RXPA=',MINVAL(RXPA(LOW1:LOW2)),
+     &                       MAXVAL(RXPA(LOW1:LOW2))
+       WRITE(*,*) 'RYPA=',MINVAL(RYPA(LOW1:LOW2)),
+     &                       MAXVAL(RYPA(LOW1:LOW2))
+       WRITE(*,*) 'RZPA=',MINVAL(RZPA(LOW1:LOW2)),
+     &                       MAXVAL(RZPA(LOW1:LOW2))
+       WRITE(*,*) 'U2DM=',MINVAL(U2DM(LOW1:LOW2)),
+     &                       MAXVAL(U2DM(LOW1:LOW2))
+       WRITE(*,*) 'U3DM=',MINVAL(U3DM(LOW1:LOW2)),
+     &                       MAXVAL(U3DM(LOW1:LOW2))
+       WRITE(*,*) 'U4DM=',MINVAL(U4DM(LOW1:LOW2)),
+     &                       MAXVAL(U4DM(LOW1:LOW2))
+       WRITE(*,*) 'MASAP=',MINVAL(MASAP(LOW1:LOW2)),
+     &                       MAXVAL(MASAP(LOW1:LOW2))
+
+       NPATCH(0:IR)=0
+
+       WRITE(*,*) 'Routine create mesh'
+       CALL CREATE_MESH(NX,NY,NZ,NL_PARTICLE_GRID,NPATCH,
+     &            PARE,PATCHNX,PATCHNY,PATCHNZ,PATCHX,PATCHY,PATCHZ,
+     &            PATCHRX,PATCHRY,PATCHRZ,RXPA,RYPA,RZPA,U2DM,U3DM,
+     &            U4DM,MASAP,NPART,LADO0)
 
        RETURN
        END
