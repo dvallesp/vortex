@@ -36,19 +36,21 @@
 
 *     LOCAL VARIABLES
       INTEGER PLEV(NDM)
-      REAL,ALLOCATABLE::U1(:,:,:)
-      REAL,ALLOCATABLE::U11(:,:,:,:)
+      !REAL,ALLOCATABLE::U1(:,:,:)
+      !REAL,ALLOCATABLE::U11(:,:,:,:)
       INTEGER,ALLOCATABLE::CR0(:,:,:)
+      INTEGER,ALLOCATABLE::CR01(:,:,:,:)
       INTEGER,ALLOCATABLE::CONTA1(:,:,:)
       INTEGER,ALLOCATABLE::CONTA11(:,:,:,:)
       REAL MAP,XL,YL,ZL,DXPA,DYPA,DZPA
       INTEGER I,IX,JY,KZ,REFINE_THR,REFINE_COUNT,BOR,MIN_PATCHSIZE
-      INTEGER INI_EXTENSION,NBIS
+      INTEGER INI_EXTENSION,NBIS,IRPA,BORAMR,LOW1,LOW2
       INTEGER INMAX(3),I1,I2,J1,J2,K1,K2,N1,N2,N3,IR,MARCA,IPATCH
 
 !     hard-coded parameters (for now, at least)
       REFINE_THR=2
       BOR=6
+      BORAMR=0
       INI_EXTENSION=2 !initial extension of a patch around a cell (on each direction)
       MIN_PATCHSIZE=18 !minimum size (child cells) to be accepted
 
@@ -236,6 +238,8 @@
 
       END DO  !-----------------------------------------------------
 
+      NPATCH(IR)=IPATCH
+
 !$OMP PARALLEL DO SHARED(NX,NY,NZ,CR0,CR0AMR),
 !$OMP+            PRIVATE(IX,JY,KZ), DEFAULT(NONE)
       DO IX=1,NX
@@ -254,11 +258,80 @@
       DEALLOCATE(CONTA1)
       DEALLOCATE(CR0)
 
-      WRITE(*,*) 'l=1 patches, l=0 cells refined', COUNT(CR0AMR.EQ.0)
+      WRITE(*,*) 'l=1 patches, l=0 cells refined', NPATCH(IR),
+     &           COUNT(CR0AMR.EQ.0)
 *     END FIRST LEVEL OF REFINEMENT ====================================
 
 *     START SUBSEQUENT LEVELS OF REFINEMENT ============================
+      pare_levels: DO IRPA=1,NL_MESH-1 !-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+       IF (NPATCH(IRPA).EQ.0) THEN
+         WRITE(*,*) 'Mesh building stops at level: ', IRPA
+         WRITE(*,*) 'There are no more candidate patches'
+         EXIT pare_levels
+       END IF
 
+       DXPA=DX/(2.0**IR)
+       DYPA=DY/(2.0**IR)
+       DZPA=DZ/(2.0**IR)
+
+       LOW1=SUM(NPATCH(0:IRPA-1))+1
+       LOW2=SUM(NPATCH(0:IRPA))
+       !WRITE(*,*) IRPA, LOW1,LOW2
+
+       ALLOCATE(CR01(1:NAMRX,1:NAMRY,1:NAMRZ,LOW1:LOW2))
+       ALLOCATE(CONTA11(1:NAMRX,1:NAMRY,1:NAMRZ,LOW1:LOW2))
+
+! PARALLELIZE!!!!!!!!!!!!!!!!!!
+       DO IPATCH=LOW1,LOW2 != = = = = = = = = = = = = = = = = = = = = =
+        !WRITE(*,*) IPATCH, LOW2
+        XL=PATCHRX(IPATCH)-DXPA
+        YL=PATCHRY(IPATCH)-DYPA
+        ZL=PATCHRZ(IPATCH)-DZPA
+
+        N1=PATCHNX(IPATCH)
+        N2=PATCHNY(IPATCH)
+        N3=PATCHNZ(IPATCH)
+
+        DO I=1,SUM(NPART)
+         IX=INT((RXPA(I)-XL)/DXPA)+1
+         JY=INT((RYPA(I)-YL)/DYPA)+1
+         KZ=INT((RZPA(I)-ZL)/DZPA)+1
+         IF (IX.GE.1.AND.IX.LE.N1.AND.
+     &       JY.GE.1.AND.JY.LE.N2.AND.
+     &       KZ.GE.1.AND.KZ.LE.N3) THEN !*****************************
+          !U1(IX,JY,KZ)=U1(IX,JY,KZ)+MASAP(I)
+          IF (PLEV(I).LE.IRPA) THEN
+           CONTA11(IX,JY,KZ,IPATCH)=CONTA11(IX,JY,KZ,IPATCH)+1
+          ELSE
+           CONTA11(IX,JY,KZ,IPATCH)=CONTA11(IX,JY,KZ,IPATCH)+REFINE_THR
+          END IF
+         END IF !*****************************************************
+        END DO
+
+        DO IX=1,N1
+        DO JY=1,N2
+        DO KZ=1,N3
+         IF(IX.LE.BORAMR.OR.IX.GE.N1-BORAMR+1.OR.
+     &      JY.LE.BORAMR.OR.JY.GE.N2-BORAMR+1.OR.
+     &      KZ.LE.BORAMR.OR.KZ.GE.N3-BORAMR+1) THEN
+           CONTA11(IX,JY,KZ,IPATCH)=0
+         END IF
+         CR01(IX,JY,KZ,IPATCH)=CONTA11(IX,JY,KZ,IPATCH)
+        END DO
+        END DO
+        END DO
+
+       END DO != = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+
+       WRITE(*,*) 'Max particles at a cell at l=',IRPA,
+     &            MAXVAL(CR01(:,:,:,LOW1:LOW2))
+
+       !CALL VEINSGRID_REDUCED
+
+       DEALLOCATE(CR01)
+       DEALLOCATE(CONTA11)
+
+      END DO pare_levels !-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 *     END SUBSEQUENT LEVELS OF REFINEMENT
       STOP
 
