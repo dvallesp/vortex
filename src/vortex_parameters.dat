@@ -1,16 +1,18 @@
-*      level 0 grid --------------------------------------------------- 
-       INTEGER NMAX,NMAY,NMAZ                                            
-       PARAMETER (NMAX=128,NMAY=128,NMAZ=128)                             
+*      level 0 grid ---------------------------------------------------
+       INTEGER NMAX,NMAY,NMAZ
+       PARAMETER (NMAX=128,NMAY=128,NMAZ=128)
 
 *      level 0 particles ----------------------------------------------
        INTEGER NDMXYZ
        PARAMETER (NDMXYZ=128*128*128)
 
-*      refinements ----------------------------------------------------          
-       INTEGER NPALEV,NLEVELS                                          
-       PARAMETER (NPALEV=1200,NLEVELS=15) 
-       
+*      refinements ----------------------------------------------------
+       INTEGER NPALEV,NLEVELS
+       PARAMETER (NPALEV=1200,NLEVELS=15)
+
        INTEGER NAMRX,NAMRY,NAMRZ
        PARAMETER (NAMRX=64,NAMRY=64,NAMRZ=64)
 
-            
+*      particles ------------------------------------------------------
+       INTEGER NDM
+       PARAMETER (NDM=100000000)

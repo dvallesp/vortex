@@ -15,3 +15,5 @@ flags_writing (1=yes; 0=no): verbose, write_divrot, write_potentials, write_velo
 1,1,1,1
 multiscale filter: apply filter, write lengths, tolerance, step, maxit ------------------->
 1,1,0.1,1.05,200
+particles (1=yes; 0=no, work with gas) ---------------------------------------------------->
+1

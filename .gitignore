@@ -1,4 +1,6 @@
 old
 *.sh
 *.png
+*.x
+simu_masclet
 .DS_Store
