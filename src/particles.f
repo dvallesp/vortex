@@ -283,7 +283,11 @@
        ALLOCATE(CR01(1:NAMRX,1:NAMRY,1:NAMRZ,LOW1:LOW2))
        ALLOCATE(CONTA11(1:NAMRX,1:NAMRY,1:NAMRZ,LOW1:LOW2))
 
-! PARALLELIZE!!!!!!!!!!!!!!!!!!
+!$OMP PARALLEL DO SHARED(LOW1,LOW2,PATCHRX,PATCHRY,PATCHRZ,DXPA,DYPA,
+!$OMP+                   DZPA,PATCHNX,PATCHNY,PATCHNZ,NPART,RXPA,RYPA,
+!$OMP+                   RZPA,CONTA11,REFINE_THR,IRPA,PLEV,BORAMR,CR01),
+!$OMP+            PRIVATE(IPATCH,XL,YL,ZL,N1,N2,N3,I,IX,JY,KZ),
+!$OMP+            DEFAULT(NONE)
        DO IPATCH=LOW1,LOW2 != = = = = = = = = = = = = = = = = = = = = =
         !WRITE(*,*) IPATCH, LOW2
         XL=PATCHRX(IPATCH)-DXPA
@@ -332,9 +336,6 @@
        WRITE(*,*) 'Refinable cells BEFORE cleaning at l=',IRPA,
      &            REFINE_COUNT
 
-       cr01(15,15,15,low2-1)=25
-       write(*,*) 'checking: cr01(15,15,15,low2-1):',
-     &             cr01(15,15,15,low2-1)
        CALL VEINSGRID_REDUCED(IRPA,NPATCH,PARE,PATCHNX,PATCHNY,
      &      PATCHNZ,PATCHX,PATCHY,PATCHZ,PATCHRX,PATCHRY,PATCHRZ,CR01,
      &      CONTA11,LOW1,LOW2)
@@ -342,8 +343,6 @@
        REFINE_COUNT=COUNT(CR01(:,:,:,LOW1:LOW2).GE.REFINE_THR)
        WRITE(*,*) 'Refinable cells AFTER cleaning at l=',IRPA,
      &            REFINE_COUNT
-       write(*,*) 'checking: cr01(15,15,15,low2-1):',
-     &             cr01(15,15,15,low2-1)
 
 
        ! mesh creation at the next level
@@ -566,9 +565,6 @@
 
        ALLOCATE(VECINO(NPALEV2,NPATCH(IR)))
        ALLOCATE(NVECI(NPATCH(IR)))
-
-       write(*,*) 'checking: cr01(15,15,15,low2-1):',
-     &             cr01(15,15,15,low2-1)
 
        DXPA=DX/(2.**IR)
        DYPA=DY/(2.**IR)
