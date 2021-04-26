@@ -431,12 +431,12 @@ c           SOLAP(:,:,:,I)=SCR4_INT(:,:,:)
 
        NPATCH(0:IR)=0
 
-       WRITE(*,*) '--------------------------------------------------'
-       WRITE(*,*) 'Routine create mesh'
+       WRITE(*,*) 'Routine create mesh ------------------------------'
        CALL CREATE_MESH(NX,NY,NZ,NL_PARTICLE_GRID,NPATCH,
      &            PARE,PATCHNX,PATCHNY,PATCHNZ,PATCHX,PATCHY,PATCHZ,
      &            PATCHRX,PATCHRY,PATCHRZ,RXPA,RYPA,RZPA,U2DM,U3DM,
      &            U4DM,MASAP,NPART,LADO0)
+       WRITE(*,*) 'End mesh creation --------------------------------'
 
        RETURN
        END
