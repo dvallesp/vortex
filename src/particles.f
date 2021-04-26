@@ -45,8 +45,14 @@
       REAL MAP,XL,YL,ZL,DXPA,DYPA,DZPA
       INTEGER I,IX,JY,KZ,REFINE_THR,REFINE_COUNT,BOR,MIN_PATCHSIZE
       INTEGER INI_EXTENSION,NBIS,IRPA,BORAMR,LOW1,LOW2,IPATCH,IPARE
-      INTEGER INMAX(3),INMAX2(4),I1,I2,J1,J2,K1,K2,N1,N2,N3,IR,MARCA
-      INTEGER NP1,NP2,NP3
+      INTEGER INMAX(3),INMAX2(2),I1,I2,J1,J2,K1,K2,N1,N2,N3,IR,MARCA
+      INTEGER NP1,NP2,NP3,BASINT,NPALEV3
+
+      INTEGER,ALLOCATABLE::LNPATCH(:)
+      INTEGER,ALLOCATABLE::LPATCHNX(:,:),LPATCHNY(:,:),LPATCHNZ(:,:)
+      INTEGER,ALLOCATABLE::LPATCHX(:,:),LPATCHY(:,:),LPATCHZ(:,:)
+      REAL,ALLOCATABLE::LPATCHRX(:,:),LPATCHRY(:,:),LPATCHRZ(:,:)
+      INTEGER,ALLOCATABLE::LVAL(:,:)
 
 !     hard-coded parameters (for now, at least)
       REFINE_THR=3
@@ -54,6 +60,8 @@
       BORAMR=3
       INI_EXTENSION=2 !initial extension of a patch around a cell (on each direction)
       MIN_PATCHSIZE=18 !minimum size (child cells) to be accepted
+      NPALEV3=(INT(NAMRX/5)**3)+1
+      write(*,*) 'NPALEV3=',NPALEV3
 
       MAP=MAXVAL(MASAP(1:SUM(NPART)))
 
@@ -332,9 +340,9 @@
        WRITE(*,*) 'Max particles at a cell at l=',IRPA,
      &            MAXVAL(CR01(:,:,:,LOW1:LOW2))
 
-       REFINE_COUNT=COUNT(CR01(:,:,:,LOW1:LOW2).GE.REFINE_THR)
-       WRITE(*,*) 'Refinable cells BEFORE cleaning at l=',IRPA,
-     &            REFINE_COUNT
+c       REFINE_COUNT=COUNT(CR01(:,:,:,LOW1:LOW2).GE.REFINE_THR)
+c       WRITE(*,*) 'Refinable cells BEFORE cleaning at l=',IRPA,
+c     &            REFINE_COUNT
 
        CALL VEINSGRID_REDUCED(IRPA,NPATCH,PARE,PATCHNX,PATCHNY,
      &      PATCHNZ,PATCHX,PATCHY,PATCHZ,PATCHRX,PATCHRY,PATCHRZ,CR01,
@@ -351,133 +359,176 @@
        !DYPA=DY/(2.0**IR)
        !DZPA=DZ/(2.0**IR)
 
-       WRITE(*,*) 'REFINABLE CELLS:', REFINE_COUNT
+       ALLOCATE(LNPATCH(LOW1:LOW2))
+       ALLOCATE(LPATCHNX(NPALEV3,LOW1:LOW2))
+       ALLOCATE(LPATCHNY(NPALEV3,LOW1:LOW2))
+       ALLOCATE(LPATCHNZ(NPALEV3,LOW1:LOW2))
+       ALLOCATE(LPATCHX(NPALEV3,LOW1:LOW2))
+       ALLOCATE(LPATCHY(NPALEV3,LOW1:LOW2))
+       ALLOCATE(LPATCHZ(NPALEV3,LOW1:LOW2))
+       ALLOCATE(LPATCHRX(NPALEV3,LOW1:LOW2))
+       ALLOCATE(LPATCHRY(NPALEV3,LOW1:LOW2))
+       ALLOCATE(LPATCHRZ(NPALEV3,LOW1:LOW2))
+       ALLOCATE(LVAL(NPALEV3,LOW1:LOW2))
 
-       DO WHILE (REFINE_COUNT.GT.0.AND.IPATCH.LT.NPALEV) !--------------
-        INMAX2=MAXLOC(CR01)
-        IX=INMAX2(1)
-        JY=INMAX2(2)
-        KZ=INMAX2(3)
-        IPARE=INMAX2(4)+LOW1-1
-        !IF (CONTA1(IX,JY,KZ).LT.REFINE_THR) EXIT
+       LNPATCH(:)=0
+       LVAL(:,:)=0
 
-        NP1=PATCHNX(IPARE)
-        NP2=PATCHNY(IPARE)
-        NP3=PATCHNZ(IPARE)
+c       WRITE(*,*) 'REFINABLE CELLS:', REFINE_COUNT
+       DO IPARE=LOW1,LOW2 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        REFINE_COUNT=COUNT(CR01(:,:,:,IPARE).GE.REFINE_THR)
+        IPATCH=0
+        DO WHILE (REFINE_COUNT.GT.0.AND.IPATCH.LT.NPALEV3) !------------
+         INMAX=MAXLOC(CR01(:,:,:,IPARE))
+         IX=INMAX(1)
+         JY=INMAX(2)
+         KZ=INMAX(3)
+         BASINT=CR01(IX,JY,KZ,IPARE)
+         !IF (CONTA1(IX,JY,KZ).LT.REFINE_THR) EXIT
 
-        I1=IX-INI_EXTENSION
-        I2=IX+INI_EXTENSION
-        J1=JY-INI_EXTENSION
-        J2=JY+INI_EXTENSION
-        K1=KZ-INI_EXTENSION
-        K2=KZ+INI_EXTENSION
+         NP1=PATCHNX(IPARE)
+         NP2=PATCHNY(IPARE)
+         NP3=PATCHNZ(IPARE)
 
-        N1=2*(I2-I1+1)
-        N2=2*(J2-J1+1)
-        N3=2*(K2-K1+1)
-        !NBAS=MAXVAL(N1,N2,N3)
-        !NBIS=MINVAL(N1,N2,N3)
+         I1=IX-INI_EXTENSION
+         I2=IX+INI_EXTENSION
+         J1=JY-INI_EXTENSION
+         J2=JY+INI_EXTENSION
+         K1=KZ-INI_EXTENSION
+         K2=KZ+INI_EXTENSION
 
-        MARCA = 1
-        DO WHILE (MARCA.EQ.1) !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-         MARCA=0
-         IF (N1.LE.NAMRX-2.AND.I1.GT.BORAMR+1) THEN
-          IF (COUNT(CONTA11(I1-1,J1:J2,K1:K2,IPARE).GE.REFINE_THR)
+         N1=2*(I2-I1+1)
+         N2=2*(J2-J1+1)
+         N3=2*(K2-K1+1)
+         !NBAS=MAXVAL(N1,N2,N3)
+         !NBIS=MINVAL(N1,N2,N3)
+
+         MARCA = 1
+         DO WHILE (MARCA.EQ.1) !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+          MARCA=0
+          IF (N1.LE.NAMRX-2.AND.I1.GT.BORAMR+1) THEN
+           IF (COUNT(CONTA11(I1-1,J1:J2,K1:K2,IPARE).GE.REFINE_THR)
      &        .GT.0) THEN
-           I1=I1-1
-           N1=2*(I2-I1+1)
-           MARCA=1
+            I1=I1-1
+            N1=2*(I2-I1+1)
+            MARCA=1
+           END IF
           END IF
-         END IF
 
-         IF (N1.LE.NAMRX-2.AND.I2.LT.NP1-BORAMR) THEN
-          !IF (IPATCH.EQ.153) WRITE(*,*) IX,JY,KZ,I1,I2,J1,J2,K1,K2
-          IF (COUNT(CONTA11(I2+1,J1:J2,K1:K2,IPARE).GE.REFINE_THR)
+          IF (N1.LE.NAMRX-2.AND.I2.LT.NP1-BORAMR) THEN
+           IF (COUNT(CONTA11(I2+1,J1:J2,K1:K2,IPARE).GE.REFINE_THR)
      &        .GT.0) THEN
-           I2=I2+1
-           N1=2*(I2-I1+1)
-           MARCA=1
+            I2=I2+1
+            N1=2*(I2-I1+1)
+            MARCA=1
+           END IF
           END IF
-         END IF
 
-         IF (N2.LE.NAMRY-2.AND.J1.GT.BORAMR+1) THEN
-          IF (COUNT(CONTA11(I1:I2,J1-1,K1:K2,IPARE).GE.REFINE_THR)
+          IF (N2.LE.NAMRY-2.AND.J1.GT.BORAMR+1) THEN
+           IF (COUNT(CONTA11(I1:I2,J1-1,K1:K2,IPARE).GE.REFINE_THR)
      &        .GT.0) THEN
-           J1=J1-1
-           N2=2*(J2-J1+1)
-           MARCA=1
+            J1=J1-1
+            N2=2*(J2-J1+1)
+            MARCA=1
+           END IF
           END IF
-         END IF
 
-         IF (N2.LE.NAMRY-2.AND.J2.LT.NP2-BORAMR) THEN
-          IF (COUNT(CONTA11(I1:I2,J2+1,K1:K2,IPARE).GE.REFINE_THR)
+          IF (N2.LE.NAMRY-2.AND.J2.LT.NP2-BORAMR) THEN
+           IF (COUNT(CONTA11(I1:I2,J2+1,K1:K2,IPARE).GE.REFINE_THR)
      &        .GT.0) THEN
-           J2=J2+1
-           N2=2*(J2-J1+1)
-           MARCA=1
+            J2=J2+1
+            N2=2*(J2-J1+1)
+            MARCA=1
+           END IF
           END IF
-         END IF
 
-         IF (N3.LE.NAMRZ-2.AND.K1.GT.BORAMR+1) THEN
-          IF (COUNT(CONTA11(I1:I2,J1:J2,K1-1,IPARE).GE.REFINE_THR)
+          IF (N3.LE.NAMRZ-2.AND.K1.GT.BORAMR+1) THEN
+           IF (COUNT(CONTA11(I1:I2,J1:J2,K1-1,IPARE).GE.REFINE_THR)
      &        .GT.0) THEN
-           K1=K1-1
-           N3=2*(K2-K1+1)
-           MARCA=1
+            K1=K1-1
+            N3=2*(K2-K1+1)
+            MARCA=1
+           END IF
           END IF
-         END IF
 
-         IF (N3.LE.NAMRZ-2.AND.K2.LT.NP3-BORAMR) THEN
-          IF (COUNT(CONTA11(I1:I2,J1:J2,K2+1,IPARE).GE.REFINE_THR)
+          IF (N3.LE.NAMRZ-2.AND.K2.LT.NP3-BORAMR) THEN
+           IF (COUNT(CONTA11(I1:I2,J1:J2,K2+1,IPARE).GE.REFINE_THR)
      &        .GT.0) THEN
-           K2=K2+1
-           N3=2*(K2-K1+1)
-           MARCA=1
+            K2=K2+1
+            N3=2*(K2-K1+1)
+            MARCA=1
+           END IF
           END IF
-         END IF
 
-        END DO !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+         END DO !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-        NBIS=MIN(N1,N2,N3)
-        IF (NBIS.LE.MIN_PATCHSIZE) THEN
-         CR01(I1:I2,J1:J2,K1:K2,IPARE)=0
-         CONTA11(I1:I2,J1:J2,K1:K2,IPARE)=0
-        ELSE
-         IPATCH=IPATCH+1
-         WRITE(*,*) 'new,pare:',IPATCH,IPARE
-         WRITE(*,*) 'N1,N2,N3,refinable:',N1,N2,N3,
+         NBIS=MIN(N1,N2,N3)
+         IF (NBIS.LE.MIN_PATCHSIZE) THEN
+          CR01(I1:I2,J1:J2,K1:K2,IPARE)=0
+          CONTA11(I1:I2,J1:J2,K1:K2,IPARE)=0
+         ELSE
+          IPATCH=IPATCH+1
+          WRITE(*,*) 'new,pare:',IPATCH,IPARE
+          WRITE(*,*) 'N1,N2,N3,refinable:',N1,N2,N3,
      &             COUNT(CONTA11(I1:I2,J1:J2,K1:K2,IPARE).GE.REFINE_THR)
-         write(*,*) 'x,y,z',i1,j1,k1
+          write(*,*) 'x,y,z',i1,j1,k1
 
-         CONTA11(I1:I2,J1:J2,K1:K2,IPARE)=0
-         CR01(I1:I2,J1:J2,K1:K2,IPARE)=-1
+          CONTA11(I1:I2,J1:J2,K1:K2,IPARE)=0
+          CR01(I1:I2,J1:J2,K1:K2,IPARE)=-1
 
-         WRITE(*,*) 'remaining',
+          WRITE(*,*) 'remaining',
      &              COUNT(CR01(:,:,:,LOW1:LOW2).GE.REFINE_THR)
 
-         PATCHNX(IPATCH)=N1
-         PATCHNY(IPATCH)=N2
-         PATCHNZ(IPATCH)=N3
+          LPATCHNX(IPATCH,IPARE)=N1
+          LPATCHNY(IPATCH,IPARE)=N2
+          LPATCHNZ(IPATCH,IPARE)=N3
 
-         PATCHX(IPATCH)=I1
-         PATCHY(IPATCH)=J1
-         PATCHZ(IPATCH)=K1
+          LPATCHX(IPATCH,IPARE)=I1
+          LPATCHY(IPATCH,IPARE)=J1
+          LPATCHZ(IPATCH,IPARE)=K1
 
-         ! remember that dxpa is the cellsize of the parent!!!
-         PATCHRX(IPATCH)=PATCHRX(IPARE)+(I1-1.5)*DXPA
-         PATCHRY(IPATCH)=PATCHRY(IPARE)+(J1-1.5)*DYPA
-         PATCHRZ(IPATCH)=PATCHRZ(IPARE)+(K1-1.5)*DZPA
+          ! remember that dxpa is the cellsize of the parent!!!
+          LPATCHRX(IPATCH,IPARE)=PATCHRX(IPARE)+(I1-1.5)*DXPA
+          LPATCHRY(IPATCH,IPARE)=PATCHRY(IPARE)+(J1-1.5)*DYPA
+          LPATCHRZ(IPATCH,IPARE)=PATCHRZ(IPARE)+(K1-1.5)*DZPA
 
-         PARE(IPATCH)=IPARE
-        END IF
+          LVAL(IPATCH,IPARE)=BASINT
+         END IF
 
-        REFINE_COUNT=COUNT(CR01(:,:,:,LOW1:LOW2).GE.REFINE_THR)
-        !WRITE(*,*) REFINE_COUNT
+         REFINE_COUNT=COUNT(CR01(:,:,:,IPARE).GE.REFINE_THR)
+         !WRITE(*,*) REFINE_COUNT
+        END DO  !-------------------------------------------------------
+       END DO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+       IPATCH=LOW2
+       DO WHILE(COUNT(LVAL(:,:).GT.0).GT.0.AND.IPATCH.LT.NPALEV)
+        INMAX2=MAXLOC(LVAL)
+        I=INMAX2(1)
+        IPARE=LOW1-1+INMAX2(2)
+C        WRITE(*,*) LVAL(I,IPARE)
+        LVAL(I,IPARE)=0
 
-       END DO  !-----------------------------------------------------
+        IPATCH=IPATCH+1
+
+        PATCHNX(IPATCH)=LPATCHNX(I,IPARE)
+        PATCHNY(IPATCH)=LPATCHNY(I,IPARE)
+        PATCHNZ(IPATCH)=LPATCHNZ(I,IPARE)
+
+        PATCHX(IPATCH)=LPATCHX(I,IPARE)
+        PATCHY(IPATCH)=LPATCHY(I,IPARE)
+        PATCHZ(IPATCH)=LPATCHZ(I,IPARE)
+
+        PATCHRX(IPATCH)=LPATCHRX(I,IPARE)
+        PATCHRY(IPATCH)=LPATCHRY(I,IPARE)
+        PATCHRZ(IPATCH)=LPATCHRZ(I,IPARE)
+
+        PARE(IPATCH)=IPARE
+       END DO
 
        NPATCH(IR)=IPATCH-SUM(NPATCH(0:IR-1))
+
+       DEALLOCATE(LNPATCH,LPATCHNX,LPATCHNY,LPATCHNZ,LPATCHRX,LPATCHRY,
+     &            LPATCHRZ,LPATCHX,LPATCHY,LPATCHZ,LVAL)
 
        ! still needing to compute cr0amr1(:,:,:,low1:low2)
        WRITE(*,*) 'l=',IR,' patches, l=',IRPA,' cells refined:',
