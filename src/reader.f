@@ -376,20 +376,20 @@ c           SOLAP(:,:,:,I)=SCR4_INT(:,:,:)
         READ(32) (U4DM(I),I=LOW1,LOW2)
         READ(32) !particle ID
         MASAP(LOW1:LOW2)=MAP
-        WRITE(*,*) 'RXPA=',MINVAL(RXPA(LOW1:LOW2)),
-     &                       MAXVAL(RXPA(LOW1:LOW2))
-        WRITE(*,*) 'RYPA=',MINVAL(RYPA(LOW1:LOW2)),
-     &                       MAXVAL(RYPA(LOW1:LOW2))
-        WRITE(*,*) 'RZPA=',MINVAL(RZPA(LOW1:LOW2)),
-     &                       MAXVAL(RZPA(LOW1:LOW2))
-        WRITE(*,*) 'U2DM=',MINVAL(U2DM(LOW1:LOW2)),
-     &                       MAXVAL(U2DM(LOW1:LOW2))
-        WRITE(*,*) 'U3DM=',MINVAL(U3DM(LOW1:LOW2)),
-     &                       MAXVAL(U3DM(LOW1:LOW2))
-        WRITE(*,*) 'U4DM=',MINVAL(U4DM(LOW1:LOW2)),
-     &                       MAXVAL(U4DM(LOW1:LOW2))
-        WRITE(*,*) 'MASAP=',MINVAL(MASAP(LOW1:LOW2)),
-     &                       MAXVAL(MASAP(LOW1:LOW2))
+*        WRITE(*,*) 'RXPA=',MINVAL(RXPA(LOW1:LOW2)),
+*     &                       MAXVAL(RXPA(LOW1:LOW2))
+*        WRITE(*,*) 'RYPA=',MINVAL(RYPA(LOW1:LOW2)),
+*     &                       MAXVAL(RYPA(LOW1:LOW2))
+*        WRITE(*,*) 'RZPA=',MINVAL(RZPA(LOW1:LOW2)),
+*     &                       MAXVAL(RZPA(LOW1:LOW2))
+*        WRITE(*,*) 'U2DM=',MINVAL(U2DM(LOW1:LOW2)),
+*     &                       MAXVAL(U2DM(LOW1:LOW2))
+*        WRITE(*,*) 'U3DM=',MINVAL(U3DM(LOW1:LOW2)),
+*     &                       MAXVAL(U3DM(LOW1:LOW2))
+*        WRITE(*,*) 'U4DM=',MINVAL(U4DM(LOW1:LOW2)),
+*     &                       MAXVAL(U4DM(LOW1:LOW2))
+*        WRITE(*,*) 'MASAP=',MINVAL(MASAP(LOW1:LOW2)),
+*     &                       MAXVAL(MASAP(LOW1:LOW2))
 
        DO IR=1,NL
         LOW1=SUM(NPATCH(0:IR-1))+1
@@ -399,7 +399,7 @@ c           SOLAP(:,:,:,I)=SCR4_INT(:,:,:)
         END DO
         LOW1=SUM(NPART(0:IR-1))+1
         LOW2=SUM(NPART(0:IR))
-        WRITE(*,*) 'LEVEL,LOW1,LOW2=',IR,LOW1,LOW2
+*        WRITE(*,*) 'LEVEL,LOW1,LOW2=',IR,LOW1,LOW2
         READ(32) (RXPA(I),I=LOW1,LOW2)
         READ(32) (RYPA(I),I=LOW1,LOW2)
         READ(32) (RZPA(I),I=LOW1,LOW2)
@@ -436,6 +436,10 @@ c           SOLAP(:,:,:,I)=SCR4_INT(:,:,:)
      &            PARE,PATCHNX,PATCHNY,PATCHNZ,PATCHX,PATCHY,PATCHZ,
      &            PATCHRX,PATCHRY,PATCHRZ,RXPA,RYPA,RZPA,U2DM,U3DM,
      &            U4DM,MASAP,NPART,LADO0)
+       DO IR=1,NL_PARTICLE_GRID
+        IF (NPATCH(IR).EQ.0) EXIT
+       END DO
+       NL=IR-1
        WRITE(*,*) 'End mesh creation --------------------------------'
 
        RETURN

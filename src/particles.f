@@ -86,12 +86,13 @@
       ALLOCATE(CONTA1(NMAX,NMAY,NMAZ))
       ALLOCATE(CR0(NMAX,NMAY,NMAZ))
 
-!$OMP PARALLEL DO SHARED(CONTA1,NX,NY,NZ),PRIVATE(IX,JY,KZ),
+!$OMP PARALLEL DO SHARED(CONTA1,CR0,NX,NY,NZ),PRIVATE(IX,JY,KZ),
 !$OMP+            DEFAULT(NONE)
       DO IX=1,NX
       DO JY=1,NY
       DO KZ=1,NZ
        CONTA1(IX,JY,KZ)=0
+       CR0(IX,JY,KZ)=0
       END DO
       END DO
       END DO
@@ -268,8 +269,8 @@
       DEALLOCATE(CONTA1)
       DEALLOCATE(CR0)
 
-      WRITE(*,*) 'l=1 patches, l=0 cells refined', NPATCH(IR),
-     &           COUNT(CR0AMR.EQ.0)
+      WRITE(*,*) 'At l=',1,', patches:', NPATCH(IR)
+      WRITE(*,*) '  --> l=',0,' cells refined:', COUNT(CR0AMR.EQ.0)
 *     END FIRST LEVEL OF REFINEMENT ====================================
 
 *     START SUBSEQUENT LEVELS OF REFINEMENT ============================
@@ -290,6 +291,20 @@
 
        ALLOCATE(CR01(1:NAMRX,1:NAMRY,1:NAMRZ,LOW1:LOW2))
        ALLOCATE(CONTA11(1:NAMRX,1:NAMRY,1:NAMRZ,LOW1:LOW2))
+
+!$OMP PARALLEL DO SHARED(LOW1,LOW2,CR01,CONTA11),
+!$OMP+            PRIVATE(IPATCH,IX,JY,KZ),
+!$OMP+            DEFAULT(NONE)
+       DO IPATCH=LOW1,LOW2
+        DO IX=1,NAMRX
+        DO JY=1,NAMRY
+        DO KZ=1,NAMRZ
+         CR01(IX,JY,KZ,IPATCH)=0
+         CONTA11(IX,JY,KZ,IPATCH)=0
+        END DO
+        END DO
+        END DO
+       END DO
 
 !$OMP PARALLEL DO SHARED(LOW1,LOW2,PATCHRX,PATCHRY,PATCHRZ,DXPA,DYPA,
 !$OMP+                   DZPA,PATCHNX,PATCHNY,PATCHNZ,NPART,RXPA,RYPA,
@@ -337,7 +352,7 @@
 
        END DO != = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-       WRITE(*,*) 'Max particles at a cell at l=',IRPA,
+       WRITE(*,*) '  --> Max particles at a cell:',
      &            MAXVAL(CR01(:,:,:,LOW1:LOW2))
 
 c       REFINE_COUNT=COUNT(CR01(:,:,:,LOW1:LOW2).GE.REFINE_THR)
@@ -349,8 +364,7 @@ c     &            REFINE_COUNT
      &      CONTA11,LOW1,LOW2)
 
        REFINE_COUNT=COUNT(CR01(:,:,:,LOW1:LOW2).GE.REFINE_THR)
-       WRITE(*,*) 'Refinable cells AFTER cleaning at l=',IRPA,
-     &            REFINE_COUNT
+       WRITE(*,*) '  --> Refinable cells AFTER cleaning:',REFINE_COUNT
 
 
        ! mesh creation at the next level
@@ -375,6 +389,17 @@ c     &            REFINE_COUNT
        LVAL(:,:)=0
 
 c       WRITE(*,*) 'REFINABLE CELLS:', REFINE_COUNT
+
+!$OMP PARALLEL DO SHARED(LOW1,LOW2,CR01,REFINE_THR,NPALEV3,PATCHNX,
+!$OMP+                   PATCHNY,PATCHNZ,INI_EXTENSION,BORAMR,CONTA11,
+!$OMP+                   MIN_PATCHSIZE,DXPA,DYPA,DZPA,LPATCHNX,
+!$OMP+                   LPATCHNY,LPATCHNZ,LPATCHX,LPATCHY,LPATCHZ,
+!$OMP+                   LPATCHRX,LPATCHRY,LPATCHRZ,LVAL,PATCHRX,
+!$OMP+                   PATCHRY,PATCHRZ),
+!$OMP+            PRIVATE(IPARE,REFINE_COUNT,IPATCH,INMAX,IX,JY,KZ,
+!$OMP+                    BASINT,NP1,NP2,NP3,I1,I2,J1,J2,K1,K2,N1,N2,N3,
+!$OMP+                    MARCA,NBIS),
+!$OMP+            DEFAULT(NONE)
        DO IPARE=LOW1,LOW2 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         REFINE_COUNT=COUNT(CR01(:,:,:,IPARE).GE.REFINE_THR)
         IPATCH=0
@@ -468,16 +493,13 @@ c       WRITE(*,*) 'REFINABLE CELLS:', REFINE_COUNT
           CONTA11(I1:I2,J1:J2,K1:K2,IPARE)=0
          ELSE
           IPATCH=IPATCH+1
-          WRITE(*,*) 'new,pare:',IPATCH,IPARE
-          WRITE(*,*) 'N1,N2,N3,refinable:',N1,N2,N3,
-     &             COUNT(CONTA11(I1:I2,J1:J2,K1:K2,IPARE).GE.REFINE_THR)
-          write(*,*) 'x,y,z',i1,j1,k1
+c          WRITE(*,*) 'new,pare:',IPATCH,IPARE
+c          WRITE(*,*) 'N1,N2,N3,refinable:',N1,N2,N3,
+c     &             COUNT(CONTA11(I1:I2,J1:J2,K1:K2,IPARE).GE.REFINE_THR)
+c          write(*,*) 'x,y,z',i1,j1,k1
 
           CONTA11(I1:I2,J1:J2,K1:K2,IPARE)=0
           CR01(I1:I2,J1:J2,K1:K2,IPARE)=-1
-
-          WRITE(*,*) 'remaining',
-     &              COUNT(CR01(:,:,:,LOW1:LOW2).GE.REFINE_THR)
 
           LPATCHNX(IPATCH,IPARE)=N1
           LPATCHNY(IPATCH,IPARE)=N2
@@ -509,6 +531,7 @@ C        WRITE(*,*) LVAL(I,IPARE)
         LVAL(I,IPARE)=0
 
         IPATCH=IPATCH+1
+        IF (IPATCH.GT.NPALEV) EXIT
 
         PATCHNX(IPATCH)=LPATCHNX(I,IPARE)
         PATCHNY(IPATCH)=LPATCHNY(I,IPARE)
@@ -526,20 +549,71 @@ C        WRITE(*,*) LVAL(I,IPARE)
        END DO
 
        NPATCH(IR)=IPATCH-SUM(NPATCH(0:IR-1))
+       IF (SUM(NPATCH).GE.NPALEV) STOP 'NPALEV too small'
 
        DEALLOCATE(LNPATCH,LPATCHNX,LPATCHNY,LPATCHNZ,LPATCHRX,LPATCHRY,
      &            LPATCHRZ,LPATCHX,LPATCHY,LPATCHZ,LVAL)
 
        ! still needing to compute cr0amr1(:,:,:,low1:low2)
-       WRITE(*,*) 'l=',IR,' patches, l=',IRPA,' cells refined:',
-     &            NPATCH(IR),COUNT(CR0AMR.EQ.0)
+       LOW1=SUM(NPATCH(0:IRPA-1))+1
+       LOW2=SUM(NPATCH(0:IRPA))
+!$OMP PARALLEL DO SHARED(LOW1,LOW2,PATCHNX,PATCHNY,PATCHNZ,CR0AMR1),
+!$OMP+            PRIVATE(IPATCH,N1,N2,N3,IX,JY,KZ),
+!$OMP+            DEFAULT(NONE)
+       DO IPATCH=LOW1,LOW2
+        N1=PATCHNX(IPATCH)
+        N2=PATCHNY(IPATCH)
+        N3=PATCHNZ(IPATCH)
+        DO IX=1,NAMRX
+        DO JY=1,NAMRY
+        DO KZ=1,NAMRZ
+         CR0AMR1(IX,JY,KZ,IPATCH)=1
+        END DO
+        END DO
+        END DO
+       END DO
 
-       DEALLOCATE(CR01)
-       DEALLOCATE(CONTA11)
+       LOW1=SUM(NPATCH(0:IR-1))+1
+       LOW2=SUM(NPATCH(0:IR))
+!$OMP PARALLEL DO SHARED(LOW1,LOW2,PATCHNX,PATCHNY,PATCHNZ,PATCHX,
+!$OMP+                   PATCHY,PATCHZ,PARE,CR0AMR1),
+!$OMP+            PRIVATE(IPATCH,IPARE,I1,I2,J1,J2,K1,K2,N1,N2,N3,
+!$OMP+                    IX,JY,KZ),
+!$OMP+            DEFAULT(NONE)
+       DO IPATCH=LOW1,LOW2
+        IPARE=PARE(IPATCH)
+        I1=PATCHX(IPATCH)
+        J1=PATCHY(IPATCH)
+        K1=PATCHZ(IPATCH)
+        N1=PATCHNX(IPATCH)
+        N2=PATCHNY(IPATCH)
+        N3=PATCHNZ(IPATCH)
+        I2=I1+N1/2
+        J2=J1+N2/2
+        K2=K1+N3/2
+        DO IX=I1,I2
+        DO JY=J1,J2
+        DO KZ=K1,K2
+         CR0AMR1(IX,JY,KZ,IPARE)=0
+        END DO
+        END DO
+        END DO
+       END DO
+
+       CALL VEINSGRID_CR0AMR(IRPA,NPATCH,PARE,PATCHNX,PATCHNY,PATCHNZ,
+     &                       PATCHX,PATCHY,PATCHZ,PATCHRX,PATCHRY,
+     &                       PATCHRZ)
+
+       LOW1=SUM(NPATCH(0:IRPA-1))+1
+       LOW2=SUM(NPATCH(0:IRPA))
+       WRITE(*,*) 'At l=',IR,', patches:', NPATCH(IR)
+       WRITE(*,*) '  --> l=',IRPA,' cells refined:',
+     &            COUNT(CR0AMR1(:,:,:,LOW1:LOW2).EQ.0)
+
+       DEALLOCATE(CR01, CONTA11)
 
       END DO pare_levels !-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 *     END SUBSEQUENT LEVELS OF REFINEMENT
-      STOP
 
       RETURN
       END
@@ -842,6 +916,311 @@ C        WRITE(*,*) LVAL(I,IPARE)
            END DO
            END DO
           END IF
+       END DO
+       END DO
+
+      DEALLOCATE(VECINO)
+      DEALLOCATE(NVECI)
+
+      RETURN
+      END
+
+
+************************************************************************
+      SUBROUTINE VEINSGRID_CR0AMR(IR,NPATCH,PARE,
+     &      PATCHNX,PATCHNY,PATCHNZ,PATCHX,PATCHY,PATCHZ,PATCHRX,
+     &      PATCHRY,PATCHRZ)
+************************************************************************
+*     small fraction of patches with rare geometry were not detected
+*     when overlapping
+
+      IMPLICIT NONE
+
+      INCLUDE 'vortex_parameters.dat'
+
+      INTEGER NPALEV2
+
+*     U11(PATCHNX,PATCHNY,PATCHNZ,NLEVEL,NPALEV)
+*     PATCHNX,PATCHNY,PATCHNZ patches dimensions
+*     IPATCH number of patches per level
+*     NLEVELS total number of levels
+
+      INTEGER NPATCH(0:NLEVELS)
+      INTEGER PATCHNX(NPALEV)
+      INTEGER PATCHNY(NPALEV)
+      INTEGER PATCHNZ(NPALEV)
+      INTEGER PATCHX(NPALEV)
+      INTEGER PATCHY(NPALEV)
+      INTEGER PATCHZ(NPALEV)
+      REAL*4  PATCHRX(NPALEV)
+      REAL*4  PATCHRY(NPALEV)
+      REAL*4  PATCHRZ(NPALEV)
+      INTEGER PARE(NPALEV)
+
+      INTEGER CR1,CR2,CR3,CR4,CR5,CR6
+      INTEGER IR,I,J,IX,JY,KZ,II,JJ,KK,I2,J2
+      INTEGER N1,N2,N3,L1,L2,L3,NN1,NN2,NN3,LL1,LL2,LL3
+      INTEGER KK2,JJ2,II2,KZ2,JY2,IX2
+      INTEGER NV,A2,B2,C2,K
+
+      INTEGER LOW1,LOW2
+      INTEGER SOLAP_PATCH(NAMRX,NAMRY,NAMRZ,NPATCH(IR))
+
+      integer cr0amr(1:NMAX,1:NMAY,1:NMAZ)
+      integer cr0amr1(1:NAMRX,1:NAMRY,1:NAMRZ,NPALEV)
+      common /cr0/ cr0amr, cr0amr1
+
+      REAL*4 A1,B1,C1,RIV1,RIV2,RIV3
+      INTEGER CONTROL
+      INTEGER CORNX1,CORNXX1,CORNX2,CORNXX2
+      INTEGER CORNY1,CORNYY1,CORNY2,CORNYY2
+      INTEGER CORNZ1,CORNZZ1,CORNZ2,CORNZZ2
+      REAL*4 RX1,RXX1,RX2,RXX2,RY1,RYY1,RY2,RYY2
+      REAL*4 RZ1,RZZ1,RZ2,RZZ2,ORXX1,ORYY1,ORZZ1
+
+      REAL*4 DXPA,DYPA,DZPA
+      REAL*4 DX,DY,DZ
+      COMMON /ESPACIADO/ DX,DY,DZ
+
+      REAL*4  RADX(0:NMAX+1),RADMX(0:NMAX+1),
+     &        RADY(0:NMAY+1),RADMY(0:NMAY+1),
+     &        RADZ(0:NMAZ+1),RADMZ(0:NMAZ+1)
+      COMMON /GRID/   RADX,RADMX,RADY,RADMY,RADZ,RADMZ
+
+      INTEGER,ALLOCATABLE::VECINO(:,:)
+      INTEGER,ALLOCATABLE::NVECI(:)
+
+      INTEGER IG1,IG2,JG1,JG2,KG1,KG2,IG3,JG3,KG3,IG4,JG4,KG4
+      REAL*4 RXFIX,RYFIX,RZFIX
+
+      REAL*4 OVERLAP
+*
+       NPALEV2=MAX(100,INT(NPALEV/5))
+
+       LOW1=SUM(NPATCH(0:IR-1))+1
+       LOW2=SUM(NPATCH(0:IR))
+
+       ALLOCATE(VECINO(NPALEV2,NPATCH(IR)))
+       ALLOCATE(NVECI(NPATCH(IR)))
+
+       DXPA=DX/(2.**IR)
+       DYPA=DY/(2.**IR)
+       DZPA=DZ/(2.**IR)
+
+*      built auxiliar grid for comparison
+       RXFIX=RADX(1) - DX*0.5 + 0.5*DXPA
+       RYFIX=RADY(1) - DY*0.5 + 0.5*DYPA
+       RZFIX=RADZ(1) - DZ*0.5 + 0.5*DZPA
+
+!$OMP   PARALLEL DO SHARED(IR,NPATCH,PARE,PATCHX,PATCHY,PATCHZ,
+!$OMP+        PATCHNX,PATCHNY,PATCHNZ,VECINO,NVECI,
+!$OMP+        DXPA,DYPA,DZPA,PATCHRX,PATCHRY,PATCHRZ,
+!$OMP+        SOLAP_PATCH,LOW1,LOW2,RXFIX,RYFIX,RZFIX),
+!$OMP+  PRIVATE(I,N1,N2,N3,NV,J,NN1,NN2,NN3,
+!$OMP+          RX1,RY1,RZ1,RXX1,RYY1,RZZ1,I2,
+!$OMP+          IG1,IG2,JG1,JG2,KG1,KG2,IG3,JG3,KG3,IG4,JG4,KG4),
+!$OMP+  DEFAULT(NONE)
+       DO I=LOW1,LOW2
+
+         I2=I-LOW1+1
+
+         NVECI(I2)=0
+         VECINO(:,I2)=0
+
+         SOLAP_PATCH(:,:,:,I2)=0
+
+         N1=PATCHNX(I)
+         N2=PATCHNY(I)
+         N3=PATCHNZ(I)
+
+         NV=0
+
+         RX1=PATCHRX(I)-0.5*DXPA
+         RY1=PATCHRY(I)-0.5*DYPA
+         RZ1=PATCHRZ(I)-0.5*DZPA
+
+         IG1=INT(((RX1-RXFIX)/DXPA)+0.5) + 1
+         JG1=INT(((RY1-RYFIX)/DYPA)+0.5) + 1
+         KG1=INT(((RZ1-RZFIX)/DZPA)+0.5) + 1
+
+         IG2=IG1 + N1 - 1
+         JG2=JG1 + N2 - 1
+         KG2=KG1 + N3 - 1
+
+         DO J=LOW1,LOW2
+          IF (J.NE.I) THEN
+
+          NN1=PATCHNX(J)
+          NN2=PATCHNY(J)
+          NN3=PATCHNZ(J)
+
+          RXX1=PATCHRX(J)-0.5*DXPA
+          RYY1=PATCHRY(J)-0.5*DYPA
+          RZZ1=PATCHRZ(J)-0.5*DZPA
+
+          IG3=INT(((RXX1-RXFIX)/DXPA)+0.5) + 1
+          JG3=INT(((RYY1-RYFIX)/DYPA)+0.5) + 1
+          KG3=INT(((RZZ1-RZFIX)/DZPA)+0.5) + 1
+
+          IG4=IG3 + NN1 - 1
+          JG4=JG3 + NN2 - 1
+          KG4=KG3 + NN3 - 1
+
+          IF (IG1.LE.IG4.AND.IG3.LE.IG2.AND.
+     &        JG1.LE.JG4.AND.JG3.LE.JG2.AND.
+     &        KG1.LE.KG4.AND.KG3.LE.KG2) THEN
+           NV=NV+1
+           VECINO(NV,I2)=J
+          END IF
+
+          END IF
+
+         END DO
+         NVECI(I2)=NV
+       END DO
+
+
+       IF (MAXVAL(NVECI(1:NPATCH(IR))).GT.NPALEV2) THEN
+         WRITE(*,*) 'ERROR: gvecino ST second dimension too large',
+     &     MAXVAL(NVECI(1:NPATCH(IR)))
+         STOP
+       END IF
+
+
+       DO I=LOW1,LOW2
+
+         L1=PATCHX(I)
+         L2=PATCHY(I)
+         L3=PATCHZ(I)
+
+         N1=PATCHNX(I)
+         N2=PATCHNY(I)
+         N3=PATCHNZ(I)
+
+         RX1=PATCHRX(I)-0.5*DXPA
+         RY1=PATCHRY(I)-0.5*DYPA
+         RZ1=PATCHRZ(I)-0.5*DZPA
+         RX2=PATCHRX(I)-0.5*DXPA+(N1-1)*DXPA
+         RY2=PATCHRY(I)-0.5*DYPA+(N2-1)*DYPA
+         RZ2=PATCHRZ(I)-0.5*DZPA+(N3-1)*DZPA
+
+         I2=I-LOW1+1
+
+         DO K=1,NVECI(I2)
+         J=VECINO(K,I2)
+         J2=J-LOW1+1
+
+         LL1=PATCHX(J)
+         LL2=PATCHY(J)
+         LL3=PATCHZ(J)
+
+         NN1=PATCHNX(J)
+         NN2=PATCHNY(J)
+         NN3=PATCHNZ(J)
+
+         RXX1=PATCHRX(J)-0.5*DXPA
+         RYY1=PATCHRY(J)-0.5*DYPA
+         RZZ1=PATCHRZ(J)-0.5*DZPA
+         RXX2=PATCHRX(J)-0.5*DXPA+(NN1-1)*DXPA
+         RYY2=PATCHRY(J)-0.5*DYPA+(NN2-1)*DYPA
+         RZZ2=PATCHRZ(J)-0.5*DZPA+(NN3-1)*DZPA
+
+*        X
+         IF (RXX1.GE.RX1.AND.RXX2.LE.RX2) THEN
+            CORNX1=INT(((RXX1-RX1)/DXPA)+0.5) + 1
+            CORNX2=INT(((RXX2-RX1)/DXPA)+0.5) + 1
+            CORNXX1=1
+            CORNXX2=NN1
+         END IF
+         IF (RXX1.GE.RX1.AND.RXX2.GT.RX2) THEN
+            CORNX1=INT(((RXX1-RX1)/DXPA)+0.5) + 1
+            CORNX2=N1
+            CORNXX1=1
+            CORNXX2=INT(((RX2-RXX1)/DXPA)+0.5) +1
+         END IF
+         IF (RXX2.LE.RX2.AND.RXX1.LT.RX1) THEN
+            CORNX1=1
+            CORNX2=INT(((RXX2-RX1)/DXPA)+0.5) + 1
+            CORNXX1=INT(((RX1-RXX1)/DXPA)+0.5) + 1
+            CORNXX2=NN1
+         END IF
+         IF (RXX1.LT.RX1.AND.RXX2.GT.RX2) THEN
+            CORNX1=1
+            CORNX2=N1
+            CORNXX1=INT(((RX1-RXX1)/DXPA)+0.5) + 1
+            CORNXX2=INT(((RX2-RXX1)/DXPA)+0.5) + 1
+         END IF
+
+*        Y
+         IF (RYY1.GE.RY1.AND.RYY2.LE.RY2) THEN
+            CORNY1=INT(((RYY1-RY1)/DYPA)+0.5) + 1
+            CORNY2=INT(((RYY2-RY1)/DYPA)+0.5) + 1
+            CORNYY1=1
+            CORNYY2=NN2
+         END IF
+         IF (RYY1.GE.RY1.AND.RYY2.GT.RY2) THEN
+            CORNY1=INT(((RYY1-RY1)/DYPA)+0.5) + 1
+            CORNY2=N2
+            CORNYY1=1
+            CORNYY2=INT(((RY2-RYY1)/DYPA)+0.5) +1
+         END IF
+         IF (RYY2.LE.RY2.AND.RYY1.LT.RY1) THEN
+            CORNY1=1
+            CORNY2=INT(((RYY2-RY1)/DYPA)+0.5) + 1
+            CORNYY1=INT(((RY1-RYY1)/DYPA)+0.5) + 1
+            CORNYY2=NN2
+         END IF
+         IF (RYY1.LT.RY1.AND.RYY2.GT.RY2) THEN
+            CORNY1=1
+            CORNY2=N2
+            CORNYY1=INT(((RY1-RYY1)/DYPA)+0.5) + 1
+            CORNYY2=INT(((RY2-RYY1)/DYPA)+0.5) + 1
+         END IF
+
+*        Z
+         IF (RZZ1.GE.RZ1.AND.RZZ2.LE.RZ2) THEN
+            CORNZ1=INT(((RZZ1-RZ1)/DZPA)+0.5) + 1
+            CORNZ2=INT(((RZZ2-RZ1)/DZPA)+0.5) + 1
+            CORNZZ1=1
+            CORNZZ2=NN3
+         END IF
+         IF (RZZ1.GE.RZ1.AND.RZZ2.GT.RZ2) THEN
+            CORNZ1=INT(((RZZ1-RZ1)/DZPA)+0.5) + 1
+            CORNZ2=N3
+            CORNZZ1=1
+            CORNZZ2=INT(((RZ2-RZZ1)/DZPA)+0.5) +1
+         END IF
+         IF (RZZ2.LE.RZ2.AND.RZZ1.LT.RZ1) THEN
+            CORNZ1=1
+            CORNZ2=INT(((RZZ2-RZ1)/DZPA)+0.5) + 1
+            CORNZZ1=INT(((RZ1-RZZ1)/DZPA)+0.5) + 1
+            CORNZZ2=NN3
+         END IF
+         IF (RZZ1.LT.RZ1.AND.RZZ2.GT.RZ2) THEN
+            CORNZ1=1
+            CORNZ2=N3
+            CORNZZ1=INT(((RZ1-RZZ1)/DZPA)+0.5) + 1
+            CORNZZ2=INT(((RZ2-RZZ1)/DZPA)+0.5) + 1
+         END IF
+
+**       celdas madre del nivel inferior
+          DO KK=CORNZZ1,CORNZZ2
+          DO JJ=CORNYY1,CORNYY2
+          DO II=CORNXX1,CORNXX2
+           IX=II-CORNXX1+CORNX1
+           JY=JJ-CORNYY1+CORNY1
+           KZ=KK-CORNZZ1+CORNZ1
+           IF (SOLAP_PATCH(IX,JY,KZ,I2).EQ.0) THEN
+*            the cell ii,jj,kk,ir,j overlaps ix,jy,kz,ir,i
+            IF (CR0AMR1(IX,JY,KZ,I).EQ.0) THEN
+             CR0AMR1(II,JJ,KK,J)=0
+            ELSE IF (CR0AMR1(II,JJ,KK,J).EQ.0) THEN
+             CR0AMR1(IX,JY,KZ,I)=0
+            END IF
+           END IF
+          END DO
+          END DO
+          END DO
        END DO
        END DO
 
