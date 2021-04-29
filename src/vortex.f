@@ -151,6 +151,8 @@
        INTEGER I,J,K,LOW1,LOW2,II,JJ,IX,JY,KZ,NL,IR,N1,N2,N3,FILT_MAXIT
        INTEGER NFILE,FIRST,EVERY,IFI,LAST,BOR,NL_PARTICLE_GRID
        real ZI,LADO,LADO0,ZETA,LIM,ERR_THR,T,FILT_TOL,FILT_STEP
+       REAL OMEGA0,ACHE,FDM
+       COMMON /COSMO/ OMEGA0,ACHE,FDM
        LOGICAL FILE_EXISTS
        CHARACTER*14 FILE5
        CHARACTER*30 FILERR5
@@ -186,6 +188,8 @@
        READ(1,*) NX,NY,NZ
        READ(1,*)
        READ(1,*) ZI,LADO0
+       READ(1,*)
+       READ(1,*) OMEGA0,ACHE,FDM
        READ(1,*)
        READ(1,*) NL
        READ(1,*)
@@ -1053,3 +1057,5 @@
       INCLUDE 'filter.f'
 *     Routines for working with particles
       INCLUDE 'particles.f'
+*     Routines from 'Numerical Recipes in Fortran90', Press, Teukoslky et al.
+      INCLUDE 'nr.f'

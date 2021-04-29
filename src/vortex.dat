@@ -5,6 +5,8 @@ cells on each direction,nx,ny,nz --------->
 128,128,128
 initial redshift, box size --------------->
 100.0,40.0
+matter density parameter, dimensionless hubble param., fraction of DM -->
+0.31,0.678,0.845
 numero de nivels  ------------------------>
 9
 SOR presion parameter, SOR max iter, border for AMR patches ---------->

@@ -59,7 +59,7 @@
       BOR=6
       BORAMR=3
       INI_EXTENSION=2 !initial extension of a patch around a cell (on each direction)
-      MIN_PATCHSIZE=18 !minimum size (child cells) to be accepted
+      MIN_PATCHSIZE=16 !minimum size (child cells) to be accepted
       NPALEV3=(INT(NAMRX/5)**3)+1
       write(*,*) 'NPALEV3=',NPALEV3
 
@@ -617,6 +617,453 @@ C        WRITE(*,*) LVAL(I,IPARE)
 
       RETURN
       END
+
+
+
+************************************************************************
+      SUBROUTINE INTERPOLATE_VELOCITIES(NX,NY,NZ,NL,NPATCH,PARE,
+     &            PATCHNX,PATCHNY,PATCHNZ,PATCHX,PATCHY,PATCHZ,
+     &            PATCHRX,PATCHRY,PATCHRZ,RXPA,RYPA,RZPA,U2DM,U3DM,
+     &            U4DM,MASAP,NPART,LADO0,BUF,BUFAMR)
+************************************************************************
+*     Compute the velocity field on the grid
+************************************************************************
+
+      IMPLICIT NONE
+
+      INCLUDE 'vortex_parameters.dat'
+
+*     function parameters
+      INTEGER NX,NY,NZ,NL
+      INTEGER NPATCH(0:NLEVELS),NPART(0:NLEVELS),PARE(NPALEV)
+      INTEGER PATCHNX(NPALEV),PATCHNY(NPALEV),PATCHNZ(NPALEV)
+      INTEGER PATCHX(NPALEV),PATCHY(NPALEV),PATCHZ(NPALEV)
+      REAL PATCHRX(NPALEV),PATCHRY(NPALEV),PATCHRZ(NPALEV)
+      REAL*4 RXPA(NDM),RYPA(NDM),RZPA(NDM),
+     &       U2DM(NDM),U3DM(NDM),U4DM(NDM),MASAP(NDM)
+      REAL LADO0
+      INTEGER BUF,BUFAMR
+
+*     COMMON VARIABLES
+      REAL DX,DY,DZ
+      COMMON /ESPACIADO/ DX,DY,DZ
+
+      REAL  RADX(0:NMAX+1),RADMX(0:NMAX+1),
+     &      RADY(0:NMAY+1),RADMY(0:NMAY+1),
+     &      RADZ(0:NMAZ+1),RADMZ(0:NMAZ+1)
+      COMMON /GRID/  RADX,RADMX,RADY,RADMY,RADZ,RADMZ
+
+      REAL RX(-2:NAMRX+3,NPALEV)
+      REAL RY(-2:NAMRX+3,NPALEV)
+      REAL RZ(-2:NAMRX+3,NPALEV)
+      REAL RMX(-2:NAMRX+3,NPALEV)
+      REAL RMY(-2:NAMRX+3,NPALEV)
+      REAL RMZ(-2:NAMRX+3,NPALEV)
+      COMMON /MINIGRIDS/ RX,RY,RZ,RMX,RMY,RMZ
+
+      INTEGER cr0amr(1:NMAX,1:NMAY,1:NMAZ)
+      INTEGER cr0amr1(1:NAMRX,1:NAMRY,1:NAMRZ,NPALEV)
+      COMMON /cr0/ cr0amr, cr0amr1
+      INTEGER solap(NAMRX,NAMRY,NAMRZ,NPALEV)
+
+      REAL U2(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
+      REAL U3(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
+      REAL U4(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
+      REAL U12(0:NAMRX+1,0:NAMRY+1,0:NAMRZ+1,NPALEV)
+      REAL U13(0:NAMRX+1,0:NAMRY+1,0:NAMRZ+1,NPALEV)
+      REAL U14(0:NAMRX+1,0:NAMRY+1,0:NAMRZ+1,NPALEV)
+      COMMON /VELOC/ U2,U3,U4,U12,U13,U14
+
+      real u1(1:NMAX,1:NMAY,1:NMAZ)
+      real u11(1:NAMRX,1:NAMRY,1:NAMRZ,NPALEV)
+      common /dens/ u1,u11
+
+      REAL OMEGA0,ACHE,FDM,RHOB0
+      COMMON /COSMO/ OMEGA0,ACHE,FDM
+
+      REAL L0(NMAX,NMAY,NMAZ)
+      REAL L1(NAMRX,NAMRY,NAMRZ,NPALEV)
+
+      INTEGER NPART0(-BUF+1:NMAX+BUF,-BUF+1:NMAY+BUF,-BUF+1:NMAZ+BUF)
+      INTEGER NPART1(-BUFAMR+1:NAMRX+BUFAMR,-BUFAMR+1:NAMRY+BUFAMR,
+     &               -BUFAMR+1:NAMRZ+BUFAMR,NPALEV)
+
+      INTEGER IX,JY,KZ,IR,I,IPATCH,LOW1,LOW2,MARCA,CONTA,KPARTICLES
+      INTEGER N1,N2,N3,RINT,MINI,MINJ,MINK,MAXI,MAXJ,MAXK,II,JJ,KK
+      INTEGER INSI,INSJ,INSK,BASINT,CONTA2,CONTA_PA
+      REAL DXPA,DYPA,DZPA,BASX,BASY,BASZ,BAS,RBAS,BASXX,BASYY,BASZZ
+      REAL XL,YL,ZL,XR,YR,ZR,MEDIOLADO0,WBAS,CONSTA_DENS,PI
+      REAL,ALLOCATABLE::DIST(:),MINS(:),U2INS(:),U3INS(:),U4INS(:)
+      REAL,ALLOCATABLE::RXPA_PA(:),RYPA_PA(:),RZPA_PA(:),U2DM_PA(:),
+     &                  U3DM_PA(:),U4DM_PA(:),MASAP_PA(:),INDICES_PA(:)
+      !INTEGER,ALLOCATABLE::SCRINT(:,:,:)
+      real t1,t2
+      INTEGER IXPA(NDM),JYPA(NDM),KZPA(NDM)
+
+      KPARTICLES=32 !NUMBER OF PARTICLES INSIDE THE KERNEL
+
+      MEDIOLADO0=0.5*LADO0
+      PI=ACOS(-1.0)
+      RHOB0=MAXVAL(MASAP)/FDM/DX**3
+      ! to get overdensity from mass in a sphere (multiply by mass in
+      ! code units, divide by radius squared)
+      CONSTA_DENS=1/(4*PI/3)/RHOB0
+      WRITE(*,*) RHOB0,CONSTA_DENS
+
+      CALL VEINSGRID_ALL_L(NL,NPATCH,PARE,PATCHNX,PATCHNY,PATCHNZ,
+     &                     PATCHX,PATCHY,PATCHZ,PATCHRX,PATCHRY,PATCHRZ,
+     &                     SOLAP)
+
+
+*    1. Find number of particles per l=0 cell, and lengths including at
+*       least KPARTICLES particles
+
+!$OMP PARALLEL DO SHARED(NX,NY,NZ,NPART0,BUF),
+!$OMP+            PRIVATE(IX,JY,KZ),
+!$OMP+            DEFAULT(NONE)
+      DO IX=-BUF+1,NX+BUF
+      DO JY=-BUF+1,NY+BUF
+      DO KZ=-BUF+1,NZ+BUF
+       NPART0(IX,JY,KZ)=0
+      END DO
+      END DO
+      END DO
+
+!$OMP PARALLEL DO SHARED(NX,NY,NZ,L0),
+!$OMP+            PRIVATE(IX,JY,KZ),
+!$OMP+            DEFAULT(NONE)
+      DO IX=1,NX
+      DO JY=1,NY
+      DO KZ=1,NZ
+       L0(IX,JY,KZ)=0.0
+      END DO
+      END DO
+      END DO
+
+      XL=-LADO0/2
+      YL=-LADO0/2
+      ZL=-LADO0/2
+!$OMP PARALLEL DO SHARED(NPART,NL,RXPA,RYPA,RZPA,XL,YL,ZL,DX,DY,DZ,
+!$OMP+                   NX,NY,NZ,IXPA,JYPA,KZPA),
+!$OMP+            PRIVATE(I,IX,JY,KZ),
+!$OMP+            DEFAULT(NONE),
+!$OMP+            REDUCTION(+:NPART0)
+      DO I=1,SUM(NPART(0:NL))
+       IX=INT((RXPA(I)-XL)/DX)+1
+       JY=INT((RYPA(I)-YL)/DY)+1
+       KZ=INT((RZPA(I)-ZL)/DZ)+1
+       IF (IX.LT.1) IX=1
+       IF (IX.GT.NX) IX=NX
+       IF (JY.LT.1) JY=1
+       IF (JY.GT.NY) JY=NY
+       IF (KZ.LT.1) KZ=1
+       IF (KZ.GT.NZ) KZ=NZ
+       NPART0(IX,JY,KZ)=NPART0(IX,JY,KZ)+1
+       IXPA(I)=IX
+       JYPA(I)=JY
+       KZPA(I)=KZ
+      END DO
+
+!$OMP PARALLEL DO SHARED(NX,NY,NZ,NPART0,BUF),
+!$OMP+            PRIVATE(IX,JY,KZ,II,JJ,KK)
+      DO IX=-BUF+1,NX+BUF
+      DO JY=-BUF+1,NY+BUF
+      DO KZ=-BUF+1,NZ+BUF
+       IF (IX.LT.1.OR.IX.GT.NX.OR.
+     &     JY.LT.1.OR.JY.GT.NY.OR.
+     &     KZ.LT.1.OR.KZ.GT.NZ) THEN
+        II=IX
+        JJ=JY
+        KK=KZ
+        IF (II.LT.1) II=II+NX
+        IF (II.GT.NX) II=II-NX
+        IF (JJ.LT.1) JJ=JJ+NY
+        IF (JJ.GT.NY) JJ=JJ-NY
+        IF (KK.LT.1) KK=KK+NZ
+        IF (KK.GT.NZ) KK=KK-NZ
+        NPART0(IX,JY,KZ)=NPART0(II,JJ,KK)
+       END IF
+      END DO
+      END DO
+      END DO
+
+!$OMP PARALLEL DO SHARED(NX,NY,NZ,CR0AMR,KPARTICLES,NPART0,L0),
+!$OMP+            PRIVATE(IX,JY,KZ,MARCA,RINT,MINI,MAXI,MINJ,MAXJ,MINK,
+!$OMP+                    MAXK),
+!$OMP+            DEFAULT(NONE)
+      DO IX=1,NX
+      DO JY=1,NY
+      DO KZ=1,NZ
+       IF (CR0AMR(IX,JY,KZ).EQ.1) THEN
+        MARCA=0
+        RINT=0
+        IF (NPART0(IX,JY,KZ).GE.KPARTICLES) MARCA=1
+        DO WHILE (MARCA.EQ.0)
+         RINT=RINT+1
+         MINI=IX-RINT
+         MAXI=IX+RINT
+         MINJ=JY-RINT
+         MAXJ=JY+RINT
+         MINK=KZ-RINT
+         MAXK=KZ+RINT
+         IF (SUM(NPART0(MINI:MAXI,MINJ:MAXJ,MINK:MAXK)).GE.
+     &       KPARTICLES) MARCA=1
+        END DO
+        L0(IX,JY,KZ)=FLOAT(RINT)
+       END IF
+      END DO
+      END DO
+      END DO
+      WRITE(*,*) 0, MAXVAL(NPART0), MAXVAL(L0)
+
+!$OMP PARALLEL DO SHARED(NPATCH,NL,NPART1,BUFAMR),
+!$OMP+            PRIVATE(IPATCH,IX,JY,KZ),
+!$OMP+            DEFAULT(NONE)
+      DO IPATCH=1,SUM(NPATCH(0:NL))
+       DO IX=-BUFAMR+1,NAMRX+BUFAMR
+       DO JY=-BUFAMR+1,NAMRY+BUFAMR
+       DO KZ=-BUFAMR+1,NAMRZ+BUFAMR
+        NPART1(IX,JY,KZ,IPATCH)=0
+       END DO
+       END DO
+       END DO
+      END DO
+
+!$OMP PARALLEL DO SHARED(NPATCH,NL,L1),
+!$OMP+            PRIVATE(IPATCH,IX,JY,KZ),
+!$OMP+            DEFAULT(NONE)
+      DO IPATCH=1,SUM(NPATCH(0:NL))
+       DO IX=1,NAMRX
+       DO JY=1,NAMRY
+       DO KZ=1,NAMRZ
+        L1(IX,JY,KZ,IPATCH)=0.0
+       END DO
+       END DO
+       END DO
+      END DO
+
+      DO IR=1,NL
+       LOW1=SUM(NPATCH(0:IR-1))+1
+       LOW2=SUM(NPATCH(0:IR))
+       DXPA=DX/2.0**IR
+       DYPA=DY/2.0**IR
+       DZPA=DZ/2.0**IR
+!$OMP PARALLEL DO SHARED(LOW1,LOW2,PATCHNX,PATCHNY,PATCHNZ,PATCHRX,
+!$OMP+                   PATCHRY,PATCHRZ,DXPA,DYPA,DZPA,NPART,NL,RXPA,
+!$OMP+                   RYPA,RZPA,NPART1,BUFAMR,CR0AMR1,SOLAP,
+!$OMP+                   KPARTICLES,L1,IR),
+!$OMP+            PRIVATE(IPATCH,N1,N2,N3,XL,YL,ZL,IX,JY,KZ,XR,YR,ZR,
+!$OMP+                    MARCA,RINT,MINI,MINJ,MINK,MAXI,MAXJ,MAXK),
+!$OMP+            DEFAULT(NONE)
+       DO IPATCH=LOW1,LOW2
+        N1=PATCHNX(IPATCH)
+        N2=PATCHNY(IPATCH)
+        N3=PATCHNZ(IPATCH)
+        XL=PATCHRX(IPATCH)-(BUFAMR+1)*DXPA
+        YL=PATCHRY(IPATCH)-(BUFAMR+1)*DYPA
+        ZL=PATCHRZ(IPATCH)-(BUFAMR+1)*DZPA
+        XR=XL+(N1+2*BUFAMR)*DXPA
+        YR=XL+(N2+2*BUFAMR)*DYPA
+        ZR=XL+(N3+2*BUFAMR)*DZPA
+        DO I=1,SUM(NPART(0:NL))
+         IX=INT((RXPA(I)-XL)/DXPA)+1-BUFAMR
+         JY=INT((RYPA(I)-YL)/DYPA)+1-BUFAMR
+         KZ=INT((RZPA(I)-ZL)/DZPA)+1-BUFAMR
+         IF (IX.GT.-BUFAMR.AND.IX.LE.N1+BUFAMR.AND.
+     &       JY.GT.-BUFAMR.AND.JY.LE.N2+BUFAMR.AND.
+     &       KZ.GT.-BUFAMR.AND.KZ.LE.N3+BUFAMR) THEN
+          NPART1(IX,JY,KZ,IPATCH)=NPART1(IX,JY,KZ,IPATCH)+1
+         END IF
+        END DO
+
+        DO IX=1,N1
+        DO JY=1,N2
+        DO KZ=1,N3
+         IF (CR0AMR1(IX,JY,KZ,IPATCH).EQ.1.AND.
+     &       SOLAP(IX,JY,KZ,IPATCH).EQ.1) THEN
+          MARCA=0
+          RINT=0
+          IF (NPART1(IX,JY,KZ,IPATCH).GE.KPARTICLES) MARCA=1
+          DO WHILE (MARCA.EQ.0)
+           RINT=RINT+1
+           MINI=IX-RINT
+           MAXI=IX+RINT
+           MINJ=JY-RINT
+           MAXJ=JY+RINT
+           MINK=KZ-RINT
+           MAXK=KZ+RINT
+           IF (SUM(NPART1(MINI:MAXI,MINJ:MAXJ,MINK:MAXK,IPATCH)).GE.
+     &         KPARTICLES) MARCA=1
+
+           IF (MIN(MINI,MINJ,MINK).EQ.-BUFAMR+1.OR.
+     &         MAX(MAXI-N1,MAXJ-N2,MAXK-N3).EQ.BUFAMR) THEN
+            IF (SUM(NPART1(MINI:MAXI,MINJ:MAXJ,MINK:MAXK,IPATCH)).GE.
+     &          KPARTICLES/4) THEN
+             MARCA=1
+            ELSE
+             WRITE(*,*) IX,JY,KZ,IPATCH,'.',RINT,'.',
+     &               SUM(NPART1(MINI:MAXI,MINJ:MAXJ,MINK:MAXK,IPATCH))
+            END IF
+           END IF
+          END DO
+          L1(IX,JY,KZ,IPATCH)=FLOAT(RINT)
+         END IF
+        END DO
+        END DO
+        END DO
+
+       END DO
+       WRITE(*,*) IR, MAXVAL(NPART1(:,:,:,LOW1:LOW2)),
+     &            MAXVAL(L1(:,:,:,LOW1:LOW2))
+      END DO
+
+*     3. Now, finally, interpolate the velocity field
+!$OMP PARALLEL DO SHARED(NX,NY,NZ,CR0AMR,RADX,RADY,RADZ,L0,NPART0,
+!$OMP+                   NPART,NL,IXPA,JYPA,KZPA,MEDIOLADO0,LADO0,
+!$OMP+                   KPARTICLES,U1,U2,U3,U4,RXPA,RYPA,RZPA,MASAP,
+!$OMP+                   U2DM,U3DM,U4DM,DX,CONSTA_DENS),
+!$OMP+            PRIVATE(IX,JY,KZ,BASX,BASY,BASZ,RINT,MINI,MAXI,
+!$OMP+                    MINJ,MAXJ,MINK,MAXK,BASINT,CONTA,DIST,MINS,
+!$OMP+                    U2INS,U3INS,U4INS,CONTA2,I,II,JJ,KK,
+!$OMP+                    BASXX,BASYY,BASZZ,BAS,RBAS,WBAS),
+!$OMP+            DEFAULT(NONE),
+!$OMP+            SCHEDULE(DYNAMIC)
+      DO IX=1,NX !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+       write(*,*) ix
+      DO JY=1,NY
+      DO KZ=1,NZ
+       IF (CR0AMR(IX,JY,KZ).EQ.1) THEN
+        BASX=RADX(IX)
+        BASY=RADY(JY)
+        BASZ=RADZ(KZ)
+
+        RINT=INT(L0(IX,JY,KZ))
+        IF (RINT.EQ.0) RINT=1
+
+        MINI=IX-RINT
+        MAXI=IX+RINT
+        MINJ=JY-RINT
+        MAXJ=JY+RINT
+        MINK=KZ-RINT
+        MAXK=KZ+RINT
+        BASINT=2*RINT
+        CONTA=SUM(NPART0(MINI:MAXI,MINJ:MAXJ,MINK:MAXK))
+
+        ALLOCATE(DIST(CONTA),MINS(CONTA),U2INS(CONTA),
+     &           U3INS(CONTA),U4INS(CONTA))
+        CONTA2=0
+        DO I=1,SUM(NPART(0:NL))
+         II=MOD(IXPA(I)-MINI,NMAX)
+         IF (II.LT.0) II=II+NMAX
+         IF (II.LE.BASINT) THEN
+          JJ=MOD(JYPA(I)-MINJ,NMAY)
+          IF (JJ.LT.0) JJ=JJ+NMAY
+          IF (JJ.LE.BASINT) THEN
+           KK=MOD(KZPA(I)-MINK,NMAZ)
+           IF (KK.LT.0) KK=KK+NMAZ
+           IF (KK.LE.BASINT) THEN
+            CONTA2=CONTA2+1
+            BASXX=ABS(BASX-RXPA(I))
+            BASYY=ABS(BASY-RYPA(I))
+            BASZZ=ABS(BASZ-RZPA(I))
+            IF (BASXX.GT.MEDIOLADO0) BASXX=BASXX-LADO0
+            IF (BASYY.GT.MEDIOLADO0) BASYY=BASYY-LADO0
+            IF (BASZZ.GT.MEDIOLADO0) BASZZ=BASZZ-LADO0
+            DIST(CONTA2)=SQRT(BASXX**2+BASYY**2+BASZZ**2)
+            MINS(CONTA2)=MASAP(I)
+            U2INS(CONTA2)=U2DM(I)
+            U3INS(CONTA2)=U3DM(I)
+            U4INS(CONTA2)=U4DM(I)
+           END IF
+          END IF
+         END IF
+        END DO
+
+        IF (CONTA2.LE.KPARTICLES) THEN
+         BAS=0.5*MAXVAL(DIST)+0.00001
+        ELSE
+         CALL SELECT(KPARTICLES,DIST,CONTA2,BAS)
+         BAS=0.5*MAX(1.5*DX,BAS)+0.00001
+        END IF
+
+        L0(IX,JY,KZ)=BAS
+        CALL KERNEL_CUBICSPLINE(CONTA,BAS,DIST)
+
+        RBAS=0.0
+        BASXX=0.0
+        BASX=0.0
+        BASY=0.0
+        BASZ=0.0
+        DO I=1,CONTA2
+         !! INTERPOLATE MASS WITHOUT KERNEL
+         !RBAS=RBAS+MINS(I) ! THIS IS THE MASS SUM
+         !! INTERPOLATE MASS WITH KERNEL
+         RBAS=RBAS+DIST(I)
+         WBAS=DIST(I)*MINS(I)
+         BASXX=BASXX+WBAS ! THIS IS THE MASS-WEIGHTED KERNEL SUM
+         BASX=BASX+WBAS*U2INS(I)
+         BASY=BASY+WBAS*U3INS(I)
+         BASZ=BASZ+WBAS*U4INS(I)
+        END DO
+
+        BASX=BASX/BASXX
+        BASY=BASY/BASXX
+        BASZ=BASZ/BASXX
+        !! INTERPOLATE MASS WITHOUT KERNEL
+        !BASXX=CONSTA_DENS*RBAS/BAS**3
+        !! INTERPOLATE MASS WITH KERNEL
+        BASXX=BASXX/RBAS*MIN(CONTA2,KPARTICLES)
+        BASXX=CONSTA_DENS*BASXX/(2.0*BAS)**3
+        !WRITE(*,*) IX,JY,KZ,'->',BAS,BASX,BASY,BASZ,BASXX
+
+        U1(IX,JY,KZ)=BASXX
+        U2(IX,JY,KZ)=BASX
+        U3(IX,JY,KZ)=BASY
+        U4(IX,JY,KZ)=BASZ
+
+        DEALLOCATE(DIST,MINS,U2INS,U3INS,U4INS)
+       END IF
+      END DO
+      END DO
+      END DO !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+      write(*,*) minval(u1(1:nx,1:ny,1:nz)),maxval(u1(1:nx,1:ny,1:nz))
+      write(*,*) minval(u2(1:nx,1:ny,1:nz)),maxval(u2(1:nx,1:ny,1:nz))
+      write(*,*) minval(u3(1:nx,1:ny,1:nz)),maxval(u3(1:nx,1:ny,1:nz))
+      write(*,*) minval(u4(1:nx,1:ny,1:nz)),maxval(u4(1:nx,1:ny,1:nz))
+
+
+      RETURN
+      END
+
+
+
+
+************************************************************************
+      SUBROUTINE KERNEL_CUBICSPLINE(N,W,DIST)
+************************************************************************
+*     DIST contains initially the distance (particle to cell), and it is
+*     updated with the (unnormalised) value of the kernel
+      INTEGER N
+      REAL W,DIST(N)
+
+      REAL DISTS
+      INTEGER I
+
+      DO I=1,N
+       DISTS=DIST(I)/W
+       IF (DISTS.LE.1.0) THEN
+        DIST(I)=1.0-1.5*DISTS**2*(1-0.5*DISTS)
+       ELSE IF (DISTS.LE.2.0) THEN
+        DIST(I)=0.25*(2-DISTS)**3
+       ELSE
+        DIST(I)=0.0
+       END IF
+      END DO
+
+      RETURN
+      END
+
 
 
 ************************************************************************

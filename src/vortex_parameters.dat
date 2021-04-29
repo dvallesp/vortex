@@ -11,7 +11,7 @@
        PARAMETER (NPALEV=5000,NLEVELS=15)
 
        INTEGER NAMRX,NAMRY,NAMRZ
-       PARAMETER (NAMRX=64,NAMRY=64,NAMRZ=64)
+       PARAMETER (NAMRX=32,NAMRY=32,NAMRZ=32)
 
 *      particles ------------------------------------------------------
        INTEGER NDM

@@ -440,7 +440,19 @@ c           SOLAP(:,:,:,I)=SCR4_INT(:,:,:)
         IF (NPATCH(IR).EQ.0) EXIT
        END DO
        NL=IR-1
+
+       CALL GRIDAMR(NX,NY,NZ,NL,NPATCH,
+     &                   PATCHNX,PATCHNY,PATCHNZ,
+     &                   PATCHX,PATCHY,PATCHZ,
+     &                   PATCHRX,PATCHRY,PATCHRZ,PARE)
        WRITE(*,*) 'End mesh creation --------------------------------'
+
+       WRITE(*,*) 'Routine interpolate velocity ---------------------'
+       CALL INTERPOLATE_VELOCITIES(NX,NY,NZ,NL,NPATCH,PARE,
+     &            PATCHNX,PATCHNY,PATCHNZ,PATCHX,PATCHY,PATCHZ,
+     &            PATCHRX,PATCHRY,PATCHRZ,RXPA,RYPA,RZPA,U2DM,U3DM,
+     &            U4DM,MASAP,NPART,LADO0,8,16)
+       WRITE(*,*) 'End velocity interpolation -----------------------'
 
        RETURN
        END
