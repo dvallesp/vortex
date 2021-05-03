@@ -588,9 +588,9 @@ C        WRITE(*,*) LVAL(I,IPARE)
         N1=PATCHNX(IPATCH)
         N2=PATCHNY(IPATCH)
         N3=PATCHNZ(IPATCH)
-        I2=I1+N1/2
-        J2=J1+N2/2
-        K2=K1+N3/2
+        I2=I1+N1/2-1
+        J2=J1+N2/2-1
+        K2=K1+N3/2-1
         DO IX=I1,I2
         DO JY=J1,J2
         DO KZ=K1,K2
