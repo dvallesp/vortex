@@ -219,7 +219,13 @@
 
        NBIS=MIN(N1,N2,N3)
        IF (NBIS.LE.MIN_PATCHSIZE) THEN
-        CR0(I1:I2,J1:J2,K1:K2)=0
+        DO II=I1,I2
+        DO JJ=J1,J2
+        DO KK=K1,K2
+         IF (CR0(II,JJ,KK).GT.0) CR0(II,JJ,KK)=0
+        END DO
+        END DO
+        END DO
         CONTA1(I1:I2,J1:J2,K1:K2)=0
        ELSE
         IPATCH=IPATCH+1
