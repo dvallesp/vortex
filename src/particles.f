@@ -46,7 +46,7 @@
       INTEGER I,IX,JY,KZ,REFINE_THR,REFINE_COUNT,BOR,MIN_PATCHSIZE
       INTEGER INI_EXTENSION,NBIS,IRPA,BORAMR,LOW1,LOW2,IPATCH,IPARE
       INTEGER INMAX(3),INMAX2(2),I1,I2,J1,J2,K1,K2,N1,N2,N3,IR,MARCA
-      INTEGER NP1,NP2,NP3,BASINT,NPALEV3
+      INTEGER NP1,NP2,NP3,BASINT,NPALEV3,II,JJ,KK
 
       INTEGER,ALLOCATABLE::LNPATCH(:)
       INTEGER,ALLOCATABLE::LPATCHNX(:,:),LPATCHNY(:,:),LPATCHNZ(:,:)
@@ -843,6 +843,7 @@ C        WRITE(*,*) LVAL(I,IPARE)
       END DO
       END DO
       END DO
+      WRITE(*,*) 'Level, Max part. at a cell, Max kernel size'
       WRITE(*,*) 0, MAXVAL(NPART0), MAXVAL(L0)
 
 !$OMP PARALLEL DO SHARED(NPATCH,NL,NPART1,BUFAMR),
@@ -952,6 +953,7 @@ C        WRITE(*,*) LVAL(I,IPARE)
       CALL INDEXX(NX,SCR_PAR,SCR_IDX)
 
 *     3. Now, finally, interpolate the velocity field
+      WRITE(*,*) 'Interpolating velocities onto the base grid'
 !$OMP PARALLEL DO SHARED(NX,NY,NZ,CR0AMR,RADX,RADY,RADZ,L0,NPART0,
 !$OMP+                   NPART,NL,IXPA,JYPA,KZPA,MEDIOLADO0,LADO0,
 !$OMP+                   KPARTICLES,U1,U2,U3,U4,RXPA,RYPA,RZPA,MASAP,
@@ -964,7 +966,7 @@ C        WRITE(*,*) LVAL(I,IPARE)
 !$OMP+            SCHEDULE(DYNAMIC)
       DO IXPAR=1,NX !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
        IX=SCR_IDX(NX+1-IXPAR)
-       write(*,*) ixpar,'-->',IX,scr_par(ix)
+c       write(*,*) ixpar,'-->',IX,scr_par(ix)
       DO JY=1,NY
       DO KZ=1,NZ
        IF (CR0AMR(IX,JY,KZ).EQ.1) THEN
@@ -1074,6 +1076,8 @@ C        WRITE(*,*) LVAL(I,IPARE)
       DO IR=1,NL
        LOW1=SUM(NPATCH(0:IR-1))+1
        LOW2=SUM(NPATCH(0:IR))
+       WRITE(*,*) 'Interpolating velocities onto level', IR,
+     &             '--> Patches:', low2-low1+1
        DXPA=DX/2.0**IR
        DYPA=DY/2.0**IR
        DZPA=DZ/2.0**IR
@@ -1097,8 +1101,8 @@ C        WRITE(*,*) LVAL(I,IPARE)
         N1=PATCHNX(IPATCH)
         N2=PATCHNY(IPATCH)
         N3=PATCHNZ(IPATCH)
-        write(*,*) ipatch,count(solap(1:n1,1:n2,1:n3,ipatch).eq.1.and.
-     &                          cr0amr1(1:n1,1:n2,1:n3,ipatch).eq.1)
+c        write(*,*) ipatch,count(solap(1:n1,1:n2,1:n3,ipatch).eq.1.and.
+c     &                          cr0amr1(1:n1,1:n2,1:n3,ipatch).eq.1)
 
         !I1=PATCHX(IPATCH)
         !J1=PATCHY(IPATCH)
@@ -1435,12 +1439,9 @@ c     &                               maxval(u14(:,:,:,low1:low2))
       end do
 
       CLOSE(99)
-      stop
 
       RETURN
       END
-
-
 
 
 ************************************************************************
