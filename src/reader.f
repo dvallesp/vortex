@@ -320,6 +320,8 @@ c           SOLAP(:,:,:,I)=SCR4_INT(:,:,:)
        integer cr0amr(1:NMAX,1:NMAY,1:NMAZ)
        integer cr0amr1(1:NAMRX,1:NAMRY,1:NAMRZ,NPALEV)
        common /cr0/ cr0amr, cr0amr1
+
+       INTEGER LIHAL(NDM),LIHAL_IX(NDM),LIHAL_JY(NDM),LIHAL_KZ(NDM)
 *      ---PARALLEL---
        INTEGER NUM,OMP_GET_NUM_THREADS,NUMOR, FLAG_PARALLEL
        COMMON /PROCESADORES/ NUM
@@ -448,10 +450,15 @@ c           SOLAP(:,:,:,I)=SCR4_INT(:,:,:)
        WRITE(*,*) 'End mesh creation --------------------------------'
 
        WRITE(*,*) 'Routine interpolate velocity ---------------------'
-       CALL INTERPOLATE_VELOCITIES(NX,NY,NZ,NL,NPATCH,PARE,
-     &            PATCHNX,PATCHNY,PATCHNZ,PATCHX,PATCHY,PATCHZ,
-     &            PATCHRX,PATCHRY,PATCHRZ,RXPA,RYPA,RZPA,U2DM,U3DM,
-     &            U4DM,MASAP,NPART,LADO0,8,16)
+c       CALL INTERPOLATE_VELOCITIES(NX,NY,NZ,NL,NPATCH,PARE,
+c     &            PATCHNX,PATCHNY,PATCHNZ,PATCHX,PATCHY,PATCHZ,
+c     &            PATCHRX,PATCHRY,PATCHRZ,RXPA,RYPA,RZPA,U2DM,U3DM,
+c     &            U4DM,MASAP,NPART,LADO0,8,16)
+
+       WRITE(*,*) 'Locating particles onto the grid'
+       CALL PLACE_PARTICLES(NX,NY,NZ,NL,NPATCH,PATCHNX,PATCHNY,
+     &            PATCHNZ,PATCHRX,PATCHRY,PATCHRZ,PARE,RXPA,RYPA,RZPA,
+     &            NPART,LADO0,LIHAL,LIHAL_IX,LIHAL_JY,LIHAL_KZ)
        WRITE(*,*) 'End velocity interpolation -----------------------'
 
        RETURN

@@ -1445,10 +1445,133 @@ c     &                               maxval(u14(:,:,:,low1:low2))
 
 
 ************************************************************************
+      SUBROUTINE PLACE_PARTICLES(NX,NY,NZ,NL,NPATCH,PATCHNX,PATCHNY,
+     &            PATCHNZ,PATCHRX,PATCHRY,PATCHRZ,PARE,RXPA,RYPA,RZPA,
+     &            NPART,LADO0,LIHAL,LIHAL_IX,LIHAL_JY,LIHAL_KZ)
+************************************************************************
+
+      IMPLICIT NONE
+
+      INCLUDE 'vortex_parameters.dat'
+
+*     function parameters
+      INTEGER NX,NY,NZ,NL
+      INTEGER NPATCH(0:NLEVELS),NPART(0:NLEVELS),PARE(NPALEV)
+      INTEGER PATCHNX(NPALEV),PATCHNY(NPALEV),PATCHNZ(NPALEV)
+      REAL PATCHRX(NPALEV),PATCHRY(NPALEV),PATCHRZ(NPALEV)
+      REAL*4 RXPA(NDM),RYPA(NDM),RZPA(NDM)
+      REAL LADO0
+
+*     Output variables
+      INTEGER LIHAL(NDM),LIHAL_IX(NDM),LIHAL_JY(NDM),LIHAL_KZ(NDM)
+      REAL ERR(NDM)
+
+*     Local variables
+      INTEGER IPATCH,IX,JY,KZ,BORAMR,IP,IR,LOW1,LOW2,N1,N2,N3,MARCA
+      REAL BASX,BASY,BASZ,DXPA,DYPA,DZPA
+      REAL XL(NPALEV),XR(NPALEV),YL(NPALEV),YR(NPALEV),ZL(NPALEV),
+     &     ZR(NPALEV)
+
+*     COMMON VARIABLES
+      REAL DX,DY,DZ
+      COMMON /ESPACIADO/ DX,DY,DZ
+
+      real RX(-2:NAMRX+3,NPALEV),RY(-2:NAMRX+3,NPALEV),
+     &     RZ(-2:NAMRX+3,NPALEV),RMX(-2:NAMRX+3,NPALEV),
+     &     RMY(-2:NAMRX+3,NPALEV),RMZ(-2:NAMRX+3,NPALEV)
+      COMMON /MINIGRIDS/ RX,RY,RZ,RMX,RMY,RMZ
+
+      real  RADX(0:NMAX+1),RADMX(0:NMAX+1),
+     &      RADY(0:NMAY+1),RADMY(0:NMAY+1),
+     &      RADZ(0:NMAZ+1),RADMZ(0:NMAZ+1)
+      COMMON /GRID/ RADX,RADMX,RADY,RADMY,RADZ,RADMZ
+
+      DO IR=1,NL
+       LOW1=SUM(NPATCH(0:IR-1))+1
+       LOW2=SUM(NPATCH(0:IR))
+       DXPA=DX/2.0**IR
+       DYPA=DY/2.0**IR
+       DZPA=DZ/2.0**IR
+       DO IPATCH=LOW1,LOW2
+        N1=PATCHNX(IPATCH)
+        N2=PATCHNY(IPATCH)
+        N3=PATCHNZ(IPATCH)
+
+        XL(IPATCH)=PATCHRX(IPATCH)+(BORAMR-1)*DXPA
+        YL(IPATCH)=PATCHRY(IPATCH)+(BORAMR-1)*DYPA
+        ZL(IPATCH)=PATCHRZ(IPATCH)+(BORAMR-1)*DZPA
+
+        XR(IPATCH)=XL(IPATCH)+(N1-2*BORAMR)*DXPA
+        YR(IPATCH)=YL(IPATCH)+(N2-2*BORAMR)*DYPA
+        ZR(IPATCH)=ZL(IPATCH)+(N3-2*BORAMR)*DZPA
+       END DO
+      END DO
+
+      BORAMR=3
+
+!$OMP PARALLEL DO SHARED(NPART,NL,NPATCH,XL,XR,YL,YR,ZL,ZR,RXPA,RYPA,
+!$OMP+                   RZPA,LIHAL,LIHAL_IX,LIHAL_JY,LIHAL_KZ,BORAMR,
+!$OMP+                   LADO0,DX,DY,DZ),
+!$OMP+            PRIVATE(IP,MARCA,IR,LOW1,LOW2,IPATCH,DXPA,DYPA,DZPA,
+!$OMP+                    BASX,BASY,BASZ),
+!$OMP+            DEFAULT(NONE)
+      DO IP=1,SUM(NPART(0:NL))
+       LIHAL(IP)=-1
+       MARCA=0
+       levels: DO IR=NL,1,-1
+        LOW1=SUM(NPATCH(0:IR-1))+1
+        LOW2=SUM(NPATCH(0:IR))
+        patches: DO IPATCH=LOW1,LOW2
+         BASX = (XR(IPATCH) - RXPA(IP)) * (RXPA(IP) - XL(IPATCH))
+         IF (BASX.GT.0) THEN
+          BASY = (YR(IPATCH) - RYPA(IP)) * (RYPA(IP) - YL(IPATCH))
+          IF (BASY.GT.0) THEN
+           BASZ = (ZR(IPATCH) - RZPA(IP)) * (RZPA(IP) - ZL(IPATCH))
+           IF (BASZ.GT.0) THEN
+            DXPA=DX/2.0**IR
+            DYPA=DY/2.0**IR
+            DZPA=DZ/2.0**IR
+            LIHAL(IP)=IPATCH
+            LIHAL_IX(IP)=BORAMR+1+INT((RXPA(IP)-XL(IPATCH))/DXPA)
+            LIHAL_JY(IP)=BORAMR+1+INT((RYPA(IP)-YL(IPATCH))/DYPA)
+            LIHAL_KZ(IP)=BORAMR+1+INT((RZPA(IP)-ZL(IPATCH))/DZPA)
+            MARCA=1
+            EXIT levels
+           END IF
+          END IF
+         END IF
+        END DO patches
+       END DO levels
+
+       IF (MARCA.EQ.0) THEN
+        LIHAL(IP)=0
+        LIHAL_IX(IP)=INT((RXPA(IP)+0.5*LADO0)/DX)+1
+        LIHAL_JY(IP)=INT((RYPA(IP)+0.5*LADO0)/DY)+1
+        LIHAL_KZ(IP)=INT((RZPA(IP)+0.5*LADO0)/DZ)+1
+       END IF
+
+
+      END DO !IP
+
+      WRITE(*,*) 'At level', 0, '-->', COUNT(LIHAL.EQ.0)
+      DO IR=1,NL
+       LOW1=SUM(NPATCH(0:IR-1))+1
+       LOW2=SUM(NPATCH(0:IR))
+       WRITE(*,*) 'At level', IR, '-->', COUNT(LIHAL.GE.LOW1.AND.
+     &                                         LIHAL.LE.LOW2)
+      END DO
+
+      RETURN
+      END
+
+
+
+************************************************************************
       SUBROUTINE KERNEL_CUBICSPLINE(N,N2,W,DIST)
 ************************************************************************
 *     DIST contains initially the distance (particle to cell), and it is
 *     updated with the (unnormalised) value of the kernel
+      IMPLICIT NONE
       INTEGER N,N2 ! N is the dimension of the array dist;
                    ! N2, the actual number of particles filled in
       REAL W,DIST(N)
