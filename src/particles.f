@@ -56,7 +56,7 @@
 
 !     hard-coded parameters (for now, at least)
       REFINE_THR=3
-      BOR=6
+      BOR=8
       BORAMR=3
       INI_EXTENSION=2 !initial extension of a patch around a cell (on each direction)
       MIN_PATCHSIZE=16 !minimum size (child cells) to be accepted
@@ -150,12 +150,12 @@
        KZ=INMAX(3)
        !IF (CONTA1(IX,JY,KZ).LT.REFINE_THR) EXIT
 
-       I1=IX-INI_EXTENSION
-       I2=IX+INI_EXTENSION
-       J1=JY-INI_EXTENSION
-       J2=JY+INI_EXTENSION
-       K1=KZ-INI_EXTENSION
-       K2=KZ+INI_EXTENSION
+       I1=MAX(IX-INI_EXTENSION,BOR+1)
+       I2=MIN(IX+INI_EXTENSION,NX-BOR)
+       J1=MAX(JY-INI_EXTENSION,BOR+1)
+       J2=MIN(JY+INI_EXTENSION,NY-BOR)
+       K1=MAX(KZ-INI_EXTENSION,BOR+1)
+       K2=MIN(KZ+INI_EXTENSION,NZ-BOR)
 
        N1=2*(I2-I1+1)
        N2=2*(J2-J1+1)
@@ -415,12 +415,12 @@ c       WRITE(*,*) 'REFINABLE CELLS:', REFINE_COUNT
          NP2=PATCHNY(IPARE)
          NP3=PATCHNZ(IPARE)
 
-         I1=IX-INI_EXTENSION
-         I2=IX+INI_EXTENSION
-         J1=JY-INI_EXTENSION
-         J2=JY+INI_EXTENSION
-         K1=KZ-INI_EXTENSION
-         K2=KZ+INI_EXTENSION
+         I1=MAX(IX-INI_EXTENSION,BORAMR+1)
+         I2=MIN(IX+INI_EXTENSION,NP1-BORAMR)
+         J1=MAX(JY-INI_EXTENSION,BORAMR+1)
+         J2=MIN(JY+INI_EXTENSION,NP2-BORAMR)
+         K1=MAX(KZ-INI_EXTENSION,BORAMR+1)
+         K2=MIN(KZ+INI_EXTENSION,NP3-BORAMR)
 
          N1=2*(I2-I1+1)
          N2=2*(J2-J1+1)
@@ -615,6 +615,24 @@ C        WRITE(*,*) LVAL(I,IPARE)
       END DO pare_levels !-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 *     END SUBSEQUENT LEVELS OF REFINEMENT
 
+      IR=IR-1
+      LOW1=SUM(NPATCH(0:IR-1))+1
+      LOW2=SUM(NPATCH(0:IR))
+!$OMP PARALLEL DO SHARED(LOW1,LOW2,N1,N2,N3,IX,JY,KZ,CR0AMR1),
+!$OMP+            PRIVATE(IPATCH,PATCHNX,PATCHNY,PATCHNZ)
+      DO IPATCH=LOW1,LOW2
+       N1=PATCHNX(IPATCH)
+       N2=PATCHNY(IPATCH)
+       N3=PATCHNZ(IPATCH)
+       DO IX=1,N1
+       DO JY=1,N2
+       DO KZ=1,N3
+        CR0AMR1(IX,JY,KZ,IPATCH)=1
+       END DO
+       END DO
+       END DO
+      END DO
+
       RETURN
       END
 
@@ -690,12 +708,17 @@ C        WRITE(*,*) LVAL(I,IPARE)
 
       INTEGER IX,JY,KZ,IR,I,IPATCH,LOW1,LOW2,MARCA,CONTA,KPARTICLES
       INTEGER N1,N2,N3,RINT,MINI,MINJ,MINK,MAXI,MAXJ,MAXK,II,JJ,KK
-      INTEGER INSI,INSJ,INSK,BASINT,CONTA2,CONTA_PA
+      INTEGER INSI,INSJ,INSK,BASINT,CONTA2,CONTA_PA,I1,I2,J1,J2,K1,K2
+      INTEGER CONTA3,JPATCH,J,K,SCR_PAR(NMAX),SCR_IDX(NMAX),IXPAR
       REAL DXPA,DYPA,DZPA,BASX,BASY,BASZ,BAS,RBAS,BASXX,BASYY,BASZZ
       REAL XL,YL,ZL,XR,YR,ZR,MEDIOLADO0,WBAS,CONSTA_DENS,PI
       REAL,ALLOCATABLE::DIST(:),MINS(:),U2INS(:),U3INS(:),U4INS(:)
       REAL,ALLOCATABLE::RXPA_PA(:),RYPA_PA(:),RZPA_PA(:),U2DM_PA(:),
-     &                  U3DM_PA(:),U4DM_PA(:),MASAP_PA(:),INDICES_PA(:)
+     &                  U3DM_PA(:),U4DM_PA(:),MASAP_PA(:)
+      INTEGER,ALLOCATABLE::INDICES_PA(:),IXPA_PA(:),JYPA_PA(:),
+     &                     KZPA_PA(:)
+      REAL FUIN,U(2,2,2),UW(2,2,2)
+
       !INTEGER,ALLOCATABLE::SCRINT(:,:,:)
       real t1,t2
       INTEGER IXPA(NDM),JYPA(NDM),KZPA(NDM)
@@ -917,19 +940,25 @@ C        WRITE(*,*) LVAL(I,IPARE)
      &            MAXVAL(L1(:,:,:,LOW1:LOW2))
       END DO
 
+      DO IX=1,NX
+       SCR_PAR(IX)=COUNT(CR0AMR(IX,:,:).EQ.1)
+      END DO
+      CALL INDEXX(NX,SCR_PAR,SCR_IDX)
+
 *     3. Now, finally, interpolate the velocity field
 !$OMP PARALLEL DO SHARED(NX,NY,NZ,CR0AMR,RADX,RADY,RADZ,L0,NPART0,
 !$OMP+                   NPART,NL,IXPA,JYPA,KZPA,MEDIOLADO0,LADO0,
 !$OMP+                   KPARTICLES,U1,U2,U3,U4,RXPA,RYPA,RZPA,MASAP,
-!$OMP+                   U2DM,U3DM,U4DM,DX,CONSTA_DENS),
-!$OMP+            PRIVATE(IX,JY,KZ,BASX,BASY,BASZ,RINT,MINI,MAXI,
+!$OMP+                   U2DM,U3DM,U4DM,DX,CONSTA_DENS,SCR_IDX,scr_par),
+!$OMP+            PRIVATE(IXPAR,IX,JY,KZ,BASX,BASY,BASZ,RINT,MINI,MAXI,
 !$OMP+                    MINJ,MAXJ,MINK,MAXK,BASINT,CONTA,DIST,MINS,
 !$OMP+                    U2INS,U3INS,U4INS,CONTA2,I,II,JJ,KK,
-!$OMP+                    BASXX,BASYY,BASZZ,BAS,RBAS,WBAS),
+!$OMP+                    BASXX,BASYY,BASZZ,BAS,RBAS,WBAS,CONTA3),
 !$OMP+            DEFAULT(NONE),
 !$OMP+            SCHEDULE(DYNAMIC)
-      DO IX=1,NX !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-       write(*,*) ix
+      DO IXPAR=1,NX !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+       IX=SCR_IDX(NX+1-IXPAR)
+       write(*,*) ixpar,'-->',IX,scr_par(ix)
       DO JY=1,NY
       DO KZ=1,NZ
        IF (CR0AMR(IX,JY,KZ).EQ.1) THEN
@@ -987,23 +1016,27 @@ C        WRITE(*,*) LVAL(I,IPARE)
         END IF
 
         L0(IX,JY,KZ)=BAS
-        CALL KERNEL_CUBICSPLINE(CONTA,BAS,DIST)
+        CALL KERNEL_CUBICSPLINE(CONTA,CONTA2,BAS,DIST)
 
         RBAS=0.0
         BASXX=0.0
         BASX=0.0
         BASY=0.0
         BASZ=0.0
+        CONTA3=0
         DO I=1,CONTA2
          !! INTERPOLATE MASS WITHOUT KERNEL
          !RBAS=RBAS+MINS(I) ! THIS IS THE MASS SUM
          !! INTERPOLATE MASS WITH KERNEL
-         RBAS=RBAS+DIST(I)
-         WBAS=DIST(I)*MINS(I)
-         BASXX=BASXX+WBAS ! THIS IS THE MASS-WEIGHTED KERNEL SUM
-         BASX=BASX+WBAS*U2INS(I)
-         BASY=BASY+WBAS*U3INS(I)
-         BASZ=BASZ+WBAS*U4INS(I)
+         IF (DIST(I).GT.0.0) THEN
+          CONTA3=CONTA3+1
+          RBAS=RBAS+DIST(I)
+          WBAS=DIST(I)*MINS(I)
+          BASXX=BASXX+WBAS ! THIS IS THE MASS-WEIGHTED KERNEL SUM
+          BASX=BASX+WBAS*U2INS(I)
+          BASY=BASY+WBAS*U3INS(I)
+          BASZ=BASZ+WBAS*U4INS(I)
+         END IF
         END DO
 
         BASX=BASX/BASXX
@@ -1012,7 +1045,7 @@ C        WRITE(*,*) LVAL(I,IPARE)
         !! INTERPOLATE MASS WITHOUT KERNEL
         !BASXX=CONSTA_DENS*RBAS/BAS**3
         !! INTERPOLATE MASS WITH KERNEL
-        BASXX=BASXX/RBAS*MIN(CONTA2,KPARTICLES)
+        BASXX=BASXX/RBAS*CONTA3
         BASXX=CONSTA_DENS*BASXX/(2.0*BAS)**3
         !WRITE(*,*) IX,JY,KZ,'->',BAS,BASX,BASY,BASZ,BASXX
 
@@ -1032,6 +1065,371 @@ C        WRITE(*,*) LVAL(I,IPARE)
       write(*,*) minval(u3(1:nx,1:ny,1:nz)),maxval(u3(1:nx,1:ny,1:nz))
       write(*,*) minval(u4(1:nx,1:ny,1:nz)),maxval(u4(1:nx,1:ny,1:nz))
 
+      DO IR=1,NL
+       LOW1=SUM(NPATCH(0:IR-1))+1
+       LOW2=SUM(NPATCH(0:IR))
+       DXPA=DX/2.0**IR
+       DYPA=DY/2.0**IR
+       DZPA=DZ/2.0**IR
+
+!$OMP PARALLEL DO SHARED(LOW1,LOW2,PATCHNX,PATCHNY,PATCHNZ,PATCHRX,
+!$OMP+                   PATCHRY,PATCHRZ,BUFAMR,DXPA,DYPA,DZPA,
+!$OMP+                   MEDIOLADO0,DX,DY,DZ,NPART0,NPART,NL,RXPA,
+!$OMP+                   RYPA,RZPA,CR0AMR1,SOLAP,RX,RY,RZ,L1,
+!$OMP+                   KPARTICLES,U11,U12,U13,U14,U2DM,U3DM,U4DM,
+!$OMP+                   MASAP,NPART1,CONSTA_DENS),
+!$OMP+            PRIVATE(IPATCH,N1,N2,N3,XL,YL,ZL,XR,YR,ZR,I1,I2,J1,J2,
+!$OMP+                    K1,K2,CONTA_PA,INDICES_PA,CONTA,I,BASX,BASY,
+!$OMP+                    BASZ,RXPA_PA,RYPA_PA,RZPA_PA,U2DM_PA,U3DM_PA,
+!$OMP+                    U4DM_PA,MASAP_PA,IXPA_PA,JYPA_PA,KZPA_PA,IX,
+!$OMP+                    JY,KZ,RINT,MINI,MAXI,MINJ,MAXJ,MINK,MAXK,
+!$OMP+                    BASINT,DIST,MINS,U2INS,U3INS,U4INS,CONTA2,
+!$OMP+                    II,JJ,KK,BASXX,BASYY,BASZZ,BAS,RBAS,WBAS,
+!$OMP+                    CONTA3),
+!$OMP+            DEFAULT(NONE), SCHEDULE(DYNAMIC)
+       DO IPATCH=LOW1,LOW2 !--------------------------------------------
+        N1=PATCHNX(IPATCH)
+        N2=PATCHNY(IPATCH)
+        N3=PATCHNZ(IPATCH)
+        write(*,*) ipatch,count(solap(1:n1,1:n2,1:n3,ipatch).eq.1.and.
+     &                          cr0amr1(1:n1,1:n2,1:n3,ipatch).eq.1)
+
+        !I1=PATCHX(IPATCH)
+        !J1=PATCHY(IPATCH)
+        !K1=PATCHZ(IPATCH)
+        !I2=I1+N1/2
+        !J2=J1+N2/2
+        !K2=K1+N3/2
+
+        XL=PATCHRX(IPATCH)-(BUFAMR+1)*DXPA
+        YL=PATCHRY(IPATCH)-(BUFAMR+1)*DYPA
+        ZL=PATCHRZ(IPATCH)-(BUFAMR+1)*DZPA
+        XR=XL+(N1+2*BUFAMR)*DXPA
+        YR=YL+(N2+2*BUFAMR)*DYPA
+        ZR=ZL+(N3+2*BUFAMR)*DZPA
+
+        I1=INT((XL+MEDIOLADO0)/DX)+1
+        I2=INT((XR+MEDIOLADO0)/DX)+2
+        J1=INT((YL+MEDIOLADO0)/DY)+1
+        J2=INT((YR+MEDIOLADO0)/DY)+2
+        K1=INT((ZL+MEDIOLADO0)/DZ)+1
+        K2=INT((ZR+MEDIOLADO0)/DZ)+2
+
+        CONTA_PA=SUM(NPART0(I1:I2,J1:J2,K1:K2))
+
+        !write(*,*) ipatch,':',xl,yl,zl,i1,j1,k1
+        !write(*,*) ipatch,':',xr,yr,zr,i2,j2,k2
+        !write(*,*) ipatch,':',conta_pa
+        !stop
+
+        ALLOCATE(INDICES_PA(CONTA_PA))
+
+        CONTA=0
+        DO I=1,SUM(NPART(0:NL))
+         BASX=RXPA(I)
+         IF (XL.LT.BASX.AND.BASX.LT.XR) THEN
+          BASY=RYPA(I)
+          IF (YL.LT.BASY.AND.BASY.LT.YR) THEN
+           BASZ=RZPA(I)
+           IF (ZL.LT.BASZ.AND.BASZ.LT.ZR) THEN
+            CONTA=CONTA+1
+            INDICES_PA(CONTA)=I
+           END IF
+          END IF
+         END IF
+        END DO
+
+        !write(*,*) 'conta:',conta
+
+        CONTA_PA=CONTA
+
+        ALLOCATE(RXPA_PA(CONTA_PA),RYPA_PA(CONTA_PA),RZPA_PA(CONTA_PA),
+     &           U2DM_PA(CONTA_PA),U3DM_PA(CONTA_PA),U4DM_PA(CONTA_PA),
+     &           MASAP_PA(CONTA_PA),IXPA_PA(CONTA_PA),JYPA_PA(CONTA_PA),
+     &           KZPA_PA(CONTA_PA))
+
+        DO I=1,CONTA_PA
+         BASX=RXPA(INDICES_PA(I))
+         BASY=RYPA(INDICES_PA(I))
+         BASZ=RZPA(INDICES_PA(I))
+
+         RXPA_PA(I)=BASX
+         RYPA_PA(I)=BASY
+         RZPA_PA(I)=BASZ
+         U2DM_PA(I)=U2DM(INDICES_PA(I))
+         U3DM_PA(I)=U3DM(INDICES_PA(I))
+         U4DM_PA(I)=U4DM(INDICES_PA(I))
+         MASAP_PA(I)=MASAP(INDICES_PA(I))
+
+         IXPA_PA(I)=INT((BASX-XL)/DXPA)+1-BUFAMR
+         JYPA_PA(I)=INT((BASY-YL)/DYPA)+1-BUFAMR
+         KZPA_PA(I)=INT((BASZ-ZL)/DZPA)+1-BUFAMR
+        END DO
+
+        DEALLOCATE(INDICES_PA)
+
+C        write(*,*) 'pre-a.',minval(ixpa_pa),maxval(ixpa_pa),
+C     & minval(jypa_pa),maxval(jypa_pa),minval(kzpa_pa),maxval(kzpa_pa)
+C        write(*,*) 'rx,nx,xl,xr',PATCHRX(IPATCH),n1,xl,xr
+C        write(*,*) 'ry,ny,yl,yr',PATCHRY(IPATCH),n2,yl,yr
+C        write(*,*) 'rz,nz,zl,zr',PATCHRZ(IPATCH),n3,zl,zr
+c        stop
+
+        DO IX=1,N1 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        DO JY=1,N2
+        DO KZ=1,N3
+         IF (CR0AMR1(IX,JY,KZ,IPATCH).EQ.1.AND.
+     &       SOLAP(IX,JY,KZ,IPATCH).EQ.1) THEN
+          BASX=RX(IX,IPATCH)
+          BASY=RY(JY,IPATCH)
+          BASZ=RZ(KZ,IPATCH)
+
+          RINT=INT(L1(IX,JY,KZ,IPATCH))
+          IF (RINT.EQ.0) RINT=1
+
+          MINI=IX-RINT
+          MAXI=IX+RINT
+          MINJ=JY-RINT
+          MAXJ=JY+RINT
+          MINK=KZ-RINT
+          MAXK=KZ+RINT
+          BASINT=2*RINT
+          CONTA=SUM(NPART1(MINI:MAXI,MINJ:MAXJ,MINK:MAXK,IPATCH))
+          ALLOCATE(DIST(CONTA),MINS(CONTA),U2INS(CONTA),
+     &             U3INS(CONTA),U4INS(CONTA))
+
+c          write(*,*) '.a.',basx,basy,basz,L1(ix,jy,kz,ipatch),rint
+c          write(*,*) '.b.',mini,maxi,minj,maxj,mink,maxk
+c          write(*,*) '.c.',conta
+
+          CONTA2=0
+          conta_pa_loop: DO I=1,CONTA_PA
+           II=IXPA_PA(I)-MINI
+           IF (II.GE.0.AND.II.LE.BASINT) THEN
+            JJ=JYPA_PA(I)-MINJ
+            IF (JJ.GE.0.AND.JJ.LE.BASINT) THEN
+             KK=KZPA_PA(I)-MINK
+             IF (KK.GE.0.AND.KK.LE.BASINT) THEN
+              CONTA2=CONTA2+1
+              IF (CONTA2.GT.CONTA) THEN
+               WRITE(*,*) 'WARNING TOO MUCH PARTICLES', IX, JY, KZ,
+     &                    CONTA, CONTA2
+               EXIT conta_pa_loop
+              END IF
+              BASXX=ABS(BASX-RXPA_PA(I))
+              BASYY=ABS(BASY-RYPA_PA(I))
+              BASZZ=ABS(BASZ-RZPA_PA(I))
+              DIST(CONTA2)=SQRT(BASXX**2+BASYY**2+BASZZ**2)
+              MINS(CONTA2)=MASAP_PA(I)
+              U2INS(CONTA2)=U2DM_PA(I)
+              U3INS(CONTA2)=U3DM_PA(I)
+              U4INS(CONTA2)=U4DM_PA(I)
+             END IF
+            END IF
+           END IF
+          END DO conta_pa_loop
+
+c          write(*,*) '.d.',conta2
+
+          IF (CONTA2.LE.KPARTICLES) THEN
+           BAS=0.5*MAXVAL(DIST)+0.00001
+          ELSE
+           CALL SELECT(KPARTICLES,DIST,CONTA2,BAS)
+           BAS=0.5*MAX(1.5*DXPA,BAS)+0.00001
+          END IF
+
+c          write(*,*) '.e.',bas
+
+          L1(IX,JY,KZ,IPATCH)=BAS
+          CALL KERNEL_CUBICSPLINE(CONTA,CONTA2,BAS,DIST)
+
+c          write(*,*) '.f.',minval(dist),maxval(dist)
+
+          RBAS=0.0
+          BASXX=0.0
+          BASX=0.0
+          BASY=0.0
+          BASZ=0.0
+          CONTA3=0
+          DO I=1,CONTA2
+           !! INTERPOLATE MASS WITHOUT KERNEL
+           !RBAS=RBAS+MINS(I) ! THIS IS THE MASS SUM
+           !! INTERPOLATE MASS WITH KERNEL
+           IF (DIST(I).GT.0.0) THEN
+            CONTA3=CONTA3+1
+            RBAS=RBAS+DIST(I)
+            WBAS=DIST(I)*MINS(I)
+            BASXX=BASXX+WBAS ! THIS IS THE MASS-WEIGHTED KERNEL SUM
+            BASX=BASX+WBAS*U2INS(I)
+            BASY=BASY+WBAS*U3INS(I)
+            BASZ=BASZ+WBAS*U4INS(I)
+            !write(*,*) u2ins(i),u3ins(i),u4ins(i)
+           END IF
+          END DO
+
+C          write(*,*) '.g.',conta3,rbas,basxx,basx,basy,basz
+
+          BASX=BASX/BASXX
+          BASY=BASY/BASXX
+          BASZ=BASZ/BASXX
+          !! INTERPOLATE MASS WITHOUT KERNEL
+          !BASXX=CONSTA_DENS*RBAS/BAS**3
+          !! INTERPOLATE MASS WITH KERNEL
+          BASXX=BASXX/RBAS*CONTA3
+          BASXX=CONSTA_DENS*BASXX/(2.0*BAS)**3
+          !WRITE(*,*) IX,JY,KZ,IPATCH,'->',BAS,BASX,BASY,BASZ,BASXX
+
+          U11(IX,JY,KZ,IPATCH)=BASXX
+          U12(IX,JY,KZ,IPATCH)=BASX
+          U13(IX,JY,KZ,IPATCH)=BASY
+          U14(IX,JY,KZ,IPATCH)=BASZ
+
+          DEALLOCATE(DIST,MINS,U2INS,U3INS,U4INS)
+
+         END IF
+        END DO
+        END DO
+        END DO !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+        DEALLOCATE(RXPA_PA,RYPA_PA,RZPA_PA,U2DM_PA,U3DM_PA,U4DM_PA,
+     &             MASAP_PA,IXPA_PA,JYPA_PA,KZPA_PA)
+
+       END DO
+c       write(*,*) 'End level', IR
+c       write(*,*) 'density min, max',minval(u11(:,:,:,low1:low2)),
+c     &                               maxval(u11(:,:,:,low1:low2))
+c       write(*,*) 'vx min, max',minval(u12(:,:,:,low1:low2)),
+c     &                               maxval(u12(:,:,:,low1:low2))
+c       write(*,*) 'vy min, max',minval(u13(:,:,:,low1:low2)),
+c     &                               maxval(u13(:,:,:,low1:low2))
+c       write(*,*) 'vz min, max',minval(u14(:,:,:,low1:low2)),
+c     &                               maxval(u14(:,:,:,low1:low2))
+      END DO
+
+*     refill refined and overlapping cells
+      DO IR=NL,1,-1
+        CALL SYNC_AMR_FILTER(IR,NPATCH,PARE,PATCHNX,PATCHNY,PATCHNZ,
+     &    PATCHX,PATCHY,PATCHZ,PATCHRX,PATCHRY,PATCHRZ,U11,NL)
+        CALL SYNC_AMR_FILTER(IR,NPATCH,PARE,PATCHNX,PATCHNY,PATCHNZ,
+     &    PATCHX,PATCHY,PATCHZ,PATCHRX,PATCHRY,PATCHRZ,
+     &    U12(1:NAMRX,1:NAMRY,1:NAMRZ,:),NL)
+        CALL SYNC_AMR_FILTER(IR,NPATCH,PARE,PATCHNX,PATCHNY,PATCHNZ,
+     &    PATCHX,PATCHY,PATCHZ,PATCHRX,PATCHRY,PATCHRZ,
+     &    U13(1:NAMRX,1:NAMRY,1:NAMRZ,:),NL)
+        CALL SYNC_AMR_FILTER(IR,NPATCH,PARE,PATCHNX,PATCHNY,PATCHNZ,
+     &    PATCHX,PATCHY,PATCHZ,PATCHRX,PATCHRY,PATCHRZ,
+     &    U14(1:NAMRX,1:NAMRY,1:NAMRZ,:),NL)
+
+        LOW1=SUM(NPATCH(0:IR-1))+1
+        LOW2=SUM(NPATCH(0:IR))
+        DO ipatch=LOW1,LOW2
+          !WRITE(*,*) 'FINISHING PATCH', IPATCH
+          N1 = PATCHNX(IPATCH)
+          N2 = PATCHNY(IPATCH)
+          N3 = PATCHNZ(IPATCH)
+          JPATCH = PARE(IPATCH)
+          DO I=1,N1,2
+          DO J=1,N2,2
+          DO K=1,N3,2
+            II = PATCHX(ipatch) + int((I-1)/2)
+            JJ = PATCHY(ipatch) + int((J-1)/2)
+            KK = PATCHZ(ipatch) + int((K-1)/2)
+            if (jpatch.ne.0) then
+             uw(1:2,1:2,1:2) = 1.0
+             u(1:2,1:2,1:2) = u11(I:I+1,J:J+1,K:K+1,IPATCH)
+             call finer_to_coarser(u,uw,fuin)
+             u11(II,JJ,KK,JPATCH) = FUIN
+
+             uw(1:2,1:2,1:2) = u(1:2,1:2,1:2)
+             u(1:2,1:2,1:2) = u12(I:I+1,J:J+1,K:K+1,IPATCH)
+             call finer_to_coarser(u,uw,fuin)
+             u12(II,JJ,KK,JPATCH) = FUIN
+
+             u(1:2,1:2,1:2) = u13(I:I+1,J:J+1,K:K+1,IPATCH)
+             call finer_to_coarser(u,uw,fuin)
+             u13(II,JJ,KK,JPATCH) = FUIN
+
+             u(1:2,1:2,1:2) = u14(I:I+1,J:J+1,K:K+1,IPATCH)
+             call finer_to_coarser(u,uw,fuin)
+             u14(II,JJ,KK,JPATCH) = FUIN
+            else
+             uw(1:2,1:2,1:2) = 1.0
+             u(1:2,1:2,1:2) = u11(I:I+1,J:J+1,K:K+1,IPATCH)
+             call finer_to_coarser(u,uw,fuin)
+             u1(II,JJ,KK) = FUIN
+
+             uw(1:2,1:2,1:2) = u(1:2,1:2,1:2)
+             u(1:2,1:2,1:2) = u12(I:I+1,J:J+1,K:K+1,IPATCH)
+             call finer_to_coarser(u,uw,fuin)
+             u2(II,JJ,KK) = FUIN
+
+             u(1:2,1:2,1:2) = u13(I:I+1,J:J+1,K:K+1,IPATCH)
+             call finer_to_coarser(u,uw,fuin)
+             u3(II,JJ,KK) = FUIN
+
+             u(1:2,1:2,1:2) = u14(I:I+1,J:J+1,K:K+1,IPATCH)
+             call finer_to_coarser(u,uw,fuin)
+             u4(II,JJ,KK) = FUIN
+            end if
+          END DO
+          END DO
+          END DO
+        END DO
+      END DO !IR=NL,1,-1
+
+      write(*,*) 'At level', 0
+      write(*,*) 'density min, max',minval(u1),maxval(u1)
+      write(*,*) 'vx min,max',minval(u2),maxval(u2)
+      write(*,*) 'vy min,max',minval(u3),maxval(u3)
+      write(*,*) 'vz min,max',minval(u4),maxval(u4)
+
+      DO IR=1,NL
+       low1=sum(npatch(0:ir-1))+1
+       low2=sum(npatch(0:ir))
+       write(*,*) 'density min, max',minval(u11(:,:,:,low1:low2)),
+     &                               maxval(u11(:,:,:,low1:low2))
+       write(*,*) 'vx min, max',minval(u12(:,:,:,low1:low2)),
+     &                          maxval(u12(:,:,:,low1:low2))
+       write(*,*) 'vy min, max',minval(u13(:,:,:,low1:low2)),
+     &                          maxval(u13(:,:,:,low1:low2))
+       write(*,*) 'vz min, max',minval(u14(:,:,:,low1:low2)),
+     &                          maxval(u14(:,:,:,low1:low2))
+      END DO
+
+      OPEN(99,FILE='output_files/particle-grid',STATUS='UNKNOWN',
+     &     FORM='UNFORMATTED')
+
+      write(99) nl
+      write(99) (npatch(i),i=0,nl)
+      write(99) (patchnx(i),i=1,sum(npatch(0:nl)))
+      write(99) (patchny(i),i=1,sum(npatch(0:nl)))
+      write(99) (patchnz(i),i=1,sum(npatch(0:nl)))
+      write(99) (patchx(i),i=1,sum(npatch(0:nl)))
+      write(99) (patchy(i),i=1,sum(npatch(0:nl)))
+      write(99) (patchz(i),i=1,sum(npatch(0:nl)))
+      write(99) (patchrx(i),i=1,sum(npatch(0:nl)))
+      write(99) (patchry(i),i=1,sum(npatch(0:nl)))
+      write(99) (patchrz(i),i=1,sum(npatch(0:nl)))
+      write(99) (pare(i),i=1,sum(npatch(0:nl)))
+      write(99) (((u1(I,J,K),I=1,NX),J=1,NY),K=1,NZ)
+      write(99) (((u2(I,J,K),I=1,NX),J=1,NY),K=1,NZ)
+      write(99) (((u3(I,J,K),I=1,NX),J=1,NY),K=1,NZ)
+      write(99) (((u4(I,J,K),I=1,NX),J=1,NY),K=1,NZ)
+      write(99) (((cr0amr(I,J,K),I=1,NX),J=1,NY),K=1,NZ)
+      do ipatch=1,sum(npatch(0:nl))
+       n1=patchnx(ipatch)
+       n2=patchny(ipatch)
+       n3=patchnz(ipatch)
+       write(99) (((u11(I,J,K,ipatch),I=1,n1),J=1,n2),K=1,n3)
+       write(99) (((u12(I,J,K,ipatch),I=1,n1),J=1,n2),K=1,n3)
+       write(99) (((u13(I,J,K,ipatch),I=1,n1),J=1,n2),K=1,n3)
+       write(99) (((u14(I,J,K,ipatch),I=1,n1),J=1,n2),K=1,n3)
+       write(99) (((cr0amr1(I,J,K,ipatch),I=1,n1),J=1,n2),K=1,n3)
+       write(99) (((solap(I,J,K,ipatch),I=1,n1),J=1,n2),K=1,n3)
+      end do
+
+      CLOSE(99)
+      stop
 
       RETURN
       END
@@ -1040,17 +1438,18 @@ C        WRITE(*,*) LVAL(I,IPARE)
 
 
 ************************************************************************
-      SUBROUTINE KERNEL_CUBICSPLINE(N,W,DIST)
+      SUBROUTINE KERNEL_CUBICSPLINE(N,N2,W,DIST)
 ************************************************************************
 *     DIST contains initially the distance (particle to cell), and it is
 *     updated with the (unnormalised) value of the kernel
-      INTEGER N
+      INTEGER N,N2 ! N is the dimension of the array dist;
+                   ! N2, the actual number of particles filled in
       REAL W,DIST(N)
 
       REAL DISTS
       INTEGER I
 
-      DO I=1,N
+      DO I=1,N2
        DISTS=DIST(I)/W
        IF (DISTS.LE.1.0) THEN
         DIST(I)=1.0-1.5*DISTS**2*(1-0.5*DISTS)
@@ -1675,4 +2074,92 @@ C        WRITE(*,*) LVAL(I,IPARE)
       DEALLOCATE(NVECI)
 
       RETURN
+      END
+
+***************************************************************************
+      SUBROUTINE indexx(n,arr,indx)
+***************************************************************************
+* From Press,Teukoslky,Vetterling & Flannery, Numerical Recipes in Fortran90,
+* Cambridge University Press
+***************************************************************************
+
+      INTEGER n,indx(n),M,NSTACK
+      INTEGER arr(n)
+      PARAMETER (M=7,NSTACK=50)
+      INTEGER i,indxt,ir,itemp,j,jstack,k,l,istack(NSTACK)
+      REAL a
+      do 11 j=1,n
+        indx(j)=j
+11    continue
+      jstack=0
+      l=1
+      ir=n
+1     if(ir-l.lt.M)then
+        do 13 j=l+1,ir
+          indxt=indx(j)
+          a=arr(indxt)
+          do 12 i=j-1,1,-1
+            if(arr(indx(i)).le.a)goto 2
+            indx(i+1)=indx(i)
+12        continue
+          i=0
+2         indx(i+1)=indxt
+13      continue
+        if(jstack.eq.0)return
+        ir=istack(jstack)
+        l=istack(jstack-1)
+        jstack=jstack-2
+      else
+        k=(l+ir)/2
+        itemp=indx(k)
+        indx(k)=indx(l+1)
+        indx(l+1)=itemp
+        if(arr(indx(l+1)).gt.arr(indx(ir)))then
+          itemp=indx(l+1)
+          indx(l+1)=indx(ir)
+          indx(ir)=itemp
+        endif
+        if(arr(indx(l)).gt.arr(indx(ir)))then
+          itemp=indx(l)
+          indx(l)=indx(ir)
+          indx(ir)=itemp
+        endif
+        if(arr(indx(l+1)).gt.arr(indx(l)))then
+          itemp=indx(l+1)
+          indx(l+1)=indx(l)
+          indx(l)=itemp
+        endif
+        i=l+1
+        j=ir
+        indxt=indx(l)
+        a=arr(indxt)
+3       continue
+          i=i+1
+        if(arr(indx(i)).lt.a)goto 3
+4       continue
+          j=j-1
+        if(arr(indx(j)).gt.a)goto 4
+        if(j.lt.i)goto 5
+        itemp=indx(i)
+        indx(i)=indx(j)
+        indx(j)=itemp
+        goto 3
+5       indx(l)=indx(j)
+        indx(j)=indxt
+        jstack=jstack+2
+        if(jstack.gt.NSTACK) then
+         write(*,*) 'NSTACK too small in indexx'
+         stop
+        endif
+        if(ir-i+1.ge.j-l)then
+          istack(jstack)=ir
+          istack(jstack-1)=i
+          ir=j-1
+        else
+          istack(jstack)=j-1
+          istack(jstack-1)=l
+          l=i
+        endif
+      endif
+      goto 1
       END
