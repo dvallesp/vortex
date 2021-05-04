@@ -737,7 +737,8 @@ C        WRITE(*,*) LVAL(I,IPARE)
       ! to get overdensity from mass in a sphere (multiply by mass in
       ! code units, divide by radius squared)
       CONSTA_DENS=1/(4*PI/3)/RHOB0
-      WRITE(*,*) RHOB0,CONSTA_DENS
+      WRITE(*,*) 'Bkg density (code units), mass to overdensity const',
+     &            RHOB0,CONSTA_DENS
 
       CALL VEINSGRID_ALL_L(NL,NPATCH,PARE,PATCHNX,PATCHNY,PATCHNZ,
      &                     PATCHX,PATCHY,PATCHZ,PATCHRX,PATCHRY,PATCHRZ,
@@ -1476,15 +1477,7 @@ c     &                               maxval(u14(:,:,:,low1:low2))
       REAL DX,DY,DZ
       COMMON /ESPACIADO/ DX,DY,DZ
 
-      real RX(-2:NAMRX+3,NPALEV),RY(-2:NAMRX+3,NPALEV),
-     &     RZ(-2:NAMRX+3,NPALEV),RMX(-2:NAMRX+3,NPALEV),
-     &     RMY(-2:NAMRX+3,NPALEV),RMZ(-2:NAMRX+3,NPALEV)
-      COMMON /MINIGRIDS/ RX,RY,RZ,RMX,RMY,RMZ
-
-      real  RADX(0:NMAX+1),RADMX(0:NMAX+1),
-     &      RADY(0:NMAY+1),RADMY(0:NMAY+1),
-     &      RADZ(0:NMAZ+1),RADMZ(0:NMAZ+1)
-      COMMON /GRID/ RADX,RADMX,RADY,RADMY,RADZ,RADMZ
+      BORAMR=3
 
       DO IR=1,NL
        LOW1=SUM(NPATCH(0:IR-1))+1
@@ -1507,13 +1500,11 @@ c     &                               maxval(u14(:,:,:,low1:low2))
        END DO
       END DO
 
-      BORAMR=3
-
 !$OMP PARALLEL DO SHARED(NPART,NL,NPATCH,XL,XR,YL,YR,ZL,ZR,RXPA,RYPA,
 !$OMP+                   RZPA,LIHAL,LIHAL_IX,LIHAL_JY,LIHAL_KZ,BORAMR,
-!$OMP+                   LADO0,DX,DY,DZ),
+!$OMP+                   LADO0,DX,DY,DZ,NX,NY,NZ),
 !$OMP+            PRIVATE(IP,MARCA,IR,LOW1,LOW2,IPATCH,DXPA,DYPA,DZPA,
-!$OMP+                    BASX,BASY,BASZ),
+!$OMP+                    BASX,BASY,BASZ,IX,JY,KZ),
 !$OMP+            DEFAULT(NONE)
       DO IP=1,SUM(NPART(0:NL))
        LIHAL(IP)=-1
@@ -1545,9 +1536,15 @@ c     &                               maxval(u14(:,:,:,low1:low2))
 
        IF (MARCA.EQ.0) THEN
         LIHAL(IP)=0
-        LIHAL_IX(IP)=INT((RXPA(IP)+0.5*LADO0)/DX)+1
-        LIHAL_JY(IP)=INT((RYPA(IP)+0.5*LADO0)/DY)+1
-        LIHAL_KZ(IP)=INT((RZPA(IP)+0.5*LADO0)/DZ)+1
+        IX=INT((RXPA(IP)+0.5*LADO0)/DX)+1
+        JY=INT((RYPA(IP)+0.5*LADO0)/DY)+1
+        KZ=INT((RZPA(IP)+0.5*LADO0)/DZ)+1
+        IF (IX.GT.NX) IX=NX
+        IF (JY.GT.NY) JY=NY
+        IF (KZ.GT.NZ) KZ=NZ
+        LIHAL_IX(IP)=IX
+        LIHAL_JY(IP)=JY
+        LIHAL_KZ(IP)=KZ
        END IF
 
 
@@ -1560,6 +1557,152 @@ c     &                               maxval(u14(:,:,:,low1:low2))
        WRITE(*,*) 'At level', IR, '-->', COUNT(LIHAL.GE.LOW1.AND.
      &                                         LIHAL.LE.LOW2)
       END DO
+      WRITE(*,*) 'Particles not located -->', COUNT(LIHAL.EQ.-1)
+
+      RETURN
+      END
+
+
+************************************************************************
+      SUBROUTINE ERROR_PARTICLES(NX,NY,NZ,NL,NPATCH,PATCHNX,PATCHNY,
+     &            PATCHNZ,PATCHRX,PATCHRY,PATCHRZ,PARE,RXPA,RYPA,RZPA,
+     &            U2DM,U3DM,U4DM,NPART,LADO0,LIHAL,LIHAL_IX,LIHAL_JY,
+     &            LIHAL_KZ)
+************************************************************************
+
+      IMPLICIT NONE
+
+      INCLUDE 'vortex_parameters.dat'
+
+*     function parameters
+      INTEGER NX,NY,NZ,NL
+      INTEGER NPATCH(0:NLEVELS),NPART(0:NLEVELS),PARE(NPALEV)
+      INTEGER PATCHNX(NPALEV),PATCHNY(NPALEV),PATCHNZ(NPALEV)
+      REAL PATCHRX(NPALEV),PATCHRY(NPALEV),PATCHRZ(NPALEV)
+      REAL*4 RXPA(NDM),RYPA(NDM),RZPA(NDM),U2DM(NDM),U3DM(NDM),U4DM(NDM)
+      REAL LADO0
+
+*     Output variables
+      INTEGER LIHAL(NDM),LIHAL_IX(NDM),LIHAL_JY(NDM),LIHAL_KZ(NDM)
+      REAL ERR(NDM)
+
+*     Local variables
+      INTEGER IPATCH,IX,JY,KZ,LOW1,LOW2,IR,IP,II
+      REAL BASX,BASY,BASZ,BASXX,BASYY,BASZZ,BAS,BAS2,DXPA,DYPA,DZPA
+      REAL UBAS(3,3,3),RXBAS(3),RYBAS(3),RZBAS(3),AAA,BBB,CCC
+      REAL PATCHLEV(NPALEV)
+
+*     COMMON VARIABLES
+      REAL DX,DY,DZ
+      COMMON /ESPACIADO/ DX,DY,DZ
+
+      real RX(-2:NAMRX+3,NPALEV),RY(-2:NAMRX+3,NPALEV),
+     &     RZ(-2:NAMRX+3,NPALEV),RMX(-2:NAMRX+3,NPALEV),
+     &     RMY(-2:NAMRX+3,NPALEV),RMZ(-2:NAMRX+3,NPALEV)
+      COMMON /MINIGRIDS/ RX,RY,RZ,RMX,RMY,RMZ
+
+      real  RADX(0:NMAX+1),RADMX(0:NMAX+1),
+     &      RADY(0:NMAY+1),RADMY(0:NMAY+1),
+     &      RADZ(0:NMAZ+1),RADMZ(0:NMAZ+1)
+      COMMON /GRID/ RADX,RADMX,RADY,RADMY,RADZ,RADMZ
+
+      real U2(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
+      real U3(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
+      real U4(0:NMAX+1,0:NMAY+1,0:NMAZ+1)
+      real U12(0:NAMRX+1,0:NAMRY+1,0:NAMRZ+1,NPALEV)
+      real U13(0:NAMRX+1,0:NAMRY+1,0:NAMRZ+1,NPALEV)
+      real U14(0:NAMRX+1,0:NAMRY+1,0:NAMRZ+1,NPALEV)
+      COMMON /VELOC/ U2,U3,U4,U12,U13,U14
+
+      DO IR=1,NL
+       LOW1=SUM(NPATCH(0:IR-1))+1
+       LOW2=SUM(NPATCH(0:IR))
+       DO IPATCH=LOW1,LOW2
+        PATCHLEV(IPATCH)=IR
+       END DO
+      END DO
+
+      DO IP=1,SUM(NPART(0:NL))
+       IPATCH=LIHAL(IP)
+       IX=LIHAL_IX(IP)
+       JY=LIHAL_JY(IP)
+       KZ=LIHAL_KZ(IP)
+       AAA=RXPA(IP)
+       BBB=RYPA(IP)
+       CCC=RZPA(IP)
+       BASXX=U2DM(IP)
+       BASYY=U3DM(IP)
+       BASZZ=U4DM(IP)
+       BAS2=BASXX**2+BASYY**2+BASZZ**2
+
+       IF (IPATCH.GT.0) THEN
+        RXBAS=RX(IX-1:IX+1,IPATCH)
+        RYBAS=RY(JY-1:JY+1,IPATCH)
+        RZBAS=RZ(KZ-1:KZ+1,IPATCH)
+c        if (rxbas(1).gt.aaa.or.rxbas(3).lt.aaa.or.
+c     &      rybas(1).gt.bbb.or.rybas(3).lt.bbb.or.
+c     &      rzbas(1).gt.ccc.or.rzbas(3).lt.ccc ) then
+c         write(*,*) ip
+c         write(*,*) aaa,'-',(rxbas(ii),ii=1,3)
+c         write(*,*) bbb,'-',(rybas(ii),ii=1,3)
+c         write(*,*) ccc,'-',(rzbas(ii),ii=1,3)
+c        end if
+
+        UBAS(1:3,1:3,1:3)=U12(IX-1:IX+1,JY-1:JY+1,KZ-1:KZ+1,IPATCH)
+        CALL LININT52D_NEW_REAL(AAA,BBB,CCC,RXBAS,RYBAS,RZBAS,UBAS,
+     &                          BASX)
+
+        UBAS(1:3,1:3,1:3)=U13(IX-1:IX+1,JY-1:JY+1,KZ-1:KZ+1,IPATCH)
+        CALL LININT52D_NEW_REAL(AAA,BBB,CCC,RXBAS,RYBAS,RZBAS,UBAS,
+     &                          BASY)
+
+        UBAS(1:3,1:3,1:3)=U14(IX-1:IX+1,JY-1:JY+1,KZ-1:KZ+1,IPATCH)
+        CALL LININT52D_NEW_REAL(AAA,BBB,CCC,RXBAS,RYBAS,RZBAS,UBAS,
+     &                          BASZ)
+
+       ELSE
+        IF (IX.GT.1.AND.IX.LT.NX.AND.
+     &      JY.GT.1.AND.JY.LT.NY.AND.
+     &      KZ.GT.1.AND.KZ.LT.NZ) THEN
+         RXBAS=RADX(IX-1:IX+1)
+         RYBAS=RADY(JY-1:JY+1)
+         RZBAS=RADZ(KZ-1:KZ+1)
+
+         UBAS(1:3,1:3,1:3)=U2(IX-1:IX+1,JY-1:JY+1,KZ-1:KZ+1)
+         CALL LININT52D_NEW_REAL(AAA,BBB,CCC,RXBAS,RYBAS,RZBAS,UBAS,
+     &                           BASX)
+
+         UBAS(1:3,1:3,1:3)=U3(IX-1:IX+1,JY-1:JY+1,KZ-1:KZ+1)
+         CALL LININT52D_NEW_REAL(AAA,BBB,CCC,RXBAS,RYBAS,RZBAS,UBAS,
+     &                           BASY)
+
+         UBAS(1:3,1:3,1:3)=U4(IX-1:IX+1,JY-1:JY+1,KZ-1:KZ+1)
+         CALL LININT52D_NEW_REAL(AAA,BBB,CCC,RXBAS,RYBAS,RZBAS,UBAS,
+     &                           BASZ)
+        ELSE
+         BASX=U2(IX,JY,KZ)
+         BASY=U3(IX,JY,KZ)
+         BASZ=U4(IX,JY,KZ)
+        END IF
+       END IF
+
+       BAS=0.0
+       BAS=BAS+((BASXX**2/BAS2)*ABS((BASX-BASXX)/(BASXX+1E-5)))**2
+       BAS=BAS+((BASYY**2/BAS2)*ABS((BASY-BASYY)/(BASYY+1E-5)))**2
+       BAS=BAS+((BASZZ**2/BAS2)*ABS((BASZ-BASZZ)/(BASZZ+1E-5)))**2
+       ERR(IP)=SQRT(BAS)
+
+      END DO
+
+      OPEN(98,FILE='output_files/error-particles',STATUS='UNKNOWN',
+     &     FORM='UNFORMATTED')
+
+      WRITE(98) (ERR(IP),IP=1,SUM(NPART(0:NL)))
+
+      CLOSE(98)
+
+      WRITE(*,*) 'Velocity errors:', MINVAL(ERR(1:SUM(NPART(0:NL)))),
+     &                               MAXVAL(ERR(1:SUM(NPART(0:NL))))
 
       RETURN
       END
