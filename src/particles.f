@@ -1665,9 +1665,9 @@ c        end if
        END IF
 
        BAS=0.0
-       BAS=BAS+((BASXX**2/BAS2)*ABS((BASX-BASXX)/(BASXX+1E-5)))**2
-       BAS=BAS+((BASYY**2/BAS2)*ABS((BASY-BASYY)/(BASYY+1E-5)))**2
-       BAS=BAS+((BASZZ**2/BAS2)*ABS((BASZ-BASZZ)/(BASZZ+1E-5)))**2
+       BAS=BAS+((BASXX**2/BAS2)*ABS((BASX-BASXX))/(ABS(BASXX)+1E-5))**2
+       BAS=BAS+((BASYY**2/BAS2)*ABS((BASY-BASYY))/(ABS(BASYY)+1E-5))**2
+       BAS=BAS+((BASZZ**2/BAS2)*ABS((BASZ-BASZZ))/(ABS(BASZZ)+1E-5))**2
        ERR(IP)=SQRT(BAS)
 
       END DO

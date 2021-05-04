@@ -538,6 +538,10 @@
       INTEGER cr0amr1(NAMRX,NAMRY,NAMRZ,NPALEV)
       INTEGER solap(NAMRX,NAMRY,NAMRZ,NPALEV)
 
+      real u1(1:NMAX,1:NMAY,1:NMAZ)
+      real u11(1:NAMRX,1:NAMRY,1:NAMRZ,NPALEV)
+      common /dens/ u1,u11
+
       INTEGER IX,JY,KZ,I,LOW1,LOW2,IR,IPATCH,J,K,N1,N2,N3
 
       CHARACTER*13 FILNOMGRIDVARS
@@ -548,6 +552,7 @@
 
       CALL NOMFILE_GRIDVARS(ITER,FILNOMGRIDVARS,FILNOMGRIDS)
 
+      write(*,*) 'Writing grids data', filnomgrids
       OPEN (23,FILE='output_files/'//FILNOMGRIDS,STATUS='UNKNOWN')
       WRITE(23,*) ITER,' ',0.0,' ',NL,' ',0.0,' ',0.0
       WRITE(23,*) 0.0
@@ -570,11 +575,13 @@
        OPEN(99,FILE='output_files/'//FILNOMGRIDVARS,STATUS='UNKNOWN',
      &     FORM='UNFORMATTED')
 
+       write(99) (((u1(I,J,K),I=1,NX),J=1,NY),K=1,NZ)
        write(99) (((cr0amr(I,J,K),I=1,NX),J=1,NY),K=1,NZ)
        do ipatch=1,sum(npatch(0:nl))
         n1=patchnx(ipatch)
         n2=patchny(ipatch)
         n3=patchnz(ipatch)
+        write(99) (((u11(I,J,K,ipatch),I=1,n1),J=1,n2),K=1,n3)
         write(99) (((cr0amr1(I,J,K,ipatch),I=1,n1),J=1,n2),K=1,n3)
         write(99) (((solap(I,J,K,ipatch),I=1,n1),J=1,n2),K=1,n3)
        end do
