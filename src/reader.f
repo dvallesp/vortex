@@ -256,7 +256,8 @@ c           SOLAP(:,:,:,I)=SCR4_INT(:,:,:)
 ***********************************************************************
        SUBROUTINE LEER_PARTICLES(ITER,NX,NY,NZ,T,ZETA,NL,
      &            NL_PARTICLE_GRID,NPATCH,PARE,PATCHNX,PATCHNY,PATCHNZ,
-     &            PATCHX,PATCHY,PATCHZ,PATCHRX,PATCHRY,PATCHRZ,LADO0)
+     &            PATCHX,PATCHY,PATCHZ,PATCHRX,PATCHRY,PATCHRZ,LADO0,
+     &            NPART,RXPA,RYPA,RZPA,MASAP,U2DM,U3DM,U4DM)
 ***********************************************************************
 *     Reads the DM particles of the simulation, builds a set of AMR
 *     grids and interpolates a continuous velocity field.

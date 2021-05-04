@@ -1407,39 +1407,10 @@ c     &                               maxval(u14(:,:,:,low1:low2))
      &                          maxval(u14(:,:,:,low1:low2))
       END DO
 
-      OPEN(99,FILE='output_files/particle-grid',STATUS='UNKNOWN',
-     &     FORM='UNFORMATTED')
-
-      write(99) nl
-      write(99) (npatch(i),i=0,nl)
-      write(99) (patchnx(i),i=1,sum(npatch(0:nl)))
-      write(99) (patchny(i),i=1,sum(npatch(0:nl)))
-      write(99) (patchnz(i),i=1,sum(npatch(0:nl)))
-      write(99) (patchx(i),i=1,sum(npatch(0:nl)))
-      write(99) (patchy(i),i=1,sum(npatch(0:nl)))
-      write(99) (patchz(i),i=1,sum(npatch(0:nl)))
-      write(99) (patchrx(i),i=1,sum(npatch(0:nl)))
-      write(99) (patchry(i),i=1,sum(npatch(0:nl)))
-      write(99) (patchrz(i),i=1,sum(npatch(0:nl)))
-      write(99) (pare(i),i=1,sum(npatch(0:nl)))
-      write(99) (((u1(I,J,K),I=1,NX),J=1,NY),K=1,NZ)
-      write(99) (((u2(I,J,K),I=1,NX),J=1,NY),K=1,NZ)
-      write(99) (((u3(I,J,K),I=1,NX),J=1,NY),K=1,NZ)
-      write(99) (((u4(I,J,K),I=1,NX),J=1,NY),K=1,NZ)
-      write(99) (((cr0amr(I,J,K),I=1,NX),J=1,NY),K=1,NZ)
-      do ipatch=1,sum(npatch(0:nl))
-       n1=patchnx(ipatch)
-       n2=patchny(ipatch)
-       n3=patchnz(ipatch)
-       write(99) (((u11(I,J,K,ipatch),I=1,n1),J=1,n2),K=1,n3)
-       write(99) (((u12(I,J,K,ipatch),I=1,n1),J=1,n2),K=1,n3)
-       write(99) (((u13(I,J,K,ipatch),I=1,n1),J=1,n2),K=1,n3)
-       write(99) (((u14(I,J,K,ipatch),I=1,n1),J=1,n2),K=1,n3)
-       write(99) (((cr0amr1(I,J,K,ipatch),I=1,n1),J=1,n2),K=1,n3)
-       write(99) (((solap(I,J,K,ipatch),I=1,n1),J=1,n2),K=1,n3)
-      end do
-
-      CLOSE(99)
+      CALL WRITE_GRID_PARTICLES(NL,NX,NY,NZ,NPATCH,PATCHNX,PATCHNY,
+     &                          PATCHNZ,PATCHX,PATCHY,PATCHZ,PATCHRX,
+     &                          PATCHRY,PATCHRZ,PARE,CR0AMR,CR0AMR1,
+     &                          SOLAP)
 
       RETURN
       END
@@ -1550,14 +1521,16 @@ c     &                               maxval(u14(:,:,:,low1:low2))
 
       END DO !IP
 
-      WRITE(*,*) 'At level', 0, '-->', COUNT(LIHAL.EQ.0)
+      WRITE(*,*) 'At level', 0, '-->',
+     &            COUNT(LIHAL(1:SUM(NPART(0:NL))).EQ.0)
       DO IR=1,NL
        LOW1=SUM(NPATCH(0:IR-1))+1
        LOW2=SUM(NPATCH(0:IR))
-       WRITE(*,*) 'At level', IR, '-->', COUNT(LIHAL.GE.LOW1.AND.
-     &                                         LIHAL.LE.LOW2)
+       WRITE(*,*) 'At level', IR, '-->', COUNT(LIHAL(1:SUM(NPART(0:NL)))
+     &                  .GE.LOW1.AND.LIHAL(1:SUM(NPART(0:NL))).LE.LOW2)
       END DO
-      WRITE(*,*) 'Particles not located -->', COUNT(LIHAL.EQ.-1)
+      WRITE(*,*) 'Particles not located -->',
+     &            COUNT(LIHAL(1:SUM(NPART(0:NL))).EQ.-1)
 
       RETURN
       END
@@ -1593,6 +1566,9 @@ c     &                               maxval(u14(:,:,:,low1:low2))
       REAL PATCHLEV(NPALEV)
 
 *     COMMON VARIABLES
+      INTEGER NXBAS,NYBAS,NZBAS,ITER
+      COMMON /ITERI/ NXBAS,NYBAS,NZBAS,ITER
+
       REAL DX,DY,DZ
       COMMON /ESPACIADO/ DX,DY,DZ
 
@@ -1613,6 +1589,8 @@ c     &                               maxval(u14(:,:,:,low1:low2))
       real U13(0:NAMRX+1,0:NAMRY+1,0:NAMRZ+1,NPALEV)
       real U14(0:NAMRX+1,0:NAMRY+1,0:NAMRZ+1,NPALEV)
       COMMON /VELOC/ U2,U3,U4,U12,U13,U14
+
+      CHARACTER*21 FILERR
 
       DO IR=1,NL
        LOW1=SUM(NPATCH(0:IR-1))+1
@@ -1694,20 +1672,115 @@ c        end if
 
       END DO
 
-      OPEN(98,FILE='output_files/error-particles',STATUS='UNKNOWN',
+      WRITE(*,*) 'Velocity errors:', MINVAL(ERR(1:SUM(NPART(0:NL)))),
+     &                               MAXVAL(ERR(1:SUM(NPART(0:NL))))
+
+*     Save errors to a file
+      CALL NOMFILE_PARTICLES_ERR(ITER,FILERR)
+
+      OPEN(98,FILE='output_files/'//FILERR,STATUS='UNKNOWN',
      &     FORM='UNFORMATTED')
 
       WRITE(98) (ERR(IP),IP=1,SUM(NPART(0:NL)))
 
       CLOSE(98)
 
-      WRITE(*,*) 'Velocity errors:', MINVAL(ERR(1:SUM(NPART(0:NL)))),
-     &                               MAXVAL(ERR(1:SUM(NPART(0:NL))))
-
       RETURN
       END
 
+************************************************************************
+      SUBROUTINE GRID_TO_PARTICLES(NX,NY,NZ,NL,NPATCH,PATCHNX,PATCHNY,
+     &            PATCHNZ,PATCHRX,PATCHRY,PATCHRZ,PARE,RXPA,RYPA,RZPA,
+     &            NPART,LADO0,LIHAL,LIHAL_IX,LIHAL_JY,LIHAL_KZ,
+     &            VAR0,VAR1,VARPART)
+************************************************************************
 
+      IMPLICIT NONE
+
+      INCLUDE 'vortex_parameters.dat'
+
+*     function parameters
+      INTEGER NX,NY,NZ,NL
+      INTEGER NPATCH(0:NLEVELS),NPART(0:NLEVELS),PARE(NPALEV)
+      INTEGER PATCHNX(NPALEV),PATCHNY(NPALEV),PATCHNZ(NPALEV)
+      REAL PATCHRX(NPALEV),PATCHRY(NPALEV),PATCHRZ(NPALEV)
+      REAL*4 RXPA(NDM),RYPA(NDM),RZPA(NDM)
+      REAL LADO0
+      INTEGER LIHAL(NDM),LIHAL_IX(NDM),LIHAL_JY(NDM),LIHAL_KZ(NDM)
+      REAL VAR0(NMAX,NMAY,NMAZ)
+      REAL VAR1(NAMRX,NAMRY,NAMRZ,NPALEV)
+
+*     Output variables
+      REAL VARPART(NDM)
+
+*     Local variables
+      INTEGER IPATCH,IX,JY,KZ,LOW1,LOW2,IR,IP,II
+      REAL FUIN,DXPA,DYPA,DZPA
+      REAL UBAS(3,3,3),RXBAS(3),RYBAS(3),RZBAS(3),AAA,BBB,CCC
+      REAL PATCHLEV(NPALEV)
+
+*     COMMON VARIABLES
+      INTEGER NXBAS,NYBAS,NZBAS,ITER
+      COMMON /ITERI/ NXBAS,NYBAS,NZBAS,ITER
+
+      REAL DX,DY,DZ
+      COMMON /ESPACIADO/ DX,DY,DZ
+
+      real RX(-2:NAMRX+3,NPALEV),RY(-2:NAMRX+3,NPALEV),
+     &     RZ(-2:NAMRX+3,NPALEV),RMX(-2:NAMRX+3,NPALEV),
+     &     RMY(-2:NAMRX+3,NPALEV),RMZ(-2:NAMRX+3,NPALEV)
+      COMMON /MINIGRIDS/ RX,RY,RZ,RMX,RMY,RMZ
+
+      real  RADX(0:NMAX+1),RADMX(0:NMAX+1),
+     &      RADY(0:NMAY+1),RADMY(0:NMAY+1),
+     &      RADZ(0:NMAZ+1),RADMZ(0:NMAZ+1)
+      COMMON /GRID/ RADX,RADMX,RADY,RADMY,RADZ,RADMZ
+
+!$OMP PARALLEL DO SHARED(NL,NPART,LIHAL,LIHAL_IX,LIHAL_JY,LIHAL_KZ,RX,
+!$OMP+                   RY,RZ,NX,NY,NZ,RADX,RADY,RADZ,VAR0,VAR1,RXPA,
+!$OMP+                   RYPA,RZPA,VARPART),
+!$OMP+            PRIVATE(IP,IPATCH,IX,JY,KZ,AAA,BBB,CCC,RXBAS,RYBAS,
+!$OMP+                    RZBAS,UBAS,FUIN),
+!$OMP+            DEFAULT(NONE)
+      DO IP=1,SUM(NPART(0:NL))
+       IPATCH=LIHAL(IP)
+       IX=LIHAL_IX(IP)
+       JY=LIHAL_JY(IP)
+       KZ=LIHAL_KZ(IP)
+       AAA=RXPA(IP)
+       BBB=RYPA(IP)
+       CCC=RZPA(IP)
+
+       IF (IPATCH.GT.0) THEN
+        RXBAS=RX(IX-1:IX+1,IPATCH)
+        RYBAS=RY(JY-1:JY+1,IPATCH)
+        RZBAS=RZ(KZ-1:KZ+1,IPATCH)
+
+        UBAS(1:3,1:3,1:3)=VAR1(IX-1:IX+1,JY-1:JY+1,KZ-1:KZ+1,IPATCH)
+        CALL LININT52D_NEW_REAL(AAA,BBB,CCC,RXBAS,RYBAS,RZBAS,UBAS,
+     &                          FUIN)
+       ELSE
+        IF (IX.GT.1.AND.IX.LT.NX.AND.
+     &      JY.GT.1.AND.JY.LT.NY.AND.
+     &      KZ.GT.1.AND.KZ.LT.NZ) THEN
+         RXBAS=RADX(IX-1:IX+1)
+         RYBAS=RADY(JY-1:JY+1)
+         RZBAS=RADZ(KZ-1:KZ+1)
+
+         UBAS(1:3,1:3,1:3)=VAR0(IX-1:IX+1,JY-1:JY+1,KZ-1:KZ+1)
+         CALL LININT52D_NEW_REAL(AAA,BBB,CCC,RXBAS,RYBAS,RZBAS,UBAS,
+     &                           FUIN)
+        ELSE
+         FUIN=VAR0(IX,JY,KZ)
+        END IF
+       END IF
+
+       VARPART(IP)=FUIN
+
+      END DO
+
+      RETURN
+      END
 
 ************************************************************************
       SUBROUTINE KERNEL_CUBICSPLINE(N,N2,W,DIST)
