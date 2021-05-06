@@ -57,9 +57,9 @@
 !     hard-coded parameters (for now, at least)
       REFINE_THR=3
       BOR=8
-      BORAMR=3
+      BORAMR=0
       INI_EXTENSION=2 !initial extension of a patch around a cell (on each direction)
-      MIN_PATCHSIZE=16 !minimum size (child cells) to be accepted
+      MIN_PATCHSIZE=14 !minimum size (child cells) to be accepted
       NPALEV3=(INT(NAMRX/5)**3)+1
       write(*,*) 'NPALEV3=',NPALEV3
 
@@ -624,8 +624,8 @@ C        WRITE(*,*) LVAL(I,IPARE)
       IR=IR-1
       LOW1=SUM(NPATCH(0:IR-1))+1
       LOW2=SUM(NPATCH(0:IR))
-!$OMP PARALLEL DO SHARED(LOW1,LOW2,N1,N2,N3,IX,JY,KZ,CR0AMR1),
-!$OMP+            PRIVATE(IPATCH,PATCHNX,PATCHNY,PATCHNZ)
+!$OMP PARALLEL DO SHARED(LOW1,LOW2,PATCHNX,PATCHNY,PATCHNZ,CR0AMR1),
+!$OMP+            PRIVATE(IPATCH,N1,N2,N3,IX,JY,KZ)
       DO IPATCH=LOW1,LOW2
        N1=PATCHNX(IPATCH)
        N2=PATCHNY(IPATCH)
@@ -934,6 +934,7 @@ C        WRITE(*,*) LVAL(I,IPARE)
             ELSE
              WRITE(*,*) IX,JY,KZ,IPATCH,'.',RINT,'.',
      &               SUM(NPART1(MINI:MAXI,MINJ:MAXJ,MINK:MAXK,IPATCH))
+             STOP 'STOP: continuing would go beyond bounds'
             END IF
            END IF
           END DO
