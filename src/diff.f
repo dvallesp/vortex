@@ -64,6 +64,10 @@
 
        LOW1=SUM(NPATCH(0:IR-1))+1
        LOW2=SUM(NPATCH(0:IR))
+!$OMP PARALLEL DO SHARED(LOW1,LOW2,PATCHNX,PATCHNY,PATCHNZ,U12,U13,U14,
+!$OMP+                   ROTAX_1,ROTAY_1,ROTAZ_1,DXPA,DYPA,DZPA),
+!$OMP+            PRIVATE(I,N1,N2,N3,IX,JY,KZ,BAS21,BAS32,BAS43),
+!$OMP+            DEFAULT(NONE)
        DO I=LOW1,LOW2
 
        N1=PATCHNX(I)
@@ -106,6 +110,10 @@
 *      COARSE LEVEL
 *-------------------------------*
 
+!$OMP PARALLEL DO SHARED(NX,NY,NZ,U2,U3,U4,DX,DY,DZ,ROTAX_0,ROTAY_0,
+!$OMP+                   ROTAZ_0),
+!$OMP+            PRIVATE(IX,JY,KZ,BAS21,BAS32),
+!$OMP+            DEFAULT(NONE)
        DO KZ=1,NZ
        DO JY=1,NY
        DO IX=1,NX
@@ -201,6 +209,10 @@
 
        LOW1=SUM(NPATCH(0:IR-1))+1
        LOW2=SUM(NPATCH(0:IR))
+!$OMP PARALLEL DO SHARED(LOW1,LOW2,PATCHNX,PATCHNY,PATCHNZ,U12,U13,U14,
+!$OMP+                   DIVER,DXPA),
+!$OMP+            PRIVATE(I,N1,N2,N3,IX,JY,KZ,BAS21,BAS32,BAS43),
+!$OMP+            DEFAULT(NONE)
        DO I=LOW1,LOW2
        N1=PATCHNX(I)
        N2=PATCHNY(I)
@@ -230,6 +242,10 @@
 *-------------------------------*
 *      COARSE LEVEL
 *-------------------------------*
+
+!$OMP PARALLEL DO SHARED(NX,NY,NZ,U2,U3,U4,DIVER0,DX),
+!$OMP+            PRIVATE(IX,JY,KZ,BAS21,BAS32,BAS43),
+!$OMP+            DEFAULT(NONE)
        DO KZ=1,NZ
        DO JY=1,NY
        DO IX=1,NX
@@ -330,6 +346,11 @@
 
        LOW1=SUM(NPATCH(0:IR-1))+1
        LOW2=SUM(NPATCH(0:IR))
+!$OMP PARALLEL DO SHARED(LOW1,LOW2,PATCHNX,PATCHNY,PATCHNZ,DXPA,DYPA,
+!$OMP+                   DZPA,U12P,U13P,U14P,DIVER),
+!$OMP+            PRIVATE(I,N1,N2,N3,IX,JY,KZ,BAS21,BAS32,BAS43,
+!$OMP+                    GRAD_P_X,GRAD_P_Y,GRAD_P_Z),
+!$OMP+            DEFAULT(NONE)
        DO I=LOW1,LOW2
 
        N1=PATCHNX(I)
@@ -370,6 +391,10 @@
 *      COARSE LEVEL
 *-------------------------------*
 
+!$OMP PARALLEL DO SHARED(NX,NY,NZ,DX,DY,DZ,DIVER0,U2P,U3P,U4P),
+!$OMP+            PRIVATE(IX,JY,KZ,BAS21,BAS32,GRAD_P_X,GRAD_P_Y,
+!$OMP+                    GRAD_P_Z),
+!$OMP+            DEFAULT(NONE)
        DO KZ=1, NZ
        DO JY=1, NY
        DO IX=1, NX

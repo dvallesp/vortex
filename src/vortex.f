@@ -444,9 +444,9 @@
 !$OMP+                   DIVER0BKP,ROTAX_0BKP,ROTAY_0BKP,ROTAZ_0BKP),
 !$OMP+            PRIVATE(I,J,K),
 !$OMP+            DEFAULT(NONE)
-        DO I=1,NX
-        DO J=1,NY
         DO K=1,NZ
+        DO J=1,NY
+        DO I=1,NX
          DIVER0BKP(I,J,K)=DIVER0(I,J,K)
          ROTAX_0BKP(I,J,K)=ROTAX_0(I,J,K)
          ROTAY_0BKP(I,J,K)=ROTAY_0(I,J,K)

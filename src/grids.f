@@ -444,6 +444,10 @@
       DYPA=DY/(2.0**IR)
       DZPA=DZ/(2.0**IR)
 
+!$OMP PARALLEL DO SHARED(NPATCH,IR,PATCHNX,PATCHNY,PATCHNZ,CR3AMR1X,
+!$OMP+                   CR3AMR1Y,CR3AMR1Z,U2,U3,U4,U12,U13,U14),
+!$OMP+            PRIVATE(I,N1,N2,N3,IX,JY,KZ,KR1,KR2,KR3,UBAS,FUIN),
+!$OMP+            DEFAULT(NONE)
       DO I=1,NPATCH(IR)
 
        N1=PATCHNX(I)
@@ -495,6 +499,12 @@
 
         LOW1=SUM(NPATCH(0:IR-1))+1
         LOW2=SUM(NPATCH(0:IR))
+!$OMP PARALLEL DO SHARED(LOW1,LOW2,PATCHNX,PATCHNY,PATCHNZ,CR3AMR1,
+!$OMP+                   CR3AMR1X,CR3AMR1Y,CR3AMR1Z,RX,RY,RZ,U2,U3,U4,
+!$OMP+                   U12,U13,U14,RADX,RADY,RADZ),
+!$OMP+            PRIVATE(I,N1,N2,N3,IX,JY,KZ,KARE,KR1,KR2,KR3,AAA,BBB,
+!$OMP+                    CCC,RXBAS,RYBAS,RZBAS,UBAS,FUIN),
+!$OMP+            DEFAULT(NONE)
         DO I=LOW1,LOW2
 
         N1=PATCHNX(I)
@@ -585,6 +595,9 @@
        DO K=0,NZ+1
        DO J=0,NY+1
        DO I=0,NX+1
+        IF (I.LT.1.OR.I.GT.NX.OR.
+     &      J.LT.1.OR.J.GT.NY.OR.
+     &      K.LT.1.OR.K.GT.NZ) THEN
 
         IX=I
         JY=J
@@ -599,6 +612,8 @@
         U2(I,J,K)=U2(IX,JY,KZ)
         U3(I,J,K)=U3(IX,JY,KZ)
         U4(I,J,K)=U4(IX,JY,KZ)
+
+        END IF
        END DO
        END DO
        END DO
