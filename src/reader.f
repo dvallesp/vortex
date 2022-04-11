@@ -65,6 +65,9 @@
        INTEGER NUM,OMP_GET_NUM_THREADS,NUMOR, FLAG_PARALLEL
        COMMON /PROCESADORES/ NUM
 
+       INTEGER IS_MASCLET_B
+       IS_MASCLET_B=1
+
 *      READING DATA
        CALL NOMFILE(ITER,FILNOM1,FILNOM2,FILNOM3)
        WRITE(*,*) 'Reading iteration: ',ITER,' ',FILNOM1, ' ', FILNOM2, ' ',
@@ -143,6 +146,11 @@ C       SCR4_INT=0
        READ(31) !!new: metalicity!! depends on MASCLET version!: TRACER
        READ(31) (((SCR4_INT(I,J,K),I=1,N1),J=1,N2),K=1,N3)
        CR0AMR(1:NX,1:NY,1:NZ)=SCR4_INT(1:NX,1:NY,1:NZ)
+       IF (IS_MASCLET_B.EQ.1) THEN 
+        READ(31) !BX
+        READ(31) !BY
+        READ(31) !BZ
+       END IF
 
        DEALLOCATE(SCR4)
        DEALLOCATE(SCR4_INT)
@@ -151,14 +159,14 @@ C       SCR4_INT=0
        DO IR=1,NL
          LOW1=SUM(NPATCH(0:IR-1))+1
          LOW2=SUM(NPATCH(0:IR))
+         ALLOCATE(SCR4(NAMRX,NAMRY,NAMRZ))
+         SCR4=0.0
+         ALLOCATE(SCR4_INT(NAMRX,NAMRY,NAMRZ))
+         SCR4_INT=0
          DO I=LOW1,LOW2
           N1=PATCHNX(I)
           N2=PATCHNY(I)
           N3=PATCHNZ(I)
-          ALLOCATE(SCR4(NAMRX,NAMRY,NAMRZ))
-          SCR4=0.0
-         ALLOCATE(SCR4_INT(NAMRX,NAMRY,NAMRZ))
-C        SCR4_INT=0
           READ(31) !(((U11(IX,J,K,I),IX=1,N1),J=1,N2),K=1,N3)
           READ(31) (((SCR4(IX,J,K),IX=1,N1),J=1,N2),K=1,N3)
              U12(1:N1,1:N2,1:N3,I)=SCR4(1:N1,1:N2,1:N3)
@@ -175,9 +183,13 @@ C        SCR4_INT=0
           CR0AMR1(:,:,:,I)=SCR4_INT(:,:,:)
           READ(31) !!(((SCR4_INT(IX,J,K),IX=1,N1),J=1,N2),K=1,N3)
 c           SOLAP(:,:,:,I)=SCR4_INT(:,:,:)
-          DEALLOCATE(SCR4)
-          DEALLOCATE(SCR4_INT)
+          IF (IS_MASCLET_B.EQ.1) THEN 
+           READ(31) !BX
+           READ(31) !BY
+           READ(31) !BZ
+          END IF
          END DO
+         DEALLOCATE(SCR4,SCR4_INT)
        END DO
 
        CLOSE(31)
