@@ -104,7 +104,7 @@
         PATCHRZ(I)=CCC
         READ(33,*) PARE(I)
        END DO
-       IF (FLAG_VERBOSE.EQ.1) THEN
+       IF (FLAG_VERBOSE.EQ.1.AND.NPATCH(IR).GT.0) THEN
          WRITE(*,*) 'IR, PATCHX', IR, MINVAL(PATCHX(LOW1:LOW2)),
      &                                MAXVAL(PATCHX(LOW1:LOW2))
          WRITE(*,*) 'IR, PATCHY', IR, MINVAL(PATCHY(LOW1:LOW2)),
