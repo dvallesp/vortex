@@ -352,40 +352,40 @@
      &     POSITION='APPEND')
 
 *     WRITE THE TOTAL VELOCITY
-      ALLOCATE(SCR4(NMAX,NMAY,NMAZ))
-
-      SCR4(1:NX,1:NY,1:NZ)=U2(1:NX,1:NY,1:NZ)
-      WRITE(25) (((SCR4(I,J,K),I=1,NX),J=1,NY),K=1,NZ)
-      SCR4(1:NX,1:NY,1:NZ)=U3(1:NX,1:NY,1:NZ)
-      WRITE(25) (((SCR4(I,J,K),I=1,NX),J=1,NY),K=1,NZ)
-      SCR4(1:NX,1:NY,1:NZ)=U4(1:NX,1:NY,1:NZ)
-      WRITE(25) (((SCR4(I,J,K),I=1,NX),J=1,NY),K=1,NZ)
-
-      DEALLOCATE(SCR4)
-
-      ALLOCATE(SCR4(NAMRX,NAMRY,NAMRZ))
-
-      DO IR=1,NL
-
-       LOW1=SUM(NPATCH(0:IR-1))+1
-       LOW2=SUM(NPATCH(0:IR))
-       DO I=LOW1,LOW2
-
-         N1=PATCHNX(I)
-         N2=PATCHNY(I)
-         N3=PATCHNZ(I)
-
-         SCR4(1:N1,1:N2,1:N3)=U12(1:N1,1:N2,1:N3,I)
-         WRITE(25) (((SCR4(IX,J,K),IX=1,N1),J=1,N2),K=1,N3)
-         SCR4(1:N1,1:N2,1:N3)=U13(1:N1,1:N2,1:N3,I)
-         WRITE(25) (((SCR4(IX,J,K),IX=1,N1),J=1,N2),K=1,N3)
-         SCR4(1:N1,1:N2,1:N3)=U14(1:N1,1:N2,1:N3,I)
-         WRITE(25) (((SCR4(IX,J,K),IX=1,N1),J=1,N2),K=1,N3)
-
-       END DO
-      END DO
-
-      DEALLOCATE(SCR4)
+c      ALLOCATE(SCR4(NMAX,NMAY,NMAZ))
+c
+c      SCR4(1:NX,1:NY,1:NZ)=U2(1:NX,1:NY,1:NZ)
+c      WRITE(25) (((SCR4(I,J,K),I=1,NX),J=1,NY),K=1,NZ)
+c      SCR4(1:NX,1:NY,1:NZ)=U3(1:NX,1:NY,1:NZ)
+c      WRITE(25) (((SCR4(I,J,K),I=1,NX),J=1,NY),K=1,NZ)
+c      SCR4(1:NX,1:NY,1:NZ)=U4(1:NX,1:NY,1:NZ)
+c      WRITE(25) (((SCR4(I,J,K),I=1,NX),J=1,NY),K=1,NZ)
+c
+c      DEALLOCATE(SCR4)
+c
+c      ALLOCATE(SCR4(NAMRX,NAMRY,NAMRZ))
+c
+c      DO IR=1,NL
+c
+c       LOW1=SUM(NPATCH(0:IR-1))+1
+c       LOW2=SUM(NPATCH(0:IR))
+c       DO I=LOW1,LOW2
+c
+c         N1=PATCHNX(I)
+c         N2=PATCHNY(I)
+c         N3=PATCHNZ(I)
+c
+c         SCR4(1:N1,1:N2,1:N3)=U12(1:N1,1:N2,1:N3,I)
+c         WRITE(25) (((SCR4(IX,J,K),IX=1,N1),J=1,N2),K=1,N3)
+c         SCR4(1:N1,1:N2,1:N3)=U13(1:N1,1:N2,1:N3,I)
+c         WRITE(25) (((SCR4(IX,J,K),IX=1,N1),J=1,N2),K=1,N3)
+c         SCR4(1:N1,1:N2,1:N3)=U14(1:N1,1:N2,1:N3,I)
+c         WRITE(25) (((SCR4(IX,J,K),IX=1,N1),J=1,N2),K=1,N3)
+c
+c       END DO
+c      END DO
+c
+c      DEALLOCATE(SCR4)
 
 *     WRITE THE COMPRESSIONAL VELOCITY
       ALLOCATE(SCR4(NMAX,NMAY,NMAZ))
