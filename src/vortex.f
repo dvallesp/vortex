@@ -373,12 +373,12 @@
 *     Runtime check: velocities have been read properly
       IF (FLAG_VERBOSE.EQ.1) THEN
         write(*,*) 'velocity: min and max values'
-        write(*,*) minval(u2),minval(u12)
-        write(*,*) maxval(u2),maxval(u12)
-        write(*,*) minval(u3),minval(u13)
-        write(*,*) maxval(u3),maxval(u13)
-        write(*,*) minval(u4),minval(u14)
-        write(*,*) maxval(u4),maxval(u14)
+        call p_minmax(u2,u12,1,1,nx,ny,nz,nl,patchnx,patchny,patchnz,
+     &                npatch)
+        call p_minmax(u3,u13,1,1,nx,ny,nz,nl,patchnx,patchny,patchnz,
+     &                npatch)
+        call p_minmax(u4,u14,1,1,nx,ny,nz,nl,patchnx,patchny,patchnz,
+     &                npatch)
       END IF
 
 *     Filter velocities (if specified to do so in vortex.dat)
@@ -391,12 +391,12 @@
         IF (FLAG_VERBOSE.EQ.1) THEN
          write(*,*) 'Computation ended!'
          write(*,*) 'filtered velocity: min and max values'
-         write(*,*) minval(u2),minval(u12)
-         write(*,*) maxval(u2),maxval(u12)
-         write(*,*) minval(u3),minval(u13)
-         write(*,*) maxval(u3),maxval(u13)
-         write(*,*) minval(u4),minval(u14)
-         write(*,*) maxval(u4),maxval(u14)
+         call p_minmax(u2,u12,1,1,nx,ny,nz,nl,patchnx,patchny,patchnz,
+     &                npatch)
+         call p_minmax(u3,u13,1,1,nx,ny,nz,nl,patchnx,patchny,patchnz,
+     &                npatch)
+         call p_minmax(u4,u14,1,1,nx,ny,nz,nl,patchnx,patchny,patchnz,
+     &                npatch)
         END IF
       END IF
 
@@ -425,15 +425,17 @@
 
         IF (FLAG_VERBOSE.EQ.1) THEN
           write(*,*) 'rotational: min and max values'
-          write(*,*) minval(rotax_0),minval(rotax_1)
-          write(*,*) maxval(rotax_0),maxval(rotax_1)
-          write(*,*) minval(rotay_0),minval(rotay_1)
-          write(*,*) maxval(rotay_0),maxval(rotay_1)
-          write(*,*) minval(rotaz_0),minval(rotaz_1)
-          write(*,*) maxval(rotaz_0),maxval(rotaz_1)
+          call p_minmax(rotax_0,rotax_1,1,3,nx,ny,nz,nl,patchnx,patchny,
+     &                  patchnz,npatch)
+          call p_minmax(rotay_0,rotay_1,1,3,nx,ny,nz,nl,patchnx,patchny,
+     &                  patchnz,npatch)
+          call p_minmax(rotaz_0,rotaz_1,1,3,nx,ny,nz,nl,patchnx,patchny,
+     &                  patchnz,npatch)
+
           write(*,*) 'divergence: min and max values'
-          write(*,*) minval(diver0),minval(diver)
-          write(*,*) maxval(diver0),maxval(diver)
+          call p_minmax(diver0,diver,1,3,nx,ny,nz,nl,patchnx,patchny,
+     &                  patchnz,npatch)
+
         END IF
 
         ! we back-up the sources for later use (they will get overwritten
@@ -865,12 +867,12 @@
 
         IF (FLAG_VERBOSE.EQ.1) THEN
           WRITE(*,*) '...Total velocity...'
-          WRITE(*,*) MINVAL(U2),MINVAL(U12)
-          WRITE(*,*) MAXVAL(U2),MAXVAL(U12)
-          WRITE(*,*) MINVAL(U3),MINVAL(U13)
-          WRITE(*,*) MAXVAL(U3),MAXVAL(U13)
-          WRITE(*,*) MINVAL(U4),MINVAL(U14)
-          WRITE(*,*) MAXVAL(U4),MAXVAL(U14)
+          call p_minmax(u2,u12,1,1,nx,ny,nz,nl,patchnx,patchny,
+     &                  patchnz,npatch)
+          call p_minmax(u3,u13,1,1,nx,ny,nz,nl,patchnx,patchny,
+     &                  patchnz,npatch)
+          call p_minmax(u4,u14,1,1,nx,ny,nz,nl,patchnx,patchny,
+     &                  patchnz,npatch)
         END IF
 
 *       We backup the original velocities in UORI
@@ -1005,19 +1007,19 @@
 
         IF (FLAG_VERBOSE.EQ.1) THEN
           WRITE(*,*) '...Compressional velocity...'
-          WRITE(*,*) MINVAL(U2P),MINVAL(U12P)
-          WRITE(*,*) MAXVAL(U2P),MAXVAL(U12P)
-          WRITE(*,*) MINVAL(U3P),MINVAL(U13P)
-          WRITE(*,*) MAXVAL(U3P),MAXVAL(U13P)
-          WRITE(*,*) MINVAL(U4P),MINVAL(U14P)
-          WRITE(*,*) MAXVAL(U4P),MAXVAL(U14P)
+          call p_minmax(u2p,u12p,1,1,nx,ny,nz,nl,patchnx,patchny,
+     &                  patchnz,npatch)
+          call p_minmax(u3p,u13p,1,1,nx,ny,nz,nl,patchnx,patchny,
+     &                  patchnz,npatch)
+          call p_minmax(u4p,u14p,1,1,nx,ny,nz,nl,patchnx,patchny,
+     &                  patchnz,npatch)
           WRITE(*,*) '...Rotational velocity...'
-          WRITE(*,*) MINVAL(ROTAX_0),MINVAL(ROTAX_1)
-          WRITE(*,*) MAXVAL(ROTAX_0),MAXVAL(ROTAX_1)
-          WRITE(*,*) MINVAL(ROTAY_0),MINVAL(ROTAY_1)
-          WRITE(*,*) MAXVAL(ROTAY_0),MAXVAL(ROTAY_1)
-          WRITE(*,*) MINVAL(ROTAZ_0),MINVAL(ROTAZ_1)
-          WRITE(*,*) MAXVAL(ROTAZ_0),MAXVAL(ROTAZ_1)
+          call p_minmax(rotax_0,rotax_1,1,3,nx,ny,nz,nl,patchnx,patchny,
+     &                  patchnz,npatch)
+          call p_minmax(rotay_0,rotay_1,1,3,nx,ny,nz,nl,patchnx,patchny,
+     &                  patchnz,npatch)
+          call p_minmax(rotaz_0,rotaz_1,1,3,nx,ny,nz,nl,patchnx,patchny,
+     &                  patchnz,npatch)
         END IF
 
         WRITE(*,*) 'Computation ended!'
