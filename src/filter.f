@@ -75,7 +75,7 @@
       INTEGER IX, JY, KZ, I, J, K, LOW1, LOW2, N1, N2, N3, IR, irr
       integer ii, jj, kk, iixx, jjyy, kkzz, ipatch, jpatch, llow1, llow2
       integer nn1, nn2, nn3
-      integer marca, iter
+      integer marca, iter, basint, basintprev
       real BAS1, BAS2, BAS3, bas4, DXPA, L, l2, err, dxpa_i
       real thisx, thisy, thisz, dv2, dv3, dv4, dv2prev, dv3prev, dv4prev
       real lado0
@@ -96,6 +96,8 @@
       DO IR=1,NL
        LOW1=SUM(NPATCH(0:IR-1))+1
        LOW2=SUM(NPATCH(0:IR))
+!$OMP PARALLEL DO SHARED(LOW1,LOW2,DENS1,IR),
+!$OMP+            PRIVATE(I), DEFAULT(NONE)
        DO I=LOW1,LOW2
          DENS1(:,:,:,I) = DENS1(:,:,:,I) + 1.0
          DENS1(:,:,:,I) = DENS1(:,:,:,I) / 8.0**IR
@@ -110,13 +112,15 @@
 
 !!!!! for each cell, we ought to find the optimum coherence length
       ! we first initialize the lengths
-      L0 = 2.0 * DX
+      L0 = 3.0 * DX
       DO IR=1,NL
        LOW1=SUM(NPATCH(0:IR-1))+1
        LOW2=SUM(NPATCH(0:IR))
        DXPA = DX / (2.0**IR)
+!$OMP PARALLEL DO SHARED(LOW1,LOW2,L1,DXPA),
+!$OMP+            PRIVATE(I), DEFAULT(NONE)
        DO I=LOW1,LOW2
-         L1(:,:,:,I) = 2.0 * DXPA
+         L1(:,:,:,I) = 3.0 * DXPA
        END DO
       END DO
 
@@ -131,12 +135,11 @@
 !$OMP+                    DV2,DV3,DV4,DV2PREV,DV3PREV,DV4PREV,
 !$OMP+                    MINI,MAXI,MINJ,MAXJ,MINK,MAXK,rx1,rx2,ry1,
 !$OMP+                    ry2,rz1,rz2,rxx1,rxx2,ryy1,ryy2,rzz1,rzz2,
-!$OMP+                    dxpa),
-!$OMP+            DEFAULT(NONE),
-!$OMP+            SCHEDULE(DYNAMIC)
-      do i=1,nx
+!$OMP+                    dxpa,basint,basintprev),
+!$OMP+            schedule(dynamic), default(none)
+      do k=1,nz
         do j=1,ny
-          do k=1,nz
+          do i=1,nx
             marca = 0
             if (cr0amr(i,j,k).eq.1) marca = 1
             iter = 0
@@ -145,11 +148,13 @@
             thisy = rady(j)
             thisz = radz(k)
 
+            basintprev = 0
             iter_while_c: do while (marca.eq.1)
               bas1 = 0.0
               bas2 = 0.0
               bas3 = 0.0
               bas4 = 0.0
+              basint = 0
               l2 = l**2
 
               mini = int(((thisx - l) / lado0 + 0.5) * nx) + 1
@@ -158,16 +163,16 @@
               maxj = int(((thisy + l) / lado0 + 0.5) * ny) + 1
               mink = int(((thisz - l) / lado0 + 0.5) * nz) + 1
               maxk = int(((thisz + l) / lado0 + 0.5) * nz) + 1
-              if (mini.le.0) mini=1
+              if (mini.lt.1) mini=1
               if (maxi.gt.nx) maxi=nx
-              if (minj.le.0) minj=1
+              if (minj.lt.1) minj=1
               if (maxj.gt.ny) maxj=ny
-              if (mink.le.0) mink=1
+              if (mink.lt.1) mink=1
               if (maxk.gt.nz) maxk=nz
 
-              outer0_c: do ii=mini,maxi
+              outer0_c: do kk=mink,maxk
                 do jj=minj,maxj
-                  do kk=mink,maxk
+                  do ii=mini,maxi
                     if (cr0amr(ii,jj,kk).eq.1) then
                     if ((radx(ii)-thisx)**2+(rady(jj)-thisy)**2+
      &                  (radz(kk)-thisz)**2.le.l2) then
@@ -175,6 +180,7 @@
                       bas2 = bas2 + dens0(ii,jj,kk) * u2(ii,jj,kk)
                       bas3 = bas3 + dens0(ii,jj,kk) * u3(ii,jj,kk)
                       bas4 = bas4 + dens0(ii,jj,kk) * u4(ii,jj,kk)
+                      basint = basint + 1
                       if (shock0(ii,jj,kk).eq.1) then
                         if (iter.ge.1) then
                           marca = 0
@@ -270,9 +276,9 @@
                      maxk=nn3
                   END IF
 
-                   do iixx = mini,maxi
-                   do jjyy = minj,maxj
                    do kkzz = mink,maxk
+                   do jjyy = minj,maxj
+                   do iixx = mini,maxi
                      if (cr0amr1(iixx,jjyy,kkzz,jpatch).eq.1.and.
      &                 solap(iixx,jjyy,kkzz,jpatch).eq.1) then
                      if ((rx(iixx,jpatch)-thisx)**2+
@@ -285,6 +291,7 @@
      &                              u13(iixx,jjyy,kkzz,jpatch)
                        bas4 = bas4 + dens1(iixx,jjyy,kkzz,jpatch) *
      &                              u14(iixx,jjyy,kkzz,jpatch)
+                       basint = basint + 1
                        if (shock1(iixx,jjyy,kkzz,jpatch).eq.1) then
                          if (iter.ge.1) then
                            marca = 0
@@ -301,6 +308,15 @@
              end do outer1_c
 
               if (marca.eq.0) exit iter_while_c
+
+              !write(*,*) i,j,k,iter,basint,basintprev
+              if (basint-basintprev.lt.10) then 
+               l = max(l*step, l+dx)
+               iter = iter + 1 
+               cycle iter_while_c
+              else
+               basintprev=basint
+              end if
 
               if (bas1.ne.0) then
                 bas2 = bas2 / bas1
@@ -365,9 +381,9 @@
 !$OMP+                    DV2,DV3,DV4,DV2PREV,DV3PREV,DV4PREV,
 !$OMP+                    MINI,MAXI,MINJ,MAXJ,MINK,MAXK,rx1,rx2,ry1,
 !$OMP+                    ry2,rz1,rz2,rxx1,rxx2,ryy1,ryy2,rzz1,rzz2,
-!$OMP+                    ipatch,n1,n2,n3,exectime,dxpa,dxpa_i,ir),
-!$OMP+            DEFAULT(NONE),
-!$OMP+            SCHEDULE(DYNAMIC)
+!$OMP+                    ipatch,n1,n2,n3,exectime,dxpa,dxpa_i,ir,
+!$OMP+                    basint,basintprev),
+!$OMP+            schedule(dynamic), default(none)
       DO ipatch=LOW1,LOW2
         exectime = time()
         n1 = patchnx(ipatch)
@@ -377,13 +393,14 @@
         DO IR=1,NL
           IF (IPATCH.LE.SUM(NPATCH(0:IR))) EXIT
         END DO
+        write(*,*) 'starting',ir,ipatch
         dxpa_i = dx/(2.0**ir)
 
 c        write(*,*) ipatch, sum(cr0amr1(1:n1,1:n2,1:n3,ipatch) *
 c     &                         solap(1:n1,1:n2,1:n3,ipatch))
-        do i=1,n1
-        do j=1,n2
         do k=1,n3
+        do j=1,n2
+        do i=1,n1
           marca = 0
           if (cr0amr1(i,j,k,ipatch).eq.1.and.
      &          solap(i,j,k,ipatch).eq.1) marca = 1
@@ -393,11 +410,14 @@ c     &                         solap(1:n1,1:n2,1:n3,ipatch))
           thisy = ry(j,ipatch)
           thisz = rz(k,ipatch)
 
+          basintprev = 0
           iter_while: do while (marca.eq.1)
             bas1 = 0.0
             bas2 = 0.0
             bas3 = 0.0
             bas4 = 0.0
+            basint = 0
+            !basintprev = 0
             l2 = l**2
 
             mini = int(((thisx - l) / lado0 + 0.5) * nx) + 1
@@ -406,16 +426,16 @@ c     &                         solap(1:n1,1:n2,1:n3,ipatch))
             maxj = int(((thisy + l) / lado0 + 0.5) * ny) + 1
             mink = int(((thisz - l) / lado0 + 0.5) * nz) + 1
             maxk = int(((thisz + l) / lado0 + 0.5) * nz) + 1
-            if (mini.lt.0) mini=1
+            if (mini.lt.1) mini=1
             if (maxi.gt.nx) maxi=nx
-            if (minj.lt.0) minj=1
+            if (minj.lt.1) minj=1
             if (maxj.gt.ny) maxj=ny
-            if (mink.lt.0) mink=1
+            if (mink.lt.1) mink=1
             if (maxk.gt.nz) maxk=nz
 
-            outer0: do ii=mini,maxi
+            outer0: do kk=mink,maxk
               do jj=minj,maxj
-                do kk=mink,maxk
+                do ii=mini,maxi
                   if (cr0amr(ii,jj,kk).eq.1) then
                   if ((radx(ii)-thisx)**2+(rady(jj)-thisy)**2+
      &                  (radz(kk)-thisz)**2.le.l2) then
@@ -423,6 +443,7 @@ c     &                         solap(1:n1,1:n2,1:n3,ipatch))
                     bas2 = bas2 + dens0(ii,jj,kk) * u2(ii,jj,kk)
                     bas3 = bas3 + dens0(ii,jj,kk) * u3(ii,jj,kk)
                     bas4 = bas4 + dens0(ii,jj,kk) * u4(ii,jj,kk)
+                    basint = basint + 1
                     if (shock0(ii,jj,kk).eq.1) then
                       if (iter.ge.1) then
                         marca=0
@@ -518,9 +539,9 @@ c     &                         solap(1:n1,1:n2,1:n3,ipatch))
                    maxk=nn3
                 END IF
 
-                 do iixx = mini,maxi
-                 do jjyy = minj,maxj
                  do kkzz = mink,maxk
+                 do jjyy = minj,maxj
+                 do iixx = mini,maxi
                    if (cr0amr1(iixx,jjyy,kkzz,jpatch).eq.1.and.
      &                 solap(iixx,jjyy,kkzz,jpatch).eq.1) then
                    if ((rx(iixx,jpatch)-thisx)**2+
@@ -533,6 +554,7 @@ c     &                         solap(1:n1,1:n2,1:n3,ipatch))
      &                              u13(iixx,jjyy,kkzz,jpatch)
                      bas4 = bas4 + dens1(iixx,jjyy,kkzz,jpatch) *
      &                              u14(iixx,jjyy,kkzz,jpatch)
+                     basint = basint + 1
                      if (shock1(iixx,jjyy,kkzz,jpatch).eq.1) then
                        if (iter.ge.1) then
                          marca=0
@@ -549,6 +571,14 @@ c     &                         solap(1:n1,1:n2,1:n3,ipatch))
            end do outer1
 
             if (marca.eq.0) exit iter_while
+              
+            if (basint-basintprev.lt.10) then 
+             l = max(l*step, l+dxpa_i)
+             iter = iter + 1
+             cycle iter_while
+            else
+             basintprev=basint
+            end if
 
             if (bas1.ne.0) then
               bas2 = bas2 / bas1
@@ -617,15 +647,22 @@ C     &                                                k,iter,l,err
 
         LOW1=SUM(NPATCH(0:IR-1))+1
         LOW2=SUM(NPATCH(0:IR))
+!       Apparent race condition, but harmless due to previous sync
+!$OMP PARALLEL DO SHARED(LOW1,LOW2,PATCHNX,PATCHNY,PATCHNZ,PARE,PATCHX,
+!$OMP+                   PATCHY,PATCHZ,DENS1,U12BULK,U13BULK,U14BULK,
+!$OMP+                   L1,U2BULK,U3BULK,U4BULK,L0),
+!$OMP+            PRIVATE(IPATCH,N1,N2,N3,JPATCH,I,J,K,II,JJ,KK,UW,U,
+!$OMP+                    FUIN),
+!$OMP+            DEFAULT(NONE)
         DO ipatch=LOW1,LOW2
           !WRITE(*,*) 'FINISHING PATCH', IPATCH
           N1 = PATCHNX(IPATCH)
           N2 = PATCHNY(IPATCH)
           N3 = PATCHNZ(IPATCH)
           JPATCH = PARE(IPATCH)
-          DO I=1,N1,2
-          DO J=1,N2,2
           DO K=1,N3,2
+          DO J=1,N2,2
+          DO I=1,N1,2
             II = PATCHX(ipatch) + int((I-1)/2)
             JJ = PATCHY(ipatch) + int((J-1)/2)
             KK = PATCHZ(ipatch) + int((K-1)/2)
@@ -674,13 +711,17 @@ C     &                                                k,iter,l,err
 
       ! U2,U3,U4,U12,U13,U14 gets updated with the values of the
       ! velocity fluctuation
+!$OMP PARALLEL DO SHARED(NPATCH,PATCHNX,PATCHNY,PATCHNZ,U12,U13,U14,
+!$OMP+                   U12BULK,U13BULK,U14BULK),
+!$OMP+            PRIVATE(IPATCH,N1,N2,N3,I,J,K),
+!$OMP+            DEFAULT(NONE)
       DO ipatch=1,sum(npatch)
         n1 = patchnx(ipatch)
         n2 = patchny(ipatch)
         n3 = patchnz(ipatch)
-        do i=1,n1
-        do j=1,n2
         do k=1,n3
+        do j=1,n2
+        do i=1,n1
           u12(i,j,k,ipatch)=u12(i,j,k,ipatch)-u12bulk(i,j,k,ipatch)
           u13(i,j,k,ipatch)=u13(i,j,k,ipatch)-u13bulk(i,j,k,ipatch)
           u14(i,j,k,ipatch)=u14(i,j,k,ipatch)-u14bulk(i,j,k,ipatch)
@@ -689,9 +730,11 @@ C     &                                                k,iter,l,err
         end do
       end do
 
-      do i=1,nx
+!$OMP PARALLEL DO SHARED(NX,NY,NZ,U2,U3,U4,U2BULK,U3BULK,U4BULK),
+!$OMP+            PRIVATE(I,J,K), DEFAULT(NONE)      
+      do k=1,nz
         do j=1,ny
-          do k=1,nz
+          do i=1,nx
             u2(i,j,k) = u2(i,j,k) - u2bulk(i,j,k)
             u3(i,j,k) = u3(i,j,k) - u3bulk(i,j,k)
             u4(i,j,k) = u4(i,j,k) - u4bulk(i,j,k)
@@ -815,6 +858,11 @@ C     &                                                k,iter,l,err
         RYFIX=RADY(1) - DY*0.5 + 0.5*DYPA
         RZFIX=RADZ(1) - DZ*0.5 + 0.5*DZPA
 
+*!$OMP PARALLEL DO SHARED(IR,NPATCH,PARE,PATCHX,PATCHY,PATCHZ,
+*!$OMP+    PATCHNX,PATCHNY,PATCHNZ,VECINO,NVECI),
+*!$OMP+  PRIVATE(I,L1,L2,L3,N1,N2,N3,CR1,CR2,CR3,NV,J,LL1,
+*!$OMP+         LL2,LL3,NN1,NN2,NN3,CR4,CR5,CR6,A1,A2,B1,B2,
+*!$OMP+         C1,C2)
         LOW1=SUM(NPATCH(0:IR-1))+1
         LOW2=SUM(NPATCH(0:IR))
         DO I=LOW1,LOW2
