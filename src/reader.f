@@ -222,7 +222,7 @@ c           SOLAP(:,:,:,I)=SCR4_INT(:,:,:)
       CHARACTER*20 FILNOM,FIL1
       real*4, allocatable::scr4(:,:,:)
 
-      thr = 1.3 ! mach no. threshold (>thr --> shocked, <thr --> unshocked)
+      thr = 3.0 ! mach no. threshold (>thr --> shocked, <thr --> unshocked)
 
       CALL NOMFILEMACH5(ITER,FILNOM)
       FIL1='shocks/'//FILNOM
