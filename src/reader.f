@@ -66,7 +66,7 @@
        COMMON /PROCESADORES/ NUM
 
        INTEGER IS_MASCLET_B
-       IS_MASCLET_B=1
+       IS_MASCLET_B=0
 
 *      READING DATA
        CALL NOMFILE(ITER,FILNOM1,FILNOM2,FILNOM3)
@@ -132,7 +132,8 @@ C       SCR4_INT=0
        N1=NX
        N2=NY
        N3=NZ
-       READ(31) !(((U1(I,J,K),I=1,N1),J=1,N2),K=1,N3)
+       READ(31) (((SCR4(I,J,K),I=1,N1),J=1,N2),K=1,N3)
+       U1(1:NX,1:NY,1:NZ)=SCR4(1:NX,1:NY,1:NZ)
        READ(31) (((SCR4(I,J,K),I=1,N1),J=1,N2),K=1,N3)
        U2(1:NX,1:NY,1:NZ)=SCR4(1:NX,1:NY,1:NZ)
        READ(31) (((SCR4(I,J,K),I=1,N1),J=1,N2),K=1,N3)
@@ -167,7 +168,8 @@ C       SCR4_INT=0
           N1=PATCHNX(I)
           N2=PATCHNY(I)
           N3=PATCHNZ(I)
-          READ(31) !(((U11(IX,J,K,I),IX=1,N1),J=1,N2),K=1,N3)
+          READ(31) (((SCR4(IX,J,K),IX=1,N1),J=1,N2),K=1,N3)
+             U11(1:N1,1:N2,1:N3,I)=SCR4(1:N1,1:N2,1:N3)
           READ(31) (((SCR4(IX,J,K),IX=1,N1),J=1,N2),K=1,N3)
              U12(1:N1,1:N2,1:N3,I)=SCR4(1:N1,1:N2,1:N3)
           READ(31) (((SCR4(IX,J,K),IX=1,N1),J=1,N2),K=1,N3)
