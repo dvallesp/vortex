@@ -411,7 +411,7 @@
        END DO
 
 
-       RADIUS=COS(PI/((N1+N2+N3+12)/3.0))
+       RADIUS=COS(PI/((N1+N2+N3+6*BOR)/3.0))
        WWW=1.0
        RESNOR=SNOR
        II=0
@@ -588,7 +588,7 @@
        END DO
 
 
-       RADIUS=COS(PI/((N1+N2+N3+12)/3.0))
+       RADIUS=COS(PI/((N1+N2+N3+6*BOR)/3.0))
 *
        WWW=1.0
        II=0
