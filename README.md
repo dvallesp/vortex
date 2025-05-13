@@ -1,4 +1,8 @@
 # ``vortex`` code
+
+## Important notice:
+<b>We have now unified vortex (for AMR inputs) and [vortex-p](https://github.com/dvallesp/vortex-p/) (for particle-based or unstructured inputs). Please refer to the [vortex-p repository](https://github.com/dvallesp/vortex-p/) and [its documentation](https://vortex-particles.github.io) for the latest version, and do not hesitate to contact us for anything.</b>
+
 ### Implements Helmholtz-Hodge decomposition for an AMR velocity field.
 #### Developed by David Vallés-Pérez, Susana Planelles and Vicent Quilis
 
